@@ -30,9 +30,9 @@ Genericity here is family-relative and purely order-theoretic. Genericity over a
 * `Forcing.meets_lowerClosure`: a filter meets a set iff it meets its downward closure.
 * `Forcing.Meets.exists_mem_le`: a filter meeting a downward-closed set contains a member of it
   strengthening any given member of the filter (the localization lemma).
-* `Forcing.genericFor_principal_bot`: with a weakest condition `⊥`, the principal filter at `⊥`
-  is generic for every family of dense sets — genericity is only interesting above atomless-like
-  behavior, which is why the kernel never assumes `OrderBot`.
+* `Forcing.genericFor_principal_bot`: a trivial-forcing sanity check. With smaller-is-stronger,
+  `⊥` is a *strongest* condition, so the principal filter at `⊥` is all of `P`
+  (`Forcing.coe_principal_bot`) and trivially meets every dense set.
 -/
 
 namespace Forcing
@@ -101,8 +101,13 @@ theorem Meets.exists_mem_le (h : Meets G D) (hD : IsLowerSet D) (hp : p ∈ G) :
   · rintro ⟨q, hqD, hxq⟩
     exact ⟨q, PFilter.mem_principal.2 hxq, hqD⟩
 
-/-- With a weakest condition, the principal filter at `⊥` is generic for every family of dense
-sets: nontrivial genericity requires leaving pointed trivialities behind. -/
+/-- With a strongest condition `⊥`, the principal filter at `⊥` is all of `P`. -/
+@[simp] theorem coe_principal_bot [OrderBot P] :
+    (PFilter.principal (⊥ : P) : Set P) = Set.univ :=
+  Set.eq_univ_of_forall fun _ ↦ PFilter.mem_principal.2 bot_le
+
+/-- Trivial-forcing sanity check: with a strongest condition `⊥`, the principal filter at `⊥` is
+all of `P`, so it is generic for every family of dense sets. -/
 theorem genericFor_principal_bot [OrderBot P] (h : ∀ D ∈ 𝒟, IsDense D) :
     GenericFor 𝒟 (PFilter.principal (⊥ : P)) := by
   intro D hD
@@ -112,8 +117,8 @@ theorem genericFor_principal_bot [OrderBot P] (h : ∀ D ∈ 𝒟, IsDense D) :
 /-!
 ### Sanity examples
 
-`ℤ` has no weakest condition, and the strictly negative integers are dense; the principal filter
-at `0` fails to meet them, so principal filters are not generic in general. Contrast with
+`ℤ` has no strongest condition, and the strictly negative integers are dense; the principal
+filter at `0` fails to meet them, so principal filters are not generic in general. Contrast with
 `genericFor_principal_bot`.
 -/
 
