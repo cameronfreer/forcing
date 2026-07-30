@@ -35,12 +35,14 @@ This milestone is "Cohen generic diagonalizes a countable family" — not yet
 
 ## M3 — Cohen forcing over a ground model
 
-Exit criterion: `G` is `M`-generic `→ c_G ∉ M`.
+Exit criterion: `G` is `M`-generic `→ c_G ∉ M.groundReals`.
 
 This is the first genuine "Cohen forcing adds a real" theorem. The ground model
-enters abstractly (a family of dense sets, a family of reals, and a closure
-hypothesis); the countable-transitive-model instantiation discharges the closure
-hypothesis in M4+.
+enters abstractly (a family of dense sets, a family of designated ground reals,
+and a closure hypothesis), so the formal conclusion is stated against the
+designated ground reals; the countable-transitive-model instantiation (M4+)
+bridges carrier membership to the ground reals, discharges the closure
+hypothesis, and upgrades the conclusion to `c_G ∉ M`.
 
 ## M4 — Names and generic extensions
 
