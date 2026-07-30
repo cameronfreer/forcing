@@ -1,0 +1,65 @@
+# Roadmap
+
+Milestones are outcome-based: each has explicit exit criteria and each later
+milestone consumes only the public API of earlier ones. Design constraints that
+apply across all milestones are recorded in
+[docs/architecture.md](docs/architecture.md).
+
+## M1 — Forcing-oriented order kernel
+
+Exit criteria:
+
+- basic forcing vocabulary (`Compatible`, `Incompatible`, `IsDense`, `IsPredense`,
+  `IsDenseOpen`);
+- all `OrderDual` glue centralized in one module;
+- `Order.PFilter`-based forcing filters, `Meets`, and `GenericFor`;
+- forcing-oriented Rasiowa–Sikorski (no visible dualization in public statements);
+- antichains and maximal-antichain equivalences;
+- dense order embeddings with correctly qualified generic transport;
+- separative preorder and quotient.
+
+No `ZFSet`, names, Boolean-valued machinery, cardinal theory, or ccc.
+
+## M2 — External Cohen generic real
+
+Exit criteria:
+
+- finite partial binary functions `Fn(ω, 2)` (representation chosen by spike);
+- the generic union is well-defined;
+- a filter meeting the coordinate dense sets has a total generic union;
+- a filter meeting the diagonal requirements differs from every member of a
+  supplied countable family.
+
+This milestone is "Cohen generic diagonalizes a countable family" — not yet
+"adds a new real."
+
+## M3 — Cohen forcing over a ground model
+
+Exit criterion: `G` is `M`-generic `→ c_G ∉ M`.
+
+This is the first genuine "Cohen forcing adds a real" theorem. The ground model
+enters abstractly (a family of dense sets, a family of reals, and a closure
+hypothesis); the countable-transitive-model instantiation discharges the closure
+hypothesis in M4+.
+
+## M4 — Names and generic extensions
+
+Typed/intensional `P`-names, valuation, internal presentations, and `M[G]`.
+
+## M5 — Forcing theorem and preservation
+
+Internal forcing relation (defined by direct recursion on formulas, not via
+Boolean values), definability, truth lemma, ZFC axioms in `M[G]`, closure and ccc
+preservation.
+
+## M6 — Boolean completion and Boolean-valued models
+
+Separative completion, complete regular algebra (via `Heyting.Regular` on lower
+sets), `B`-names, and carefully scoped comparison theorems — distinguishing
+external completeness from completeness internal to `M`.
+
+## Later endpoint work
+
+Flypitch port audit and concordance, proof theory, and CH independence are
+endpoint work, not numbered near-term milestones. The Flypitch audit is a
+parallel research task with no milestone dependency.
