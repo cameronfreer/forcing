@@ -1,0 +1,18 @@
+name = "forcing"
+version = "0.1.0"
+license = "Apache-2.0"
+keywords = ["math"]
+defaultTargets = ["Forcing"]
+
+# Pinned to the mathlib revision at the v4.32.2 tag, matching the toolchain in
+# `lean-toolchain` so the cache is fully populated.
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "905b95818eb32af7874a58b427f50c1711a5e96c"
+
+[[lean_lib]]
+name = "Forcing"
+# `longFile` and `longFileDefValue` must be set to the same value, or the linter
+# nags to remove a `set_option` on every short file (fatal under `warningAsError`).
+leanOptions = { autoImplicit = false, weak.linter.mathlibStandardSet = true, weak.linter.style.longFile = 1500, weak.linter.style.longFileDefValue = 1500, warningAsError = true }
