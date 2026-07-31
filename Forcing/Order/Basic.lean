@@ -31,12 +31,14 @@ which already points the right way.
 
 * `Forcing.IsDense.isPredense`: dense sets are predense.
 * `Forcing.isDense_iff_forall_isDenseBelow`: density is density below every condition.
+* `Forcing.IsDenseBelow.mono_condition`, `Forcing.IsDenseBelow.trans`: density below a condition
+  is stable under strengthening and transitive.
 * `Forcing.IsDense.isDenseOpen_lowerClosure`: the downward closure of a dense set is dense open.
 -/
 
 namespace Forcing
 
-variable {P : Type*} [Preorder P] {p q : P} {D : Set P}
+variable {P : Type*} [Preorder P] {p q : P} {D E : Set P}
 
 /-- Two conditions are *compatible* if they have a common strengthening. -/
 def Compatible (p q : P) : Prop :=
@@ -119,6 +121,25 @@ theorem IsDense.isDenseBelow (h : IsDense D) (p : P) : IsDenseBelow D p :=
 theorem isDense_iff_forall_isDenseBelow : IsDense D ↔ ∀ p, IsDenseBelow D p :=
   ⟨fun h p ↦ h.isDenseBelow p, fun h p ↦ h p (Set.mem_Iic.2 le_rfl)⟩
 
+theorem isDenseBelow_Iic (p : P) : IsDenseBelow (Set.Iic p) p :=
+  fun q hq ↦ ⟨q, hq, le_rfl⟩
+
+/-- Pullback stability: density below a condition persists to every strengthening of it. Note
+that this is a genuinely local statement — `isDense_iff_forall_isDenseBelow` relates global to
+local density but is not this theorem. -/
+theorem IsDenseBelow.mono_condition (hD : IsDenseBelow D p) (hqp : q ≤ p) : IsDenseBelow D q :=
+  fun _ hr ↦ hD (Set.mem_Iic.2 ((Set.mem_Iic.1 hr).trans hqp))
+
+/-- Transitivity: if `D` is dense below `p` and `E` is dense below every member of `D`, then `E`
+is dense below `p`. Together with `IsDenseBelow.mono_condition` this is the coverage calculation
+in forcing-order form; no sieve or Grothendieck-topology machinery is involved. -/
+theorem IsDenseBelow.trans (hD : IsDenseBelow D p) (hE : ∀ q ∈ D, IsDenseBelow E q) :
+    IsDenseBelow E p := by
+  intro q hq
+  obtain ⟨r, hrD, hrq⟩ := hD hq
+  obtain ⟨s, hsE, hsr⟩ := hE r hrD (Set.mem_Iic.2 le_rfl)
+  exact ⟨s, hsE, hsr.trans hrq⟩
+
 /-- The downward closure of a dense set is dense open. -/
 theorem IsDense.isDenseOpen_lowerClosure (h : IsDense D) :
     IsDenseOpen (↑(lowerClosure D) : Set P) := by
@@ -138,7 +159,10 @@ example : IsDense (Set.univ : Set P) := fun p ↦ ⟨p, trivial, le_rfl⟩
 
 example : IsDense ({0} : Set ℕ) := fun n ↦ ⟨0, rfl, Nat.zero_le n⟩
 
-example (p : P) : IsDenseBelow (Set.Iic p) p := fun q hq ↦ ⟨q, hq, le_rfl⟩
+example (p : P) : IsDenseBelow (Set.Iic p) p := isDenseBelow_Iic p
+
+example (hD : IsDense D) (hqp : q ≤ p) : IsDenseBelow D q :=
+  (hD.isDenseBelow p).mono_condition hqp
 
 example (h : Compatible p q) : Compatible q p := h.symm
 
