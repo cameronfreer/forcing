@@ -6,3 +6,4 @@ import Forcing.Order.Dual
 import Forcing.Order.Embedding
 import Forcing.Order.Filter
 import Forcing.Order.RasiowaSikorski
+import Forcing.Order.Separative
