@@ -17,7 +17,7 @@ task on conditions that is
 
 `Requirement.equivDenseOpen` proves that requirements in this sense are precisely the dense open
 sets, so nothing is lost by explaining genericity through requirements rather than announcing
-density. And `Meets.lowerClosure_iff` (restated here as `meets_normalize_iff`) shows that
+density. And `meets_lowerClosure` (restated here as `meets_normalize_iff`) shows that
 restricting attention to *persistent* tasks costs nothing either: every dense test has a
 canonical persistent form — its downward closure — which the same filters meet.
 
