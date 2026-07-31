@@ -52,11 +52,12 @@ theorem exists_pfilter_total (p : Cond) :
     ∃ G : PFilter Cond, p ∈ G ∧ ∀ n, (genericFun G n).isSome :=
   FinitePartialFunction.exists_pfilter_total p
 
-/-- **Faithful recovery**: a coordinate-generic filter is the canonical filter of its own
-generic real. -/
-theorem eq_ofFunction (h : ∀ n, Meets G (coordReq n).support) {c : ℕ → Bool}
-    (hc : ∀ n, genericFun G n = some (c n)) : G = ofFunction c :=
-  eq_ofFunction_of_unionFun h hc
+/-- **Faithful recovery**: a filter whose generic real is the total function `c` is the
+canonical filter of `c`. Coordinate genericity is not an extra hypothesis — it is equivalent
+evidence of totality (`meets_coordReq_iff`). -/
+theorem eq_ofFunction {c : ℕ → Bool} (hc : ∀ n, genericFun G n = some (c n)) :
+    G = ofFunction c :=
+  eq_ofFunction_of_unionFun hc
 
 /-!
 ### Sanity examples
@@ -72,6 +73,9 @@ example (c : ℕ → Bool) (n : ℕ) : Meets (ofFunction c) (coordReq n).support
   meets_coordReq_ofFunction c n
 
 example (c : ℕ → Bool) : ofFunction c = ofFunction c :=
-  eq_ofFunction (meets_coordReq_ofFunction c) fun _ ↦ unionFun_ofFunction
+  eq_ofFunction fun _ ↦ unionFun_ofFunction
+
+example {n : ℕ} : Meets G (coordReq n).support ↔ (genericFun G n).isSome :=
+  meets_coordReq_iff_isSome_unionFun
 
 end Forcing.Cohen
