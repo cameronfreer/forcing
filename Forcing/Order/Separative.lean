@@ -78,6 +78,12 @@ theorem Compatible.of_sepLE_of_sepLE (h1 : SepLE r p) (h2 : SepLE r q) : Compati
 def SepEquiv (p q : P) : Prop :=
   SepLE p q ∧ SepLE q p
 
+/-- `SepEquiv` is an equivalence relation. -/
+theorem sepEquiv_equivalence : Equivalence (@SepEquiv P _) where
+  refl p := ⟨.refl p, .refl p⟩
+  symm h := ⟨h.2, h.1⟩
+  trans h1 h2 := ⟨h1.1.trans h2.1, h2.2.trans h1.2⟩
+
 /-- A preorder is *separative* if the separative preorder implies the forcing order. -/
 def IsSeparative (P : Type*) [Preorder P] : Prop :=
   ∀ ⦃p q : P⦄, SepLE p q → p ≤ q
@@ -162,8 +168,8 @@ theorem IsDense.image_sepQuotient (hD : IsDense D) :
   exact ⟨sepQuotient q, ⟨q, hqD, rfl⟩, sepQuotient_monotone hqp⟩
 
 /-- The preimage of a dense open set under the canonical map is dense open. Openness (downward
-closure) is essential: a plain dense set in the quotient has a dense preimage only after
-regularizing, since order reflection along the map gives only `SepLE`. -/
+closure) is essential: a plain dense set in the quotient has a dense preimage only after passing
+to its downward closure, since order reflection along the map gives only `SepLE`. -/
 theorem IsDenseOpen.preimage_sepQuotient {D' : Set (SepQuotient P)} (h : IsDenseOpen D') :
     IsDenseOpen (sepQuotient ⁻¹' D') := by
   constructor
@@ -210,6 +216,15 @@ theorem genericFor_sepQuotientPFilter {G : Order.PFilter P} {𝒟' : Set (Set (S
   intro D' hD'
   obtain ⟨p, hpG, hpD⟩ := h _ (Set.mem_image_of_mem _ hD')
   exact ⟨sepQuotient p, ⟨p, hpG, le_rfl⟩, hpD⟩
+
+/-- For families of downward-closed sets, genericity transport is an equivalence. -/
+theorem genericFor_sepQuotientPFilter_iff {G : Order.PFilter P}
+    {𝒟' : Set (Set (SepQuotient P))} (h𝒟' : ∀ D' ∈ 𝒟', IsLowerSet D') :
+    GenericFor 𝒟' (sepQuotientPFilter G) ↔ GenericFor ((sepQuotient ⁻¹' ·) '' 𝒟') G := by
+  constructor
+  · rintro h E ⟨D', hD', rfl⟩
+    exact (meets_sepQuotientPFilter_iff (h𝒟' D' hD')).1 (h D' hD')
+  · exact genericFor_sepQuotientPFilter
 
 /-!
 ### Sanity examples
