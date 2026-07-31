@@ -133,6 +133,14 @@ theorem le_def : q ≤ p ↔ ∀ ⦃i⦄ ⦃b : β i⦄, p.lookup i = some b →
 theorem le_of_lookup (h : ∀ ⦃i⦄ ⦃b : β i⦄, p.lookup i = some b → q.lookup i = some b) : q ≤ p :=
   h
 
+/-- A stronger condition decides every coordinate the weaker one decides. -/
+theorem mem_mono (h : q ≤ p) (hi : i ∈ p) : i ∈ q := by
+  obtain ⟨b, hb⟩ := Option.isSome_iff_exists.1 (mem_iff_isSome.1 hi)
+  exact mem_iff_isSome.2 (by rw [h hb]; rfl)
+
+theorem keys_mono (h : q ≤ p) : p.keys ⊆ q.keys :=
+  fun _ hi ↦ mem_def.1 (mem_mono h (mem_def.2 hi))
+
 /-- The empty condition is the weakest: it decides nothing, so every condition strengthens it.
 Note the orientation — with smaller-is-stronger, `⊤` is the *weakest* condition. -/
 instance instOrderTop : OrderTop (FinitePartialFunction β) where
