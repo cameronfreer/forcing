@@ -20,14 +20,15 @@ Generic transport is direction-asymmetric, and this file states exactly what hol
   its image — `{q | ∃ p ∈ G, e p ≤ q}` — and meeting a pulled-back dense set
   (`pullDense`) transports to meeting the original (`meets_mapPFilter`,
   `genericFor_mapPFilter`).
-* **Reverse** (`isPFilter_preimage`): the literal preimage of a filter on `Q` need not be a
-  filter — see the counterexample at the bottom of this file, where the preimage is empty. The
-  correct hypothesis is *localization of the filter in the range*: every member of `H` is
-  weakened by a member of `H ∩ range e`. In the model-relative setting (M3+) this hypothesis is
-  automatic for `M`-generic filters, because the relevant density-of-range sets belong to `M`;
-  here it must be assumed.
+* **Reverse** (`comapPFilter`): the literal preimage of a filter on `Q` need not be a filter —
+  see the counterexample at the bottom of this file, where the preimage is empty. The correct
+  hypothesis is *localization of the filter in the range*: every member of `H` has a
+  strengthening in `H ∩ range e`. In the model-relative setting (M3+), localization follows
+  from `M`-genericity only once the relevant localized dense sets are shown to belong to `M`;
+  meeting the range itself is insufficient. Here the hypothesis must be assumed.
 
-There is no unconditional preimage transport theorem, by design.
+There is no unconditional preimage transport theorem, by design. With the hypothesis, `map` and
+`comap` are mutually inverse (`mapPFilter_comapPFilter`, `comapPFilter_mapPFilter`).
 
 ## Main definitions
 
@@ -46,7 +47,7 @@ variable {P Q : Type*} [Preorder P] [Preorder Q]
 forcing-dense (coinitial) in the target. Monotonicity, order reflection, and compatibility
 reflection are theorems, not fields. -/
 structure DenseOrderEmbedding (P Q : Type*) [Preorder P] [Preorder Q] extends P ↪o Q where
-  /-- Every condition in the target is weakened by something in the range. -/
+  /-- Every condition in the target has a strengthening in the range. -/
   dense_range : IsCoinitial (Set.range toRelEmbedding)
 
 namespace DenseOrderEmbedding
@@ -113,23 +114,43 @@ def mapPFilter (G : Order.PFilter P) : Order.PFilter Q :=
     q ∈ e.mapPFilter G ↔ ∃ p ∈ G, e p ≤ q :=
   .rfl
 
+/-- Meeting transports along the embedding as an equivalence: the generated filter meets `D'`
+iff the base filter meets the pulled-back dense set. -/
+theorem meets_mapPFilter_iff {G : Order.PFilter P} :
+    Meets (e.mapPFilter G) D' ↔ Meets G (e.pullDense D') := by
+  constructor
+  · rintro ⟨q', ⟨p, hpG, hpq'⟩, hq'D⟩
+    exact ⟨p, hpG, q', hq'D, hpq'⟩
+  · rintro ⟨p, hpG, q', hq'D, hpq'⟩
+    exact ⟨q', ⟨p, hpG, hpq'⟩, hq'D⟩
+
 /-- Forward transport of meeting: if `G` meets the pulled-back dense set, the generated filter
 meets the original. -/
 theorem meets_mapPFilter {G : Order.PFilter P} (h : Meets G (e.pullDense D')) :
-    Meets (e.mapPFilter G) D' := by
-  obtain ⟨p, hpG, q', hq'D, hpq'⟩ := h
-  exact ⟨q', ⟨p, hpG, hpq'⟩, hq'D⟩
+    Meets (e.mapPFilter G) D' :=
+  e.meets_mapPFilter_iff.2 h
+
+/-- Genericity transports along the embedding as an equivalence: the generated filter is generic
+for a family iff the base filter is generic for the pulled-back family. -/
+theorem genericFor_mapPFilter_iff {G : Order.PFilter P} {𝒟' : Set (Set Q)} :
+    GenericFor 𝒟' (e.mapPFilter G) ↔ GenericFor (e.pullDense '' 𝒟') G := by
+  constructor
+  · rintro h E ⟨D', hD', rfl⟩
+    exact e.meets_mapPFilter_iff.1 (h D' hD')
+  · intro h D' hD'
+    exact e.meets_mapPFilter_iff.2 (h _ (Set.mem_image_of_mem _ hD'))
 
 /-- Forward transport of genericity: generic for the pulled-back family, generated filter
 generic for the original family. -/
 theorem genericFor_mapPFilter {G : Order.PFilter P} {𝒟' : Set (Set Q)}
     (h : GenericFor (e.pullDense '' 𝒟') G) : GenericFor 𝒟' (e.mapPFilter G) :=
-  fun _ hD' ↦ e.meets_mapPFilter (h _ (Set.mem_image_of_mem _ hD'))
+  e.genericFor_mapPFilter_iff.2 h
 
 /-- Reverse transport, correctly qualified: the preimage of a filter `H` on `Q` is a filter
-provided `H` is *localized in the range* — every member of `H` is weakened by a member of
-`H ∩ range e`. This hypothesis is automatic for `M`-generic filters in the model-relative
-setting; it is not automatic here, and without it the preimage can even be empty (see the
+provided `H` is *localized in the range* — every member of `H` has a strengthening in
+`H ∩ range e`. In the model-relative setting, localization follows from `M`-genericity only
+once the relevant localized dense sets are shown to belong to `M` (meeting the range itself is
+insufficient); here it must be assumed, and without it the preimage can even be empty (see the
 counterexample below). -/
 theorem isPFilter_preimage {H : Order.PFilter Q}
     (hloc : ∀ q ∈ H, ∃ p, e p ∈ H ∧ e p ≤ q) :
@@ -144,6 +165,40 @@ theorem isPFilter_preimage {H : Order.PFilter Q}
     exact ⟨s, hsH, e.le_iff_le.1 (hsr.trans hr₁), e.le_iff_le.1 (hsr.trans hr₂)⟩
   · exact fun hxy hx ↦ Order.PFilter.mem_of_le (e.monotone hxy) hx
 
+/-- The preimage filter of a range-localized filter: reverse transport as a construction. -/
+def comapPFilter (H : Order.PFilter Q) (hloc : ∀ q ∈ H, ∃ p, e p ∈ H ∧ e p ≤ q) :
+    Order.PFilter P :=
+  (e.isPFilter_preimage hloc).toPFilter
+
+@[simp] theorem mem_comapPFilter {H : Order.PFilter Q}
+    {hloc : ∀ q ∈ H, ∃ p, e p ∈ H ∧ e p ≤ q} {p : P} :
+    p ∈ e.comapPFilter H hloc ↔ e p ∈ H :=
+  .rfl
+
+/-- Pushing a range-localized filter down and back up recovers it. -/
+theorem mapPFilter_comapPFilter (H : Order.PFilter Q)
+    (hloc : ∀ q ∈ H, ∃ p, e p ∈ H ∧ e p ≤ q) :
+    e.mapPFilter (e.comapPFilter H hloc) = H := by
+  ext q'
+  constructor
+  · rintro ⟨p, hpH, hpq'⟩
+    exact Order.PFilter.mem_of_le hpq' hpH
+  · exact fun hq' ↦ hloc q' hq'
+
+/-- Generated filters are automatically range-localized. -/
+theorem localized_mapPFilter (G : Order.PFilter P) :
+    ∀ q ∈ e.mapPFilter G, ∃ p, e p ∈ e.mapPFilter G ∧ e p ≤ q :=
+  fun _ ⟨p, hpG, hpq⟩ ↦ ⟨p, ⟨p, hpG, le_rfl⟩, hpq⟩
+
+/-- Pulling a generated filter back recovers the base filter. -/
+theorem comapPFilter_mapPFilter (G : Order.PFilter P) :
+    e.comapPFilter (e.mapPFilter G) (e.localized_mapPFilter G) = G := by
+  ext p
+  constructor
+  · rintro ⟨p', hp'G, hp'p⟩
+    exact Order.PFilter.mem_of_le (e.le_iff_le.1 hp'p) hp'G
+  · exact fun hp ↦ ⟨p, hp, le_rfl⟩
+
 end DenseOrderEmbedding
 
 /-!
@@ -152,7 +207,7 @@ end DenseOrderEmbedding
 The inclusion of the negative integers into `ℤ` is a dense order embedding (every integer is
 weakened by a negative one), yet the preimage of the principal filter at `5` is empty — not a
 filter. Reverse transport genuinely needs the localization hypothesis of
-`DenseOrderEmbedding.isPFilter_preimage`.
+`DenseOrderEmbedding.comapPFilter`.
 -/
 
 /-- The inclusion of the negative integers into `ℤ`, as a dense order embedding. -/
