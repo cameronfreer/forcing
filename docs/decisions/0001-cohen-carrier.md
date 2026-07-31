@@ -80,21 +80,36 @@ drags in algebraic API that is irrelevant here; it is candidate C with extra ste
 
 ## Decision
 
-**`Cond := Finmap (fun _ : ℕ => Bool)`**, with the reverse-inclusion order
+A **`Finmap`-backed carrier**. The public type is a one-field wrapper, not a transparent
+abbreviation:
+
+```lean
+@[ext] structure Cond where
+  toFinmap : Finmap (fun _ : ℕ => Bool)
+```
+
+An `abbrev` (as in the prototype) would make the forcing-order instance an orphan instance on
+mathlib's `Finmap` type and leak the forcing orientation globally; the wrapper retains every
+`Finmap` advantage, with operations and lemmas lifting through the single field.
+
+The order is reverse inclusion via lookup
 
 ```lean
 q ≤ p ↔ ∀ ⦃n b⦄, p.lookup n = some b → q.lookup n = some b
 ```
 
-(smaller = more information), `∅` as the weakest condition, `insert` as one-coordinate
-extension, and the left-biased `∪` as the canonical common extension of compatible conditions.
+(smaller = more information), the empty condition is weakest, `insert` is one-coordinate
+extension, and the left-biased `∪` is the canonical common extension of compatible conditions.
 
 ## Consequences
 
-- M2's `Forcing/Cohen/` files build on `Finmap`; the `Agree`/`compatible_of_agree` bridge from
-  the prototype becomes real library code there (re-proved properly, not copied).
-- `Fn(ω, 2)` has a weakest condition (`∅`), so `OrderTop`-style convenience lemmas apply to the
-  Cohen poset even though the kernel never assumes one.
+- M2's `Forcing/Cohen/` files build on the wrapper; the `Agree`/`compatible_of_agree` bridge
+  from the prototype becomes real library code there (re-proved properly, not copied).
+- M2 provides the actual order structure, not just a `Preorder`: **`PartialOrder Cond`**
+  (antisymmetry of the lookup-extension order via `Finmap.ext_lookup`) and **`OrderTop Cond`**
+  (the empty condition is literally `⊤`). Both verified to compile at the pin. The kernel still
+  never assumes a weakest condition; the Cohen poset simply has one.
 - Generalizing to `Fn(κ, λ)` later keeps the carrier shape (`Finmap` over any `DecidableEq`
-  index); nothing in the decision is `ℕ`/`Bool`-specific except the diagonal-density argument's
-  use of an infinite index.
+  index). The diagonal-density argument is what constrains the parameters: it needs both a
+  fresh-coordinate supply (infinite `κ`) and the ability to choose a value differing from the
+  ground function's value (typically `Nontrivial λ`).
