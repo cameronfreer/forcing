@@ -2,5 +2,6 @@
 import Forcing.Basic
 import Forcing.Order.Basic
 import Forcing.Order.Dual
+import Forcing.Order.Embedding
 import Forcing.Order.Filter
 import Forcing.Order.RasiowaSikorski
