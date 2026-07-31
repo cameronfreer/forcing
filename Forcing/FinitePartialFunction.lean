@@ -38,7 +38,7 @@ agreement, and globally it is left-biased, noncommutative, and not a forcing mee
   the union.
 * `Forcing.FinitePartialFunction.insert_le_iff`: `insert` strengthens exactly when the
   coordinate is fresh or the value agrees — it is an operation, not unconditionally a
-  strengthening.
+  strengthening; `insert_eq_self` covers the value-agreement case exactly.
 * `Forcing.FinitePartialFunction.exists_lookup_eq_none`: over an infinite index type, every
   condition leaves some coordinate undecided.
 -/
@@ -109,6 +109,16 @@ def insert (p : FinitePartialFunction β) (i : ι) (b : β i) : FinitePartialFun
 @[simp] theorem lookup_insert_of_ne (h : j ≠ i) : (p.insert i b).lookup j = p.lookup j :=
   Finmap.lookup_insert_of_ne _ h
 
+omit [DecidableEq ι] in
+@[simp] theorem keys_empty : (∅ : FinitePartialFunction β).keys = ∅ :=
+  Finmap.keys_empty
+
+@[simp] theorem keys_insert : (p.insert i b).keys = Insert.insert i p.keys := by
+  ext j
+  rcases eq_or_ne j i with rfl | hne
+  · simp
+  · simp [mem_keys, lookup_insert_of_ne hne, hne]
+
 /-- Reverse inclusion: `q ≤ p` means `q` decides everything `p` decides, the same way. -/
 instance instPartialOrder : PartialOrder (FinitePartialFunction β) where
   le q p := ∀ ⦃i⦄ ⦃b : β i⦄, p.lookup i = some b → q.lookup i = some b
@@ -158,8 +168,15 @@ theorem insert_le_iff : p.insert i b ≤ p ↔ p.lookup i = none ∨ p.lookup i 
 theorem insert_le_of_notMem (h : i ∉ p) : p.insert i b ≤ p :=
   insert_le_iff.2 (Or.inl (lookup_eq_none_iff.2 h))
 
-/-- Re-deciding a coordinate the same way strengthens (indeed, does not change) the
-condition. -/
+/-- Re-deciding a coordinate the same way does not change the condition. -/
+@[simp] theorem insert_eq_self (h : p.lookup i = some b) : p.insert i b = p := by
+  refine ext_lookup fun j ↦ ?_
+  rcases eq_or_ne j i with rfl | hne
+  · rw [lookup_insert_self, h]
+  · rw [lookup_insert_of_ne hne]
+
+/-- Re-deciding a coordinate the same way strengthens the condition — indeed leaves it
+unchanged (`insert_eq_self`). -/
 theorem insert_le_of_lookup_eq (h : p.lookup i = some b) : p.insert i b ≤ p :=
   insert_le_iff.2 (Or.inr h)
 
@@ -183,6 +200,9 @@ instance: it is a common strengthening only under agreement, and globally it is 
 noncommutative, and not a forcing meet. -/
 def union (p q : FinitePartialFunction β) : FinitePartialFunction β :=
   ⟨p.toFinmap ∪ q.toFinmap⟩
+
+@[simp] theorem keys_union : (p.union q).keys = p.keys ∪ q.keys :=
+  Finmap.keys_union
 
 theorem lookup_union_eq_some_iff :
     (p.union q).lookup i = some b ↔ p.lookup i = some b ∨ (i ∉ p ∧ q.lookup i = some b) :=
