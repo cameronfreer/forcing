@@ -11,7 +11,8 @@ Proof-theoretic independence results in the style of
 [Flypitch](https://github.com/flypitch/flypitch) are a detachable endpoint, not a
 foundation.
 
-**Current milestone: M1 — forcing-oriented order kernel.**
+**Current milestone: M2 — external Cohen generic real** (M1, the forcing-oriented order
+kernel, is complete).
 See [ROADMAP.md](ROADMAP.md) for milestones and
 [the issue tracker](https://github.com/cameronfreer/forcing/issues) for active work.
 
