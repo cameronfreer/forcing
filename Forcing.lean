@@ -1,5 +1,6 @@
 -- Root module for the `Forcing` library. Import every library file here.
 import Forcing.Basic
+import Forcing.Order.Antichain
 import Forcing.Order.Basic
 import Forcing.Order.Dual
 import Forcing.Order.Filter
