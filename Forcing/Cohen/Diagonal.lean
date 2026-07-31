@@ -31,6 +31,7 @@ coordinates, so a fresh one is available, and `Bool` has another value to put th
 * `Forcing.Cohen.exists_ne_of_meets_diagReq`: meeting the diagonal requirement forces
   disagreement.
 * `Forcing.Cohen.exists_pfilter_total_diagonalizing`: the external Cohen theorem.
+* `Forcing.Cohen.totality_separation`: the strict separation `J_total < J_new`.
 * `Forcing.Cohen.parity_separation`: a filter meeting every coordinate *and* every diagonal
   requirement that is nonetheless not generic — the strict separation `J_new < J_full`.
 -/
@@ -106,6 +107,10 @@ def parityReal (x : ℕ → ℕ → Bool) (m : ℕ) : Bool :=
 def oddTrue : Set Cond :=
   {p | ∃ n, p.lookup (2 * n + 1) = some true}
 
+/-- `oddTrue` is persistent: putting `true` at an odd coordinate survives strengthening. -/
+theorem isLowerSet_oddTrue : IsLowerSet oddTrue :=
+  fun _ _ hba ⟨n, hn⟩ ↦ ⟨n, hba hn⟩
+
 /-- `oddTrue` is dense: a condition decides only finitely many coordinates, so a large enough odd
 coordinate is free. -/
 theorem isDense_oddTrue : IsDense oddTrue := by
@@ -117,6 +122,11 @@ theorem isDense_oddTrue : IsDense oddTrue := by
     omega
   exact ⟨p.insert (2 * n + 1) true, ⟨n, lookup_insert_self⟩,
     insert_le_of_notMem hfresh⟩
+
+/-- `oddTrue` is a dense *open* test, so it belongs to the full doctrine `J_full`, which is
+defined by dense-open tests. -/
+theorem isDenseOpen_oddTrue : IsDenseOpen oddTrue :=
+  ⟨isDense_oddTrue, isLowerSet_oddTrue⟩
 
 /-- **The strict separation.** For any countable family, the canonical filter of `parityReal`
 meets every coordinate requirement and every diagonal requirement against the family, yet misses
@@ -138,12 +148,30 @@ theorem parity_separation (x : ℕ → ℕ → Bool) :
     rw [parityReal_odd] at this
     exact Bool.noConfusion this
 
-/-- The separating filter's generic real is total and diagonalizes the family, restating the
-separation in the form the genericity spectrum uses. -/
+/-- The separating filter's generic real is total and diagonalizes the family, and the filter is
+still not generic — the separation in the form the genericity spectrum uses. -/
 theorem parity_separation_total_diagonalizing (x : ℕ → ℕ → Bool) :
     (∀ n, (genericFun (ofFunction (parityReal x)) n).isSome) ∧
-      ∀ i, ∃ n b, genericFun (ofFunction (parityReal x)) n = some b ∧ b ≠ x i n :=
+      (∀ i, ∃ n b, genericFun (ofFunction (parityReal x)) n = some b ∧ b ≠ x i n) ∧
+      ¬Meets (ofFunction (parityReal x)) oddTrue :=
   ⟨fun n ↦ isSome_genericFun (meets_coordReq_ofFunction _) n,
-    fun i ↦ exists_ne_of_meets_diagReq ((parity_separation x).2.1 i)⟩
+    fun i ↦ exists_ne_of_meets_diagReq ((parity_separation x).2.1 i),
+    (parity_separation x).2.2⟩
+
+/-! ### The first strict separation: total is weaker than diagonalizing
+
+The canonical filter of a real `x` decides every coordinate but cannot differ from `x`, so
+`J_total < J_new`.
+-/
+
+/-- **The strict separation `J_total < J_new`.** The canonical filter of `x` meets every
+coordinate requirement, yet misses the diagonal requirement against `x` itself: every condition
+in it agrees with `x`. -/
+theorem totality_separation (x : ℕ → Bool) :
+    (∀ n, Meets (ofFunction x) (coordReq n).support) ∧
+      ¬Meets (ofFunction x) (diagReq x).support := by
+  refine ⟨meets_coordReq_ofFunction x, ?_⟩
+  rintro ⟨q, hqG, n, b, hb, hne⟩
+  exact hne (mem_ofFunction_iff.1 hqG hb).symm
 
 end Forcing.Cohen
