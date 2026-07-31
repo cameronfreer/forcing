@@ -158,12 +158,22 @@ def coordReq (i : ι) : Requirement (FinitePartialFunction β) where
 @[simp] theorem mem_coordReq_support : p ∈ (coordReq i (β := β)).support ↔ i ∈ p :=
   .rfl
 
-/-- **Meeting the coordinate requirement decides the coordinate.** -/
+/-- **Meeting the coordinate requirement is exactly deciding the coordinate.** -/
+theorem meets_coordReq_iff : Meets G (coordReq i (β := β)).support ↔ ∃ b, UnionGraph G i b := by
+  constructor
+  · rintro ⟨q, hqG, hq⟩
+    obtain ⟨b, hb⟩ := Option.isSome_iff_exists.1 (mem_iff_isSome.1 hq)
+    exact ⟨b, unionGraph_of_mem hqG hb⟩
+  · rintro ⟨b, q, hqG, hq⟩
+    exact ⟨q, hqG, mem_iff_isSome.2 (by rw [hq]; rfl)⟩
+
+theorem meets_coordReq_iff_isSome_unionFun :
+    Meets G (coordReq i (β := β)).support ↔ (unionFun G i).isSome :=
+  meets_coordReq_iff.trans isSome_unionFun_iff.symm
+
 theorem exists_unionGraph_of_meets (h : Meets G (coordReq i (β := β)).support) :
-    ∃ b, UnionGraph G i b := by
-  obtain ⟨q, hqG, hq⟩ := h
-  obtain ⟨b, hb⟩ := Option.isSome_iff_exists.1 (mem_iff_isSome.1 hq)
-  exact ⟨b, unionGraph_of_mem hqG hb⟩
+    ∃ b, UnionGraph G i b :=
+  meets_coordReq_iff.1 h
 
 /-- **Meeting every coordinate requirement makes the union total.** -/
 theorem isSome_unionFun (h : ∀ i, Meets G (coordReq i (β := β)).support) (i : ι) :
@@ -202,11 +212,16 @@ theorem exists_mem_keys_subset (h : ∀ i, Meets G (coordReq i (β := β)).suppo
     · exact mem_def.1 (mem_mono hs'q hq)
     · exact keys_mono hs'r (hrt hkt)
 
-/-- **Faithful recovery**: a filter meeting every coordinate requirement is exactly the canonical
-filter of its own union. So the generic object determines its filter, not merely the other way
-round — a separate claim from any adequacy statement. -/
-theorem eq_ofFunction (h : ∀ i, Meets G (coordReq i (β := β)).support) {c : ∀ i, β i}
-    (hc : ∀ i, UnionGraph G i (c i)) : G = ofFunction c := by
+/-- **Faithful recovery**: a filter whose union is the total function `c` is exactly the
+canonical filter of `c`. So the generic object determines its filter, not merely the other way
+round — a separate claim from any adequacy statement.
+
+Note what the hypothesis is *not*: coordinate genericity is not an extra assumption here, it is
+equivalent evidence of totality (`meets_coordReq_iff`) and is derived inside the proof. Together
+with `ofFunction` needing no genericity at all, recovery is genericity-free in both
+directions. -/
+theorem eq_ofFunction {c : ∀ i, β i} (hc : ∀ i, UnionGraph G i (c i)) : G = ofFunction c := by
+  have h : ∀ i, Meets G (coordReq i (β := β)).support := fun i ↦ meets_coordReq_iff.2 ⟨c i, hc i⟩
   ext q
   constructor
   · intro hqG i b hb
@@ -220,8 +235,8 @@ theorem eq_ofFunction (h : ∀ i, Meets G (coordReq i (β := β)).support) {c : 
     exact hb''.trans (congrArg some (hbc.symm.trans (hq hb)))
 
 /-- Faithful recovery, stated through the union function. -/
-theorem eq_ofFunction_of_unionFun (h : ∀ i, Meets G (coordReq i (β := β)).support)
-    {c : ∀ i, β i} (hc : ∀ i, unionFun G i = some (c i)) : G = ofFunction c :=
-  eq_ofFunction h fun i ↦ unionFun_eq_some_iff.1 (hc i)
+theorem eq_ofFunction_of_unionFun {c : ∀ i, β i} (hc : ∀ i, unionFun G i = some (c i)) :
+    G = ofFunction c :=
+  eq_ofFunction fun i ↦ unionFun_eq_some_iff.1 (hc i)
 
 end Forcing.FinitePartialFunction
