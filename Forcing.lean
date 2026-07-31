@@ -1,6 +1,7 @@
 -- Root module for the `Forcing` library. Import every library file here.
 import Forcing.Basic
 import Forcing.Cohen.Basic
+import Forcing.Cohen.Diagonal
 import Forcing.Cohen.Generic
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
