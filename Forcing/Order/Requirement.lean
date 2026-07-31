@@ -37,8 +37,8 @@ genericity for a family of requirements is `GenericFor` applied to the family of
 * `Forcing.Requirement.equivDenseOpen`: the presentation is faithful.
 * `Forcing.meets_normalize_iff`: a filter meets a dense set iff it meets its canonical
   persistent form — so the restriction to requirements loses no genericity.
-* `Forcing.genericFor_support_iff`: genericity for requirements is `GenericFor` of the supports,
-  definitionally.
+* `Forcing.genericFor_support_iff`: genericity for requirements is `GenericFor` of the supports
+  — obtained directly, by unpacking `Set.range`.
 -/
 
 namespace Forcing
@@ -115,8 +115,9 @@ theorem meets_normalize_iff (hD : IsDense D) :
     Meets G (Requirement.normalize D hD).support ↔ Meets G D :=
   meets_lowerClosure
 
-/-- Genericity for a family of requirements is `GenericFor` of the family of supports — a
-definition, not a new predicate. -/
+/-- Genericity for a family of requirements is `GenericFor` of the family of supports. This is
+immediate — though not literally definitional, since `Set.range` must be unpacked — and it is
+the only genericity statement about requirements: no competing predicate is introduced. -/
 theorem genericFor_support_iff {ι : Type*} {ℛ : ι → Requirement P} :
     GenericFor (Set.range fun i ↦ (ℛ i).support) G ↔ ∀ i, Meets G (ℛ i).support := by
   constructor
