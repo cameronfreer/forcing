@@ -36,8 +36,9 @@ strengthening — so it is independent of the index type, the value type, and th
 ## 2. A filter can still be partial: coordinate requirements
 
 > **Attempt.** Take an arbitrary filter.
-> **Failure.** Nothing forces it to decide any particular coordinate. The union is a *partial*
-> function ([`unionFun`](../Forcing/GenericUnion.lean)), and may stay partial forever.
+> **Failure.** Nothing forces it to decide any particular coordinate, and this is not a
+> hypothetical: the principal filter at the weakest condition has a union that is *nowhere*
+> defined — [`unionFun_principal_top`](../Forcing/GenericUnion.lean).
 > **Repair.** Demand that the coordinate be decided:
 > [`coordReq i`](../Forcing/GenericUnion.lean).
 
@@ -58,7 +59,7 @@ keeps them apart:
 |---|---|---|
 | Question | *If* a filter meets these tests, does the conclusion follow? | Does such a filter exist at all? |
 | Cohen instance | [`isSome_unionFun`](../Forcing/GenericUnion.lean) | [`exists_pfilter_total`](../Forcing/GenericUnion.lean) |
-| Depends on | nothing but the tests | countability of the test family |
+| Depends on | nothing but the tests | attainability of every requirement, plus countability of the family |
 | Proved by | unfolding the requirement | [Rasiowa–Sikorski](../Forcing/Order/RasiowaSikorski.lean) |
 
 **Adequacy without existence is vacuous** — every statement of the form "every filter meeting
@@ -130,8 +131,10 @@ J_total  <  J_new  <  J_full
 
 ## 8. Where "dense" comes from
 
-Nothing above ever needed the word "dense". What the repairs needed was **persistent, attainable
-tasks** — and those are *exactly* the dense open sets:
+Nothing in the formulation of the failures and repairs above required density as a primitive
+notion. (The existence proof uses density internally; requirements supply it automatically from
+local attainability.) What the repairs needed was **persistent, attainable tasks** — and those
+are *exactly* the dense open sets:
 [`Requirement.equivDenseOpen`](../Forcing/Order/Requirement.lean), an equivalence with both round
 trips definitional.
 
@@ -196,7 +199,7 @@ And what each ingredient does **not** contribute:
 
 | Not enough | Fails to give | Certificate |
 |---|---|---|
-| An arbitrary filter | totality | (§2; the union is merely partial) |
+| An arbitrary filter | totality | [`unionFun_principal_top`](../Forcing/GenericUnion.lean) |
 | Coordinate tests | difference from a given real | [`totality_separation`](../Forcing/Cohen/Diagonal.lean) |
 | Coordinate + diagonal tests | full genericity | [`parity_separation`](../Forcing/Cohen/Diagonal.lean) |
 | Any of the above | newness over a model | M3 (no ground model in scope yet) |
