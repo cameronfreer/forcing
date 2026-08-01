@@ -5,6 +5,7 @@ import Forcing.Cohen.Diagonal
 import Forcing.Cohen.Generic
 import Forcing.Cohen.Ground
 import Forcing.Cohen.NewReal
+import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
 import Forcing.Model.GenericOver
