@@ -33,6 +33,8 @@ and it is stated as its own theorem.
 ## Main results
 
 * `Forcing.FinitePartialFunction.unionGraph_unique`: the union graph is functional.
+* `Forcing.FinitePartialFunction.unionFun_principal_top`: an arbitrary filter's union really can
+  be nowhere defined.
 * `Forcing.FinitePartialFunction.isSome_unionFun`: meeting the coordinate requirements makes the
   union total.
 * `Forcing.FinitePartialFunction.exists_pfilter_total`: such filters exist (Rasiowa–Sikorski).
@@ -85,6 +87,19 @@ theorem unionFun_eq_some_iff : unionFun G i = some b ↔ UnionGraph G i b := by
     have hex : ∃ b, UnionGraph G i b := ⟨b, h⟩
     rw [unionFun, dif_pos hex]
     exact congrArg some (unionGraph_unique hex.choose_spec h)
+
+/-- **Partiality actually occurs.** The principal filter at the weakest condition decides
+nothing, so its union is nowhere defined: an arbitrary filter is not enough for totality. -/
+@[simp] theorem unionFun_principal_top (i : ι) :
+    unionFun (PFilter.principal (⊤ : FinitePartialFunction β)) i = none := by
+  cases hu : unionFun (PFilter.principal (⊤ : FinitePartialFunction β)) i with
+  | none => rfl
+  | some b =>
+    obtain ⟨p, hp, hpi⟩ := unionFun_eq_some_iff.1 hu
+    have htop : (⊤ : FinitePartialFunction β).lookup i = some b :=
+      le_def.1 (PFilter.mem_principal.1 hp) hpi
+    rw [lookup_top] at htop
+    simp at htop
 
 theorem isSome_unionFun_iff : (unionFun G i).isSome ↔ ∃ b, UnionGraph G i b := by
   constructor
