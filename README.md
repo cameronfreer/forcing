@@ -11,8 +11,10 @@ Proof-theoretic independence results in the style of
 [Flypitch](https://github.com/flypitch/flypitch) are a detachable endpoint, not a
 foundation.
 
-**Current milestone: M2 — external Cohen generic real** (M1, the forcing-oriented order
-kernel, is complete).
+**Current milestone: M3 — Cohen forcing over a ground model.** M1 (the forcing-oriented order
+kernel) and M2 (the external Cohen generic real) are complete; see
+[docs/why-genericity.md](docs/why-genericity.md) for the discovery-order account of what M2
+established and why.
 See [ROADMAP.md](ROADMAP.md) for milestones and
 [the issue tracker](https://github.com/cameronfreer/forcing/issues) for active work.
 
@@ -33,6 +35,9 @@ lake build
   layer boundaries.
 - [docs/mathlib-v4.32.2.md](docs/mathlib-v4.32.2.md) — verified inventory of what
   the pinned mathlib provides (and lacks) for forcing.
+- [docs/why-genericity.md](docs/why-genericity.md) — genericity derived in discovery order,
+  each definition introduced by the failure it repairs.
+- [docs/decisions/](docs/decisions/) — decision records for contested choices.
 
 ## Related work
 
