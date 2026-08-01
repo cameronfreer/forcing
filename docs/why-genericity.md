@@ -105,8 +105,8 @@ the filter, because `J_new` is countable when the family is:
 [`exists_pfilter_total_diagonalizing`](../Forcing/Cohen/Diagonal.lean). The accumulation is
 literally a sum — the proof indexes `J_new` by `ℕ ⊕ ι` and applies Rasiowa–Sikorski once — so
 cumulativity of doctrines rides on countability being closed under countable sums. That looks
-like bookkeeping here; §10 explains why it is the load-bearing cardinal fact of the whole
-subject.
+like bookkeeping here; §10 shows how the same countability discipline reappears when the
+observer's visible tests are enumerated.
 
 **This is the M2 result, and it is not "adds a real."** The conclusion is about the *supplied*
 family. There is no ground model in the statement, so there is nothing for "new" to mean. The
