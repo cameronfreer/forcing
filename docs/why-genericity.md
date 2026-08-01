@@ -110,7 +110,7 @@ observer's visible tests are enumerated.
 
 **This is the M2 result, and it is not "adds a real."** The conclusion is about the *supplied*
 family. There is no ground model in the statement, so there is nothing for "new" to mean. The
-over-`M` theorem is M3.
+over-`M` theorem is [`exists_pfilter_genericOver_new`](../Forcing/Cohen/NewReal.lean) (§10).
 
 ## 7. Diagonalizing is still not genericity: the second strict separation
 
@@ -220,7 +220,7 @@ The ledger opened in §1 is now balanced:
 
 No filter axiom is a convention: each is the exact price of a named theorem.
 
-## 10. What is still missing: the ground model
+## 10. Fixing the observer: the ground context
 
 The two separations instantiate one phenomenon. Each witness filter is `ofFunction` of a real
 given by an explicit definition, and each is defeated by a detector for a law that definition
@@ -235,42 +235,76 @@ dense-open detector, so enlarging the supplied family merely restarts the game �
 But even the certified instances point at the right repair, and it is not "add tests one at a
 time."
 
-Fix the *observer* instead of the tests. Quantify over every test **visible to a ground model**
-`M`, and record — as an explicit interface obligation, not a closure property hidden inside
-visibility — the bridge
+Fix the *observer* instead of the tests. The ground model enters the library as the minimal
+interface that makes "visible to `M`" a hypothesis rather than a metaphor:
+[`GroundContext`](../Forcing/Model/Ground.lean) is nothing but the family of sets of conditions
+`M` can see. Genericity over it is not a new notion —
+[`GenericOver`](../Forcing/Model/GenericOver.lean) is `GenericFor` of the visible dense-open
+family, i.e. `J_full` relative to `M`, and at the all-seeing context it collapses back to the
+absolute `J_full` ([`genericOver_full_iff`](../Forcing/Model/GenericOver.lean)). The passage
+from visibility to meeting is generic, not Cohen-specific: a generic filter meets every visible
+requirement ([`GenericOver.meets_requirement`](../Forcing/Model/Requirement.lean)).
+
+The Cohen instance adds the designated ground reals
+([`CohenGroundContext`](../Forcing/Cohen/Ground.lean)) and records — as an explicit interface
+obligation, not a closure property hidden inside visibility — the bridge
 
 ```text
 x ∈ M.groundReals   →   Visible M ((diagReq x).support)
 ```
 
-The abstract M3 context *exposes* this obligation; a later material ground model must *prove*
-it. Granted the bridge, the certified instance flips from limitation to theorem: a filter
-generic over `M` meets the visible detector `diagReq x` for every ground real `x`, so its real
-differs from each of them. Newness is the special case of lawbreaking in which the law is
-"equals this real of `M`" — which is why "adds a new real" is a *consequence* of genericity over
-`M` plus the bridge, not an extra demand. That is what M3 adds:
+formalized, with its coordinate companion, as
+[`Sees.visible_diagReq`](../Forcing/Cohen/Ground.lean). The abstract context *exposes* this
+obligation; a later material ground model must *prove* it. Granted the bridge, the certified
+instance flips from limitation to theorem: a filter generic over `M` meets the visible detector
+`diagReq x` for every ground real `x`, so its real differs from each of them
+([`not_mem_groundReals_of_genericOver`](../Forcing/Cohen/NewReal.lean)). Newness is the special
+case of lawbreaking in which the law is "equals this real of `M`" — a *consequence* of
+genericity over `M` plus the bridge, not an extra demand. Adequacy is packaged
+countability-free ([`exists_newReal_of_genericOver`](../Forcing/Cohen/NewReal.lean)), and
+composing it with countable existence
+([`exists_pfilter_genericOver`](../Forcing/Model/GenericOver.lean)) gives the theorem that
+earns the phrase **adds a new real**:
+[`exists_pfilter_genericOver_new`](../Forcing/Cohen/NewReal.lean).
 
-- an explicit visibility context, so "`M`-coded" is a named field rather than something implicit
-  in each test family;
-- `J_full` relative to `M`, replacing "a supplied countable family";
-- the obligation, easy to forget, that a separating test such as `oddTrue` is itself visible to
-  `M`;
-- and only then the theorem that deserves the phrase **adds a new real**.
+The spectrum relativizes too, and the easy-to-forget obligation lands where it must: the
+separating test `oddTrue` has to be *visible* to `M`, as a standalone hypothesis. Under it,
+**newness over `M` does not imply `M`-genericity**
+([`parityReal_new_not_genericOver`](../Forcing/Cohen/Spectrum.lean)), and the two legs are
+separate declarations with *incomparable* hypothesis budgets:
+[`parityReal_not_mem_groundReals`](../Forcing/Cohen/Spectrum.lean) uses only a covering
+enumeration of the ground reals, while
+[`not_genericOver_parityReal`](../Forcing/Cohen/Spectrum.lean) uses only the visibility of
+`oddTrue` — no `Sees`, no enumeration. So the new-real theorem and the spectrum are independent
+results, each blind to the other's hypotheses.
 
 One quantitative remark, already visible in the Lean proofs — and one place where two textbook
 adjectives do different jobs and should not travel as an unexplained package:
 
 - **closure of countability under countable sums** is what let §6 combine the coordinate and
   diagonal families (`ℕ ⊕ ι`);
-- **external countability of the visible dense-open family** is what M3's existence theorem will
-  actually consume: enumerate the visible tests and run Rasiowa–Sikorski, exactly as in §6;
-- external countability of `M` itself is one standard *sufficient* source of that fact — a
-  countable observer sees countably many tests — not a requirement of the argument;
+- **external countability of the visible dense-open family** is what existence consumes: the
+  `Set.Countable` hypothesis of
+  [`exists_pfilter_genericOver`](../Forcing/Model/GenericOver.lean), inherited by
+  `exists_pfilter_genericOver_new` — enumerate the visible tests and run Rasiowa–Sikorski,
+  exactly as in §6;
+- **external countability of the designated ground reals**, supplied as a covering enumeration,
+  is a *different* role: it constructs the spectrum witness
+  ([`parityReal_not_mem_groundReals`](../Forcing/Cohen/Spectrum.lean)) and appears in no
+  existence statement;
+- external countability of `M` itself is one standard *sufficient* source of the visible-family
+  fact — a countable observer sees countably many tests — not a requirement of the argument;
 - **transitivity** plays no role in any of this. It becomes relevant later, for absoluteness,
   valuation, and interpreting `M[G]` — the material-model layer, not the existence of generics.
 
 The countable transitive models of the textbook treatment bundle these jobs; the formal
 development keeps them apart.
+
+**What M3 does not claim.** The context is an interface, not a model: nothing above is a
+countable transitive model or a model of ZFC, and `M.groundReals` is designated rather than
+derived from any membership relation. Nothing constructs `M[G]`. And the conclusion is
+`c ∉ M.groundReals` — upgrading it to `c ∉ M` is precisely the job of the later material
+instantiation, which must prove the `Sees` obligations instead of assuming them.
 
 ---
 
@@ -288,7 +322,8 @@ development keeps them apart.
 | Persistence + attainability | *are* dense-openness | [`Requirement.equivDenseOpen`](../Forcing/Order/Requirement.lean) |
 | Downward closure | persistence is free | [`meets_normalize_iff`](../Forcing/Order/Requirement.lean) |
 | Union equation | the object determines the filter | [`eq_ofFunction`](../Forcing/GenericUnion.lean) |
-| A ground model | "new", and full genericity | M3 |
+| A ground context + the bridge | newness over `M` (adequacy) | [`exists_newReal_of_genericOver`](../Forcing/Cohen/NewReal.lean) |
+| Countability of the visible tests | **adds a new real** (existence) | [`exists_pfilter_genericOver_new`](../Forcing/Cohen/NewReal.lean) |
 
 And what each ingredient does **not** contribute:
 
@@ -297,7 +332,7 @@ And what each ingredient does **not** contribute:
 | An arbitrary filter | totality | [`unionFun_principal_top`](../Forcing/GenericUnion.lean) |
 | Coordinate tests | difference from a given real | [`totality_separation`](../Forcing/Cohen/Diagonal.lean) |
 | Coordinate + diagonal tests | full genericity | [`parity_separation`](../Forcing/Cohen/Diagonal.lean) |
-| Any of the above | newness over a model | M3 (no ground model in scope yet) |
+| Newness over `M` (even with `oddTrue` visible) | `M`-genericity | [`parityReal_new_not_genericOver`](../Forcing/Cohen/Spectrum.lean) |
 
 ---
 
