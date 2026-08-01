@@ -24,14 +24,20 @@ ordered by reverse inclusion.
 
 > **Attempt.** Take an arbitrary set of finite approximations and glue them.
 > **Failure.** Two approximations may disagree, and the glue is not a function.
-> **Repair.** Require the collection to be a *filter*: upward closed, and any two members have a
-> common strengthening **inside** the collection
-> ([`Order.PFilter`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/PFilter.html),
-> [`exists_mem_le_le`](../Forcing/Order/Filter.lean)).
+> **Repair.** Require any two members to have a common strengthening **inside** the collection
+> ([`exists_mem_le_le`](../Forcing/Order/Filter.lean)).
 
-That single property is exactly what makes the union well defined:
+That single property — *directedness* — is exactly what makes the union well defined:
 [`unionGraph_unique`](../Forcing/GenericUnion.lean). Note what the proof uses — only the common
 strengthening — so it is independent of the index type, the value type, and the representation.
+
+A *filter*
+([`Order.PFilter`](https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/PFilter.html))
+demands two further properties that this failure does **not** motivate: **nonemptiness**, and
+**upward closure** — every weakening of a member is a member. Coherence uses neither, and a
+discovery-order account should not smuggle them in. Both are bought later: upward closure by
+normalization invariance (§8) and by recovery (§9), nonemptiness by recovery alone (§9). Until
+then, everything proved about the union uses directedness alone.
 
 ## 2. A filter can still be partial: coordinate requirements
 
@@ -96,7 +102,11 @@ not even be the comparison being claimed.
 Meeting a diagonal requirement forces disagreement
 ([`exists_ne_of_meets_diagReq`](../Forcing/Cohen/Diagonal.lean)), and Rasiowa–Sikorski supplies
 the filter, because `J_new` is countable when the family is:
-[`exists_pfilter_total_diagonalizing`](../Forcing/Cohen/Diagonal.lean).
+[`exists_pfilter_total_diagonalizing`](../Forcing/Cohen/Diagonal.lean). The accumulation is
+literally a sum — the proof indexes `J_new` by `ℕ ⊕ ι` and applies Rasiowa–Sikorski once — so
+cumulativity of doctrines rides on countability being closed under countable sums. That looks
+like bookkeeping here; §10 shows how the same countability discipline reappears when the
+observer's visible tests are enumerated.
 
 **This is the M2 result, and it is not "adds a real."** The conclusion is about the *supplied*
 family. There is no ground model in the statement, so there is nothing for "new" to mean. The
@@ -129,6 +139,15 @@ J_total  <  J_new  <  J_full
    └── totality_separation
 ```
 
+Both separations were proved the same way, and the method deserves a name. Each witness filter
+is the canonical filter of a real we *wrote down* — `x` itself in §4, `parityReal x` here — and
+each is defeated by a test that detects a law its definition obeys. The library certifies two
+instances: the law "equals this particular real `c`" always has the detector `diagReq c`, and
+the parity witness additionally obeys "`false` on the odd coordinates", detected by the
+parameter-free `oddTrue` — a stronger detector special to that construction. (No claim is made
+that every informally described law has a dense-open violation test.) §10 turns this pattern
+from a proof technique into the reason a ground model must enter.
+
 ## 8. Where "dense" comes from
 
 Nothing in the formulation of the failures and repairs above required density as a primitive
@@ -141,6 +160,13 @@ trips definitional.
 And nothing is lost by insisting on persistence, because an arbitrary dense test has a canonical
 persistent form — its downward closure — that the same filters meet:
 [`meets_normalize_iff`](../Forcing/Order/Requirement.lean).
+
+This is where the filter's *upward closure*, left deliberately unmotivated in §1, earns its
+first keep. `meets_normalize_iff` is [`meets_lowerClosure`](../Forcing/Order/Filter.lean), and
+its proof is one of exactly two places the story in this document uses closure under weakening
+(`Order.PFilter.mem_of_le`): a filter containing a strengthening of a test element must contain
+the test element itself. The two closures are dual and pay for each other — tests may be closed
+**downward** at no cost precisely because filters are closed **upward**.
 
 That is the answer to Chow's complaint. Dense open sets are not an inspired combinatorial trick;
 they are the tasks one can impose on an object built by finite approximation, and the persistence
@@ -167,10 +193,62 @@ So faithful recovery is genericity-free in both directions, and it is stated as 
 rather than folded into any adequacy claim. (The partial-function version, likely an equivalence
 between filters and partial functions, is tracked as factoring work in issue #31.)
 
+Recovery is also upward closure's second — and decisive — appearance. The proof of
+`eq_ofFunction` invokes closure under weakening exactly once, and that one step is the whole
+difference between a filter and a merely directed set. Directedness alone cannot make the object
+determine the collection: the chain of restrictions of `c` to `{0, …, n}` is directed and has
+union `c`, yet is a proper subset of `ofFunction c`. (That counterexample is informal — the
+library does not formalize directed non-filters.) Upward closure says the filter contains
+*every* finite fact its object validates, and that maximality is exactly what recovery recovers.
+
+Nonemptiness is bought by recovery too, more quietly. The empty collection is directed and has
+the same nowhere-defined union as the principal filter at `⊤` — but only the latter is a filter,
+and only a filter guarantees there is an approximation to recover: the base case of
+[`exists_mem_keys_subset`](../Forcing/GenericUnion.lean), which `eq_ofFunction` consumes, opens
+with `G.nonempty`. Equivalently, a starting condition supplies nonemptiness for free — which is
+why Rasiowa–Sikorski threads `p ∈ G` through every existence statement.
+
+The ledger opened in §1 is now balanced:
+
+- **directedness** — the union is functional
+  ([`unionGraph_unique`](../Forcing/GenericUnion.lean));
+- **nonemptiness** — there is an approximation to recover, including for the empty partial
+  function ([`exists_mem_keys_subset`](../Forcing/GenericUnion.lean));
+- **upward closure** — meeting is invariant under normalization
+  ([`meets_normalize_iff`](../Forcing/Order/Requirement.lean)), and every finite fact the object
+  validates belongs to the filter ([`eq_ofFunction`](../Forcing/GenericUnion.lean)).
+
+No filter axiom is a convention: each is the exact price of a named theorem.
+
 ## 10. What is still missing: the ground model
 
-Every statement above quantifies over a **supplied** family of tests. A real forcing argument
-quantifies over the tests *visible to a ground model* `M`, and that is what M3 adds:
+The two separations instantiate one phenomenon. Each witness filter is `ofFunction` of a real
+given by an explicit definition, and each is defeated by a detector for a law that definition
+obeys. The library certifies two instances of the pattern: for any real `c`, the law "equals
+`c`" has the detector `diagReq c`
+([`totality_separation`](../Forcing/Cohen/Diagonal.lean)); and the parity witness — built from
+the very family it diagonalizes — obeys the further law "`false` on the odd coordinates",
+detected by `oddTrue` ([`parity_separation`](../Forcing/Cohen/Diagonal.lean)). The broader
+reading suggested by the pattern — every explicitly constructed filter obeys *some* law with a
+dense-open detector, so enlarging the supplied family merely restarts the game — is
+**informal**: this document proves the two rounds above and asserts no general regress theorem.
+But even the certified instances point at the right repair, and it is not "add tests one at a
+time."
+
+Fix the *observer* instead of the tests. Quantify over every test **visible to a ground model**
+`M`, and record — as an explicit interface obligation, not a closure property hidden inside
+visibility — the bridge
+
+```text
+x ∈ M.groundReals   →   Visible M ((diagReq x).support)
+```
+
+The abstract M3 context *exposes* this obligation; a later material ground model must *prove*
+it. Granted the bridge, the certified instance flips from limitation to theorem: a filter
+generic over `M` meets the visible detector `diagReq x` for every ground real `x`, so its real
+differs from each of them. Newness is the special case of lawbreaking in which the law is
+"equals this real of `M`" — which is why "adds a new real" is a *consequence* of genericity over
+`M` plus the bridge, not an extra demand. That is what M3 adds:
 
 - an explicit visibility context, so "`M`-coded" is a named field rather than something implicit
   in each test family;
@@ -179,6 +257,21 @@ quantifies over the tests *visible to a ground model* `M`, and that is what M3 a
   `M`;
 - and only then the theorem that deserves the phrase **adds a new real**.
 
+One quantitative remark, already visible in the Lean proofs — and one place where two textbook
+adjectives do different jobs and should not travel as an unexplained package:
+
+- **closure of countability under countable sums** is what let §6 combine the coordinate and
+  diagonal families (`ℕ ⊕ ι`);
+- **external countability of the visible dense-open family** is what M3's existence theorem will
+  actually consume: enumerate the visible tests and run Rasiowa–Sikorski, exactly as in §6;
+- external countability of `M` itself is one standard *sufficient* source of that fact — a
+  countable observer sees countably many tests — not a requirement of the argument;
+- **transitivity** plays no role in any of this. It becomes relevant later, for absoluteness,
+  valuation, and interpreting `M[G]` — the material-model layer, not the existence of generics.
+
+The countable transitive models of the textbook treatment bundle these jobs; the formal
+development keeps them apart.
+
 ---
 
 ## What each ingredient contributes
@@ -186,6 +279,8 @@ quantifies over the tests *visible to a ground model* `M`, and that is what M3 a
 | Ingredient | Contributes | Declaration |
 |---|---|---|
 | Filter (directedness) | the union is a partial function | [`unionGraph_unique`](../Forcing/GenericUnion.lean) |
+| Filter (nonemptiness) | there is an approximation to recover | [`exists_mem_keys_subset`](../Forcing/GenericUnion.lean) |
+| Filter (upward closure) | the filter is *all* its object validates | [`eq_ofFunction`](../Forcing/GenericUnion.lean) |
 | Coordinate requirements | the union is total | [`isSome_unionFun`](../Forcing/GenericUnion.lean) |
 | Countability of the tests | such a filter exists | [`exists_pfilter_total`](../Forcing/GenericUnion.lean) |
 | Diagonal requirements | differs from each supplied real | [`exists_ne_of_meets_diagReq`](../Forcing/Cohen/Diagonal.lean) |
