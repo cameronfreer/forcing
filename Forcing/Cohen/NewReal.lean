@@ -23,8 +23,10 @@ this file adds no new density or diagonal content, only the observer.
 
 * `Forcing.Cohen.isSome_genericFun_of_genericOver`: adequacy, totality half.
 * `Forcing.Cohen.not_mem_groundReals_of_genericOver`: adequacy, newness half.
-* `Forcing.Cohen.exists_pfilter_genericOver_new`: **Cohen forcing adds a new real** — the
-  combined existence corollary.
+* `Forcing.Cohen.exists_newReal_of_genericOver`: adequacy, packaged — the countability-free
+  endpoint, extraction included.
+* `Forcing.Cohen.exists_pfilter_genericOver_new`: **Cohen forcing adds a new real** — countable
+  existence composed with the packaged adequacy theorem.
 -/
 
 namespace Forcing.Cohen
@@ -51,20 +53,30 @@ theorem not_mem_groundReals_of_genericOver (hM : M.Sees) (hG : M.GenericOver G)
   rw [hc n] at hb
   exact hne (Option.some.inj hb).symm
 
+/-- Adequacy, packaged: an `M`-generic filter yields a total real outside the designated ground
+reals. Countability-free — this is the adequacy endpoint, with the extraction of the total real
+happening here, so that the existence corollary below is literally "countable existence composed
+with this theorem". -/
+theorem exists_newReal_of_genericOver (hM : M.Sees) (hG : M.GenericOver G) :
+    ∃ c : ℕ → Bool, (∀ n, genericFun G n = some (c n)) ∧ c ∉ M.groundReals := by
+  have htotal : ∀ n, (genericFun G n).isSome := isSome_genericFun_of_genericOver hM hG
+  have hc : ∀ n, genericFun G n = some ((genericFun G n).get (htotal n)) := fun n ↦
+    (Option.some_get (htotal n)).symm
+  exact ⟨fun n ↦ (genericFun G n).get (htotal n), hc,
+    not_mem_groundReals_of_genericOver hM hG hc⟩
+
 /-- **Cohen forcing adds a new real.** Through any condition there is an `M`-generic filter;
-its union is total, and the extracted real avoids every designated ground real. External
-countability of the visible dense-open family is the existence hypothesis, exactly as in M2 —
-it lives here and in no adequacy statement. -/
+its union is total, and the extracted real avoids every designated ground real. The proof is
+the adequacy/existence separation made literal: countable existence of a generic filter
+(`exists_pfilter_genericOver`) composed with the countability-free adequacy endpoint
+(`exists_newReal_of_genericOver`). External countability of the visible dense-open family lives
+here and in no adequacy statement. -/
 theorem exists_pfilter_genericOver_new (hM : M.Sees)
     (hcount : M.visibleDenseOpen.Countable) (p : Cond) :
     ∃ G : PFilter Cond, p ∈ G ∧ M.GenericOver G ∧
       ∃ c : ℕ → Bool, (∀ n, genericFun G n = some (c n)) ∧ c ∉ M.groundReals := by
   obtain ⟨G, hpG, hG⟩ := exists_pfilter_genericOver p hcount
-  have htotal : ∀ n, (genericFun G n).isSome := isSome_genericFun_of_genericOver hM hG
-  have hc : ∀ n, genericFun G n = some ((genericFun G n).get (htotal n)) := fun n ↦
-    (Option.some_get (htotal n)).symm
-  exact ⟨G, hpG, hG, fun n ↦ (genericFun G n).get (htotal n), hc,
-    not_mem_groundReals_of_genericOver hM hG hc⟩
+  exact ⟨G, hpG, hG, exists_newReal_of_genericOver hM hG⟩
 
 /-!
 ### Sanity example
