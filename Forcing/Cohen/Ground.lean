@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Cohen.Diagonal
-import Forcing.Model.GenericOver
+import Forcing.Model.Requirement
 
 /-!
 # The Cohen ground context and its visibility obligations
@@ -77,28 +77,31 @@ structure Sees (M : CohenGroundContext) : Prop where
   /-- The M3 bridge: the diagonal requirement of every designated ground real is visible. -/
   visible_diagReq : ∀ x ∈ M.groundReals, M.Visible (diagReq x).support
 
-/-- Under the obligations, each coordinate requirement is a visible dense-open test. -/
+/-- Under the obligations, each coordinate requirement is a visible dense-open test. A thin
+specialization of the generic bridge `Requirement.mem_visibleDenseOpen`. -/
 theorem Sees.coordReq_mem_visibleDenseOpen (hM : M.Sees) (n : ℕ) :
     (coordReq n).support ∈ M.visibleDenseOpen :=
-  ⟨hM.visible_coordReq n, (coordReq n).isDenseOpen_support⟩
+  (coordReq n).mem_visibleDenseOpen (hM.visible_coordReq n)
 
 /-- Under the bridge, the diagonal requirement of each ground real is a visible dense-open
-test. -/
+test. A thin specialization of the generic bridge `Requirement.mem_visibleDenseOpen`. -/
 theorem Sees.diagReq_mem_visibleDenseOpen (hM : M.Sees) {x : ℕ → Bool}
     (hx : x ∈ M.groundReals) :
     (diagReq x).support ∈ M.visibleDenseOpen :=
-  ⟨hM.visible_diagReq x hx, (diagReq x).isDenseOpen_support⟩
+  (diagReq x).mem_visibleDenseOpen (hM.visible_diagReq x hx)
 
-/-- A filter generic over `M` meets every coordinate requirement. -/
+/-- A filter generic over `M` meets every coordinate requirement. A thin specialization of the
+generic `GenericOver.meets_requirement`. -/
 theorem Sees.meets_coordReq (hM : M.Sees) (hG : M.GenericOver G) (n : ℕ) :
     Meets G (coordReq n).support :=
-  hG _ (hM.coordReq_mem_visibleDenseOpen n)
+  hG.meets_requirement (hM.visible_coordReq n)
 
-/-- A filter generic over `M` meets the diagonal requirement of every ground real. -/
+/-- A filter generic over `M` meets the diagonal requirement of every ground real. A thin
+specialization of the generic `GenericOver.meets_requirement`. -/
 theorem Sees.meets_diagReq (hM : M.Sees) (hG : M.GenericOver G) {x : ℕ → Bool}
     (hx : x ∈ M.groundReals) :
     Meets G (diagReq x).support :=
-  hG _ (hM.diagReq_mem_visibleDenseOpen hx)
+  hG.meets_requirement (hM.visible_diagReq x hx)
 
 /-- The full Cohen context: sees everything, over any designated ground reals. -/
 def full (R : Set (ℕ → Bool)) : CohenGroundContext :=
