@@ -45,7 +45,7 @@ variable {P : Type*} [Preorder P]
 conditions the ground model can see. Deliberately minimal — no countability (that is always an
 external hypothesis of an existence statement), no carrier-specific data, and no claim to model
 anything. -/
-structure GroundContext (P : Type*) [Preorder P] where
+@[ext] structure GroundContext (P : Type*) [Preorder P] where
   /-- The sets of conditions the ground model can see. -/
   visible : Set (Set P)
 
