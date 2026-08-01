@@ -10,6 +10,7 @@ import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
 import Forcing.Model.GenericOver
 import Forcing.Model.Ground
+import Forcing.Model.Requirement
 import Forcing.Order.Antichain
 import Forcing.Order.Basic
 import Forcing.Order.Dual
