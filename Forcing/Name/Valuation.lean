@@ -12,7 +12,7 @@ import Forcing.Name.Basic
 The valuation of a name keeps the branches whose conditions lie in a given set, recursively.
 The set is an **arbitrary** `Set P` — no order, no filter laws, and no genericity: any
 collection of conditions values every name. A `PFilter` coerces to `Set P` at call sites;
-genericity earns its keep only at the truth lemma (M5).
+genericity earns its keep at the truth lemma.
 
 The intensional/extensional boundary is placed exactly here: `val` lands in `PSet`, the
 intensional side of mathlib's set theory, and the public laws are stated for `zval`, its
