@@ -54,10 +54,12 @@ theorem parityReal_not_mem_groundReals (hx : M.groundReals ⊆ Set.range x) :
   cases x i (2 * i) <;> simp at h2i
 
 /-- The witness's canonical filter is not generic over `M`: it misses `oddTrue`, which `M`
-sees. Uses only the visibility of `oddTrue` — no enumeration, no `Sees`. -/
+sees. Uses only the visibility of `oddTrue` — no enumeration, no `Sees`. The proof is the
+composition payoff of packaging the test as `oddTrueReq`: the generic requirement–visibility
+bridge applies directly. -/
 theorem not_genericOver_parityReal (hodd : M.Visible oddTrue) :
     ¬M.GenericOver (ofFunction (parityReal x)) :=
-  fun hG ↦ (parity_separation x).2.2 (hG oddTrue ⟨hodd, isDenseOpen_oddTrue⟩)
+  fun hG ↦ (parity_separation x).2.2 (hG.meets_requirement (R := oddTrueReq) hodd)
 
 /-- **Newness over `M` does not imply `M`-genericity.** The canonical filter of `parityReal x`
 is total and its real avoids every designated ground real, yet it is not generic over `M`. A
