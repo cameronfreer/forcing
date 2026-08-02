@@ -1,5 +1,7 @@
 # Forcing
 
+[![CI](https://github.com/cameronfreer/forcing/actions/workflows/lean_action_ci.yml/badge.svg)](https://github.com/cameronfreer/forcing/actions/workflows/lean_action_ci.yml)
+
 A Lean 4 library for set-theoretic forcing, built against
 [mathlib](https://github.com/leanprover-community/mathlib4).
 
@@ -11,18 +13,41 @@ Proof-theoretic independence results in the style of
 [Flypitch](https://github.com/flypitch/flypitch) are a detachable endpoint, not a
 foundation.
 
-**Current milestone: M4 — names and generic extensions.** M1 (the forcing-oriented order
-kernel), M2 (the external Cohen generic real), and M3 (the context-relative new-real theorem:
-an `M`-generic filter's real avoids the designated ground reals) are complete; see
-[docs/why-genericity.md](docs/why-genericity.md) for the discovery-order account, now certified
-through the ground context.
-See [ROADMAP.md](ROADMAP.md) for milestones and
-[the issue tracker](https://github.com/cameronfreer/forcing/issues) for active work.
+## Layout
 
-- Toolchain: `leanprover/lean4:v4.32.2`
-- Mathlib: pinned to the `v4.32.2` tag (`905b9581`)
+The library is organized into independently reusable components; imports are kept
+local, so users can stop at the layer they need.
+
+| Component | Modules | Provides |
+|---|---|---|
+| Order kernel | `Forcing/Order/` | conditions, compatibility, dense/predense/dense-open sets, forcing filters, family-relative genericity, Rasiowa–Sikorski, antichains, maximal antichains, dense embeddings, separative quotients, requirements |
+| Finite conditions | `Forcing/FinitePartialFunction.lean`, `Forcing/GenericUnion.lean` | the shared carrier of finite-condition forcing notions; the correspondence between filters and partial functions; coordinate requirements and totality of the generic union |
+| Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
+| Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the new-real theorem over a visibility context |
+
+Milestones, their exit criteria, and their status live in [ROADMAP.md](ROADMAP.md);
+active work is on
+[the issue tracker](https://github.com/cameronfreer/forcing/issues).
+
+## Conventions
+
+Two orientation facts to know on arrival, and one policy:
+
+- **Smaller is stronger**: `q ≤ p` means `q` carries at least as much information
+  as `p`; a strongest condition (when one exists) is `⊥`.
+- **Adequacy and existence are separate.** External countability enters
+  Rasiowa–Sikorski existence statements, not the definitions of `GenericFor` or
+  `GenericOver`.
+- Mathlib's linters run with warnings-as-errors; project policy forbids `sorry`
+  and custom axioms.
+
+The full set of design constraints and layer boundaries is recorded in
+[docs/architecture.md](docs/architecture.md).
 
 ## Building
+
+Exact Lean and mathlib revisions are pinned in `lean-toolchain` and
+`lakefile.toml`.
 
 ```sh
 lake exe cache get
@@ -31,7 +56,7 @@ lake build
 
 ## Documentation
 
-- [ROADMAP.md](ROADMAP.md) — outcome-based milestones and exit criteria.
+- [ROADMAP.md](ROADMAP.md) — outcome-based milestones, exit criteria, and status.
 - [docs/architecture.md](docs/architecture.md) — stable design constraints and
   layer boundaries.
 - [docs/mathlib-v4.32.2.md](docs/mathlib-v4.32.2.md) — verified inventory of what

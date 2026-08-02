@@ -5,7 +5,12 @@ milestone consumes only the public API of earlier ones. Design constraints that
 apply across all milestones are recorded in
 [docs/architecture.md](docs/architecture.md).
 
+Status is tracked here, one line per milestone, and in the milestone tracking
+issues; the README does not duplicate it.
+
 ## M1 — Forcing-oriented order kernel
+
+**Status: complete** ([#1](https://github.com/cameronfreer/forcing/issues/1)).
 
 Exit criteria:
 
@@ -22,6 +27,8 @@ No `ZFSet`, names, Boolean-valued machinery, cardinal theory, or ccc.
 
 ## M2 — External Cohen generic real
 
+**Status: complete** ([#20](https://github.com/cameronfreer/forcing/issues/20)).
+
 Exit criteria:
 
 - finite partial binary functions `Fn(ω, 2)` (representation chosen by spike);
@@ -35,6 +42,8 @@ This milestone is "Cohen generic diagonalizes a countable family" — not yet
 
 ## M3 — Cohen forcing over a ground model
 
+**Status: complete** ([#35](https://github.com/cameronfreer/forcing/issues/35)).
+
 Exit criterion: `G` is `M`-generic `→ c_G ∉ M.groundReals`.
 
 This is the first genuine "Cohen forcing adds a real" theorem. The ground model
@@ -46,15 +55,27 @@ hypothesis, and upgrades the conclusion to `c_G ∉ M`.
 
 ## M4 — Names and generic extensions
 
-Typed/intensional `P`-names, valuation, internal presentations, and `M[G]`.
+**Status: in progress** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
+
+Typed/intensional `P`-names, valuation, check and generic names, and valuation
+images of selected name families. A material ground-model presentation
+([#62](https://github.com/cameronfreer/forcing/issues/62)) is required before
+the resulting object is called `M[G]`, and is a named prerequisite for M5.
 
 ## M5 — Forcing theorem and preservation
+
+**Status: planned.**
+
+Prerequisite: the material ground/internal-name presentation
+([#62](https://github.com/cameronfreer/forcing/issues/62)).
 
 Internal forcing relation (defined by direct recursion on formulas, not via
 Boolean values), definability, truth lemma, ZFC axioms in `M[G]`, closure and ccc
 preservation.
 
 ## M6 — Boolean completion and Boolean-valued models
+
+**Status: planned.**
 
 Separative completion, complete regular algebra (via `Heyting.Regular` on lower
 sets), `B`-names, and carefully scoped comparison theorems — distinguishing
