@@ -6,9 +6,10 @@ A Lean 4 library for set-theoretic forcing, built against
 [mathlib](https://github.com/leanprover-community/mathlib4).
 
 The library is developed in layers, with **typed forcing posets as the spine**:
-order-theoretic forcing combinatorics first, then genericity over a ground model,
-`P`-names and generic extensions `M[G]`, the forcing theorem and preservation, and
-only then separative quotients, Boolean completions, and Boolean-valued models.
+the order kernel and concrete forcing notions first, then observer-relative
+genericity, typed names and external valuation semantics, material ground models
+and `M[G]`, the forcing theorem and preservation, and only then Boolean
+completions and Boolean-valued models.
 Proof-theoretic independence results in the style of
 [Flypitch](https://github.com/flypitch/flypitch) are a detachable endpoint, not a
 foundation.
@@ -16,7 +17,9 @@ foundation.
 ## Layout
 
 The library is organized into independently reusable components; imports are kept
-local, so users can stop at the layer they need.
+local, so users can stop at the layer they need. Use `import Forcing` for the
+complete public surface, or import the component modules listed below for
+narrower dependencies.
 
 | Component | Modules | Provides |
 |---|---|---|
