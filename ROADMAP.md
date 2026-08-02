@@ -57,9 +57,17 @@ hypothesis, and upgrades the conclusion to `c_G ∉ M`.
 
 **Status: in progress** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
 
-Typed/intensional `P`-names, valuation, internal presentations, and `M[G]`.
+Typed/intensional `P`-names, valuation against condition sets, check names, the
+generic's name over an explicit condition code, and selected-name valuation
+images — external name semantics. The material internal-name presentation that
+earns the notation `M[G]` is tracked separately
+([#62](https://github.com/cameronfreer/forcing/issues/62)) and is a named
+prerequisite for M5.
 
 ## M5 — Forcing theorem and preservation
+
+Prerequisite: the material ground/internal-name presentation
+([#62](https://github.com/cameronfreer/forcing/issues/62)).
 
 Internal forcing relation (defined by direct recursion on formulas, not via
 Boolean values), definability, truth lemma, ZFC axioms in `M[G]`, closure and ccc
