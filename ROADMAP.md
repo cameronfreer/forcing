@@ -56,7 +56,7 @@ the conclusion to `c_G ∉ M`.
 
 ## M4 — Names and external valuation semantics
 
-**Status: in progress** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
+**Status: complete** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
 
 Typed/intensional `P`-names, valuation, check and generic names, and valuation
 images of selected name families. A material ground-model presentation
