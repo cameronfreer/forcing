@@ -54,16 +54,14 @@ theorem not_mem_groundReals_of_genericOver (hM : M.Sees) (hG : M.GenericOver G)
   exact hne (Option.some.inj hb).symm
 
 /-- Adequacy, packaged: an `M`-generic filter yields a total real outside the designated ground
-reals. Countability-free — this is the adequacy endpoint, with the extraction of the total real
-happening here, so that the existence corollary below is literally "countable existence composed
-with this theorem". -/
+reals. Countability-free — this is the adequacy endpoint, with the total real extracted by the
+generic `totalUnion`, so that the existence corollary below is literally "countable existence
+composed with this theorem". -/
 theorem exists_newReal_of_genericOver (hM : M.Sees) (hG : M.GenericOver G) :
     ∃ c : ℕ → Bool, (∀ n, genericFun G n = some (c n)) ∧ c ∉ M.groundReals := by
   have htotal : ∀ n, (genericFun G n).isSome := isSome_genericFun_of_genericOver hM hG
-  have hc : ∀ n, genericFun G n = some ((genericFun G n).get (htotal n)) := fun n ↦
-    (Option.some_get (htotal n)).symm
-  exact ⟨fun n ↦ (genericFun G n).get (htotal n), hc,
-    not_mem_groundReals_of_genericOver hM hG hc⟩
+  exact ⟨totalUnion G htotal, unionFun_totalUnion htotal,
+    not_mem_groundReals_of_genericOver hM hG (unionFun_totalUnion htotal)⟩
 
 /-- **Cohen forcing adds a new real.** Through any condition there is an `M`-generic filter;
 its union is total, and the extracted real avoids every designated ground real. The proof is
