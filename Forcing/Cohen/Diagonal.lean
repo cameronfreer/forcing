@@ -25,6 +25,7 @@ coordinates, so a fresh one is available, and `Bool` has another value to put th
 
 * `Forcing.Cohen.diagReq`: the requirement to differ from a given real.
 * `Forcing.Cohen.parityReal`: the witness separating diagonalization from genericity.
+* `Forcing.Cohen.oddTrueReq`: the separating test `oddTrue`, packaged as a requirement.
 
 ## Main results
 
@@ -123,10 +124,22 @@ theorem isDense_oddTrue : IsDense oddTrue := by
   exact ⟨p.insert (2 * n + 1) true, ⟨n, lookup_insert_self⟩,
     insert_le_of_notMem hfresh⟩
 
+/-- The separating test as a *requirement*: put `true` at some odd coordinate. Its persistence
+and density proofs are exactly the two `Requirement` fields, so the separating test enters the
+requirement vocabulary and composes with the requirement–visibility bridge
+(`GenericOver.meets_requirement`) without unpacking `IsDenseOpen` by hand. -/
+def oddTrueReq : Requirement Cond where
+  holds p := p ∈ oddTrue
+  persistent _ _ hqp hp := isLowerSet_oddTrue hqp hp
+  attainable p := let ⟨q, hq, hqp⟩ := isDense_oddTrue p; ⟨q, hqp, hq⟩
+
+@[simp] theorem support_oddTrueReq : oddTrueReq.support = oddTrue :=
+  rfl
+
 /-- `oddTrue` is a dense *open* test, so it belongs to the full doctrine `J_full`, which is
 defined by dense-open tests. -/
 theorem isDenseOpen_oddTrue : IsDenseOpen oddTrue :=
-  ⟨isDense_oddTrue, isLowerSet_oddTrue⟩
+  oddTrueReq.isDenseOpen_support
 
 /-- **The strict separation.** For any countable family, the canonical filter of `parityReal`
 meets every coordinate requirement and every diagonal requirement against the family, yet misses
