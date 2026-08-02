@@ -15,14 +15,15 @@ foundation.
 
 ## Layout
 
-Each layer is usable without the ones after it:
+The library is organized into independently reusable components; imports are kept
+local, so users can stop at the layer they need.
 
-| Layer | Modules | Provides |
+| Component | Modules | Provides |
 |---|---|---|
 | Order kernel | `Forcing/Order/` | conditions, compatibility, dense/predense/dense-open sets, forcing filters, family-relative genericity, Rasiowa–Sikorski, antichains, maximal antichains, dense embeddings, separative quotients, requirements |
 | Finite conditions | `Forcing/FinitePartialFunction.lean`, `Forcing/GenericUnion.lean` | the shared carrier of finite-condition forcing notions; the correspondence between filters and partial functions; coordinate requirements and totality of the generic union |
-| Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the new-real theorem over a ground context |
-| Ground contexts | `Forcing/Model/` | visibility contexts, genericity over a ground model, existence from external countability, the requirement–visibility bridge |
+| Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
+| Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the new-real theorem over a visibility context |
 
 Milestones, their exit criteria, and their status live in [ROADMAP.md](ROADMAP.md);
 active work is on
@@ -34,19 +35,19 @@ Two orientation facts to know on arrival, and one policy:
 
 - **Smaller is stronger**: `q ≤ p` means `q` carries at least as much information
   as `p`; a strongest condition (when one exists) is `⊥`.
-- **Adequacy and existence are separate theorems everywhere.** Countability
-  hypotheses appear only in existence statements, never in definitions or
-  adequacy claims.
-- The build enforces mathlib's linters with warnings-as-errors, so the library
-  compiles without `sorry`; no axioms are used beyond Lean's standard three.
+- **Adequacy and existence are separate.** External countability enters
+  Rasiowa–Sikorski existence statements, not the definitions of `GenericFor` or
+  `GenericOver`.
+- Mathlib's linters run with warnings-as-errors; project policy forbids `sorry`
+  and custom axioms.
 
 The full set of design constraints and layer boundaries is recorded in
 [docs/architecture.md](docs/architecture.md).
 
 ## Building
 
-- Toolchain: `leanprover/lean4:v4.32.2`
-- Mathlib: pinned to the `v4.32.2` tag (`905b9581`)
+Exact Lean and mathlib revisions are pinned in `lean-toolchain` and
+`lakefile.toml`.
 
 ```sh
 lake exe cache get

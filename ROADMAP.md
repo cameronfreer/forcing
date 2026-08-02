@@ -10,7 +10,7 @@ issues; the README does not duplicate it.
 
 ## M1 — Forcing-oriented order kernel
 
-**Status: complete.**
+**Status: complete** ([#1](https://github.com/cameronfreer/forcing/issues/1)).
 
 Exit criteria:
 
@@ -57,14 +57,14 @@ hypothesis, and upgrades the conclusion to `c_G ∉ M`.
 
 **Status: in progress** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
 
-Typed/intensional `P`-names, valuation against condition sets, check names, the
-generic's name over an explicit condition code, and selected-name valuation
-images — external name semantics. The material internal-name presentation that
-earns the notation `M[G]` is tracked separately
-([#62](https://github.com/cameronfreer/forcing/issues/62)) and is a named
-prerequisite for M5.
+Typed/intensional `P`-names, valuation, check and generic names, and valuation
+images of selected name families. A material ground-model presentation
+([#62](https://github.com/cameronfreer/forcing/issues/62)) is required before
+the resulting object is called `M[G]`, and is a named prerequisite for M5.
 
 ## M5 — Forcing theorem and preservation
+
+**Status: planned.**
 
 Prerequisite: the material ground/internal-name presentation
 ([#62](https://github.com/cameronfreer/forcing/issues/62)).
@@ -74,6 +74,8 @@ Boolean values), definability, truth lemma, ZFC axioms in `M[G]`, closure and cc
 preservation.
 
 ## M6 — Boolean completion and Boolean-valued models
+
+**Status: planned.**
 
 Separative completion, complete regular algebra (via `Heyting.Regular` on lower
 sets), `B`-names, and carefully scoped comparison theorems — distinguishing
