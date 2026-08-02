@@ -319,6 +319,9 @@ derived from any membership relation. Nothing constructs `M[G]`. And the conclus
 `c ∉ M.groundReals` — upgrading it to `c ∉ M` is precisely the job of the later material
 instantiation, which must prove the `Sees` obligations instead of assuming them.
 
+The story continues one layer up in [names.md](names.md): what the extension contains before
+`G` is chosen, and why a genuine extension must choose its names.
+
 ---
 
 ## What each ingredient contributes
