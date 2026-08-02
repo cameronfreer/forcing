@@ -184,7 +184,8 @@ Yes, and the two directions have different costs:
 
 - **object → filter** needs no genericity whatsoever:
   [`ofFunction`](../Forcing/GenericUnion.lean) is defined for any total function.
-- **filter → object → filter** holds with no hypothesis at all: every filter is the canonical
+- **filter → object → filter** holds with no genericity, totality, or fiber-nonemptiness
+  hypothesis: every filter is the canonical
   filter of its own *partial* union
   ([`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)), and the total case
   [`eq_ofFunction`](../Forcing/GenericUnion.lean) is its specialization along the union
@@ -195,7 +196,8 @@ rather than folded into any adequacy claim. Indeed the correspondence is exact:
 [`pfilterEquivPartialFunction`](../Forcing/GenericUnion.lean) makes filters of finite partial
 functions *equivalent* to partial objects, with both inverse laws
 ([`unionFun_ofPartialFunction`](../Forcing/GenericUnion.lean),
-[`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)) and no hypotheses. Arbitrary
+[`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)) and no genericity, totality, or
+fiber-nonemptiness hypotheses. Arbitrary
 filters are partial objects; coordinate-generic filters are exactly the total ones
 ([`forall_meets_coordReq_iff_isSome_unionFun`](../Forcing/GenericUnion.lean), with extraction
 by [`totalUnion`](../Forcing/GenericUnion.lean)); and `ofFunction` is the total inclusion.

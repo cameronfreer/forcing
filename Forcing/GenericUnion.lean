@@ -16,7 +16,8 @@ function: that is `unionGraph_unique`, and it is entirely generic — it uses on
 members have a common strengthening inside the filter.
 
 The correspondence runs in both directions and is exact: `unionFun` and `ofPartialFunction` are
-mutually inverse with **no hypotheses at all** (`pfilterEquivPartialFunction`), so arbitrary
+mutually inverse with **no genericity, totality, or fiber-nonemptiness hypotheses**
+(`pfilterEquivPartialFunction`), so arbitrary
 filters are exactly partial functions. Coordinate requirements carve out the total objects:
 meeting them all is exactly totality of the union
 (`forall_meets_coordReq_iff_isSome_unionFun`), extraction is `totalUnion`, and `ofFunction` —
