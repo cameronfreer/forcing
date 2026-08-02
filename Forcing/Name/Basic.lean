@@ -3,19 +3,17 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Order.Basic
-
 /-!
 # Typed intensional `P`-names
 
 A `PName P` is a set of names, each tagged with the condition that admits it: an inductive tree
-mirroring mathlib's `PSet`, with a condition on every branch. This is the raw material of the
-generic-extension layer — a name is a set-in-waiting, its branches conditioned on the filter to
+mirroring mathlib's `PSet`, with a condition on every branch. This is the raw material of
+external name semantics — a name is a set-in-waiting, its branches conditioned on the filter to
 come.
 
 Deliberately **intensional** (architecture constraint 6): there is no quotient, no `Setoid`,
 and no extensional equality anywhere at this layer. Extensional identifications happen only at
-the `ZFSet` end of the valuation (#56).
+the `ZFSet` end of the valuation.
 
 Equally deliberately, there is no `[Preorder P]` anywhere in this file: the tree structure does
 not consult the order, and even valuation uses only membership of conditions in a set. The
