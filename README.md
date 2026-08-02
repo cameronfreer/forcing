@@ -25,6 +25,7 @@ narrower dependencies.
 |---|---|---|
 | Order kernel | `Forcing/Order/` | conditions, compatibility, dense/predense/dense-open sets, forcing filters, family-relative genericity, Rasiowa–Sikorski, antichains, maximal antichains, dense embeddings, separative quotients, requirements |
 | Finite conditions | `Forcing/FinitePartialFunction.lean`, `Forcing/GenericUnion.lean` | the shared carrier of finite-condition forcing notions; the correspondence between filters and partial functions; coordinate requirements and totality of the generic union |
+| Names | `Forcing/Name/` | external name semantics: intensional `P`-names, valuation against condition sets, check and generic names, and selected-name valuation images with the certified collapse of the unrestricted image |
 | Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
 | Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the new-real theorem over a visibility context |
 
@@ -66,6 +67,8 @@ lake build
   the pinned mathlib provides (and lacks) for forcing.
 - [docs/why-genericity.md](docs/why-genericity.md) — genericity derived in discovery order,
   each definition introduced by the failure it repairs.
+- [docs/names.md](docs/names.md) — external name semantics in the same discovery order, ending
+  at the honest stopping point before `M[G]`.
 - [docs/decisions/](docs/decisions/) — decision records for contested choices.
 
 ## Related work
