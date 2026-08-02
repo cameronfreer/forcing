@@ -184,17 +184,27 @@ Yes, and the two directions have different costs:
 
 - **object → filter** needs no genericity whatsoever:
   [`ofFunction`](../Forcing/GenericUnion.lean) is defined for any total function.
-- **filter → object → filter** needs only that the filter's union *be* that total function:
-  [`eq_ofFunction`](../Forcing/GenericUnion.lean). Coordinate genericity is not an extra
-  hypothesis here — it is equivalent evidence of totality
-  ([`meets_coordReq_iff`](../Forcing/GenericUnion.lean)) and is derived inside the proof.
+- **filter → object → filter** holds with no genericity, totality, or fiber-nonemptiness
+  hypothesis: every filter is the canonical
+  filter of its own *partial* union
+  ([`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)), and the total case
+  [`eq_ofFunction`](../Forcing/GenericUnion.lean) is its specialization along the union
+  equation — carrying no genericity and no fiber-nonemptiness hypothesis.
 
 So faithful recovery is genericity-free in both directions, and it is stated as its own theorem
-rather than folded into any adequacy claim. (The partial-function version, likely an equivalence
-between filters and partial functions, is tracked as factoring work in issue #31.)
+rather than folded into any adequacy claim. Indeed the correspondence is exact:
+[`pfilterEquivPartialFunction`](../Forcing/GenericUnion.lean) makes filters of finite partial
+functions *equivalent* to partial objects, with both inverse laws
+([`unionFun_ofPartialFunction`](../Forcing/GenericUnion.lean),
+[`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)) and no genericity, totality, or
+fiber-nonemptiness hypotheses. Arbitrary
+filters are partial objects; coordinate-generic filters are exactly the total ones
+([`forall_meets_coordReq_iff_isSome_unionFun`](../Forcing/GenericUnion.lean), with extraction
+by [`totalUnion`](../Forcing/GenericUnion.lean)); and `ofFunction` is the total inclusion.
 
-Recovery is also upward closure's second — and decisive — appearance. The proof of
-`eq_ofFunction` invokes closure under weakening exactly once, and that one step is the whole
+Recovery is also upward closure's second — and decisive — appearance. The recovery inclusion
+([`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean), through which `eq_ofFunction`
+now factors) invokes closure under weakening exactly once, and that one step is the whole
 difference between a filter and a merely directed set. Directedness alone cannot make the object
 determine the collection: the chain of restrictions of `c` to `{0, …, n}` is directed and has
 union `c`, yet is a proper subset of `ofFunction c`. (That counterexample is informal — the
@@ -204,21 +214,24 @@ library does not formalize directed non-filters.) Upward closure says the filter
 Nonemptiness is bought by recovery too, more quietly. The empty collection is directed and has
 the same nowhere-defined union as the principal filter at `⊤` — but only the latter is a filter,
 and only a filter guarantees there is an approximation to recover: the base case of
-[`exists_mem_keys_subset`](../Forcing/GenericUnion.lean), which `eq_ofFunction` consumes, opens
-with `G.nonempty`. Equivalently, a starting condition supplies nonemptiness for free — which is
-why Rasiowa–Sikorski threads `p ∈ G` through every existence statement.
+[`exists_mem_le_of_forall_unionGraph`](../Forcing/GenericUnion.lean), the assembly step that
+`ofPartialFunction_unionFun` consumes, opens with `G.nonempty`. Equivalently, a starting
+condition supplies nonemptiness for free — which is why Rasiowa–Sikorski threads `p ∈ G`
+through every existence statement.
 
 The ledger opened in §1 is now balanced:
 
 - **directedness** — the union is functional
   ([`unionGraph_unique`](../Forcing/GenericUnion.lean));
 - **nonemptiness** — there is an approximation to recover, including for the empty partial
-  function ([`exists_mem_keys_subset`](../Forcing/GenericUnion.lean));
+  function ([`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean));
 - **upward closure** — meeting is invariant under normalization
   ([`meets_normalize_iff`](../Forcing/Order/Requirement.lean)), and every finite fact the object
-  validates belongs to the filter ([`eq_ofFunction`](../Forcing/GenericUnion.lean)).
+  validates belongs to the filter
+  ([`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean)).
 
-No filter axiom is a convention: each is the exact price of a named theorem.
+No filter axiom is a convention: each is the exact price of a named theorem — and the three
+prices together buy exactly the equivalence between filters and partial objects.
 
 ## 10. Fixing the observer: the ground context
 
@@ -313,8 +326,9 @@ instantiation, which must prove the `Sees` obligations instead of assuming them.
 | Ingredient | Contributes | Declaration |
 |---|---|---|
 | Filter (directedness) | the union is a partial function | [`unionGraph_unique`](../Forcing/GenericUnion.lean) |
-| Filter (nonemptiness) | there is an approximation to recover | [`exists_mem_keys_subset`](../Forcing/GenericUnion.lean) |
-| Filter (upward closure) | the filter is *all* its object validates | [`eq_ofFunction`](../Forcing/GenericUnion.lean) |
+| Filter (nonemptiness) | there is an approximation to recover | [`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean) |
+| Filter (upward closure) | the filter is *all* its object validates | [`ofPartialFunction_unionFun`](../Forcing/GenericUnion.lean) |
+| All three axioms together | filters *are* partial objects | [`pfilterEquivPartialFunction`](../Forcing/GenericUnion.lean) |
 | Coordinate requirements | the union is total | [`isSome_unionFun`](../Forcing/GenericUnion.lean) |
 | Countability of the tests | such a filter exists | [`exists_pfilter_total`](../Forcing/GenericUnion.lean) |
 | Diagonal requirements | differs from each supplied real | [`exists_ne_of_meets_diagReq`](../Forcing/Cohen/Diagonal.lean) |
