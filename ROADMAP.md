@@ -98,7 +98,14 @@ ZFC axioms in `M[G]`.
 
 **Status: planned.**
 
-Closure and ccc preservation, cardinal arithmetic consequences.
+Split by proof mechanism, deliberately not bundled: **depth preservation**
+(recursively decide a long name and take a lower bound — the
+closure/distributivity route) and **width preservation** (choose a deciding
+antichain for a name with a ground-valued codomain and bound its possible
+values — the chain-condition route), then cardinal arithmetic consequences.
+Every infinitary hypothesis is `M`-internal per architecture constraint 9; the
+parallel external property kernel (`Forcing/Property/`, non-gating) supplies
+only definitions, implications, and order-level theorems.
 
 ## M9 — Boolean completion and Boolean-valued models
 
