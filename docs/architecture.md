@@ -13,9 +13,10 @@ contested choices get a short decision record in `docs/decisions/`.
 3. **No weakest condition in the core.** `[OrderTop P]` may appear in
    convenience lemmas only.
 4. **Typed combinatorics before set coding.** All forcing combinatorics (density,
-   antichains, closure, ccc) is proved on ordinary Lean types. Set-coded
-   (`ZFSet`) presentations arrive only at the ground-model layer, with explicit
-   absoluteness bridges.
+   antichains, closure, ccc) is proved on ordinary Lean types. `ZFSet` enters
+   first as the *target* of external name valuation; set-coded presentations of
+   the forcing notion itself arrive only at the material ground-model layer,
+   with explicit absoluteness bridges.
 5. **`GenericFor` is distinct from `GenericOver`.** `GenericFor 𝒟 G` (meeting a
    supplied family of dense sets) is pure order theory. `GenericOver M G` (meeting
    every dense-open test visible to `M`) is observer-relative: `M` is a
@@ -39,7 +40,8 @@ contested choices get a short decision record in `docs/decisions/`.
 The spine is poset-first (see [ROADMAP.md](../ROADMAP.md)):
 
 ```text
-order kernel → Cohen (external) → genericity over M → names and M[G]
+order kernel → Cohen (external) → genericity over a visibility context
+            → external name semantics → material grounds and M[G]
             → forcing relation and preservation → Boolean completion and BVM
 ```
 
@@ -57,6 +59,25 @@ Consequences of poset-first sequencing:
   recovering the classical regular-open completion. The topological
   presentation, if ever wanted, is to be proved isomorphic — not used as the
   definition.
+
+## The two observer-relative vocabularies
+
+The observer contributes two vocabularies, and they face opposite ways:
+
+- **Tests.** A `VisibilityContext` fixes which dense-open tests count. More
+  visible tests admit *fewer* generic filters — genericity is antitone in
+  visibility (`GenericOver.anti`).
+- **Descriptions.** A name family fixes which conditional descriptions are
+  available. More names produce a *larger* valuation image — the image is
+  monotone in the family (`valuationImage_mono`) — and the unrestricted family
+  collapses to the ambient universe (`valuationImage_univ_eq_univ`).
+
+Genericity constrains which worlds are admissible; valuation generates the sets
+of a chosen world. A material ground must **derive both vocabularies coherently
+from one carrier** — never accept them as independent fields (issue #62); the
+forcing relation is then the coherence statement connecting them: the local
+conditions the ground recognizes as forcing a statement are exactly those
+securing it when the ground's names are evaluated at its generic worlds.
 
 ## Qualified claims (do not overstate)
 

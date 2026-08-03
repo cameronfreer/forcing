@@ -14,6 +14,18 @@ built when; read this for why anything is built at all.
 structures — the library has no `GenericityDoctrine` type, and the comparisons between them are
 theorems about specific filters, not about a formalized hierarchy.
 
+> **Where this is heading.** The failures below converge on a normal form, reached in §9: on
+> the finite-partial-function carrier, filters are **exactly partial objects, presented by all
+> of their finite facts**
+> ([`pfilterEquivPartialFunction`](../Forcing/GenericUnion.lean)) — and requirements are
+> exactly the persistent, attainable — equivalently dense-open — tests on those facts
+> ([`Requirement.equivDenseOpen`](../Forcing/Order/Requirement.lean)). On that reading,
+> genericity is a testing semantics: a generic object is one that passes every test the chosen
+> observer can see (§10). The scope matters: the first equivalence is a theorem about this
+> carrier, not about filters on an arbitrary order — which is why the discovery order below
+> earns each half through the specific failure that demands it rather than positing the
+> slogan.
+
 ---
 
 ## 1. Finite approximations must cohere: why filters
@@ -168,9 +180,12 @@ its proof is one of exactly two places the story in this document uses closure u
 the test element itself. The two closures are dual and pay for each other — tests may be closed
 **downward** at no cost precisely because filters are closed **upward**.
 
-That is the answer to Chow's complaint. Dense open sets are not an inspired combinatorial trick;
-they are the tasks one can impose on an object built by finite approximation, and the persistence
-requirement costs nothing.
+This answers the first part of Chow's complaint: dense open sets are not an inspired
+combinatorial trick; they are the tasks one can impose on an object built by finite
+approximation, and the persistence requirement costs nothing. It is not the whole answer. Two
+parts remain: why the tests must be *observer-relative* (§10), and — one document later
+([names.md](names.md)) — why passing them produces a genuine extension, through descriptions
+that must likewise be the observer's own.
 
 Genericity for requirements is not a new predicate either — it is
 [`GenericFor`](../Forcing/Order/Filter.lean) of the supports
