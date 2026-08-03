@@ -76,17 +76,15 @@ theorem not_genericOver_of_visible_compl (h : IsAtomless P) {M : VisibilityConte
 /-!
 ### Sanity examples
 
-A trivial order (one with a bottom-like condition compatible with refining everything, e.g.
-any order with a least element and more than one point collapses differently) is excluded:
-over a `Preorder` with a least element `⊥`, every two conditions are compatible through `⊥`,
-so such an order is atomless only if it is empty. And over the full observer, the refutation
-applies to every filter of an atomless order — the familiar "no filter is fully generic over
-an atomless forcing" as long as the observer sees everything.
+A preorder with a least element is not atomless: every two conditions are compatible through
+`⊥`. And over the full observer, the refutation applies to every filter of an atomless
+order — the familiar "no filter is fully generic over an atomless forcing" as long as the
+observer sees everything.
 -/
 
-example [OrderBot P] [Nonempty P] : ¬IsAtomless P := by
+example [OrderBot P] : ¬IsAtomless P := by
   intro h
-  obtain ⟨q, r, -, -, hqr⟩ := h (Classical.arbitrary P)
+  obtain ⟨q, r, -, -, hqr⟩ := h ⊥
   exact hqr ⟨⊥, bot_le, bot_le⟩
 
 example (h : IsAtomless P) (G : PFilter P) :
