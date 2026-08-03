@@ -4,13 +4,13 @@ import Forcing.Cohen.Basic
 import Forcing.Cohen.ConditionCode
 import Forcing.Cohen.Diagonal
 import Forcing.Cohen.Generic
-import Forcing.Cohen.Ground
+import Forcing.Cohen.Visibility
 import Forcing.Cohen.NewReal
 import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
 import Forcing.Model.GenericOver
-import Forcing.Model.Ground
+import Forcing.Model.Visibility
 import Forcing.Model.Requirement
 import Forcing.Name.Basic
 import Forcing.Name.Check
