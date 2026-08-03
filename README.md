@@ -73,6 +73,11 @@ lake build
   each definition introduced by the failure it repairs.
 - [docs/names.md](docs/names.md) — external name semantics in the same discovery order, ending
   at the honest stopping point before `M[G]`.
+- [docs/property-zoo.md](docs/property-zoo.md) — the vertical control theory: property levels,
+  axes, and the property-card discipline for structural certificates.
+- [docs/base-theories-and-shadows.md](docs/base-theories-and-shadows.md) — research RFC:
+  forcing properties as universal envelopes of theorem-local shadows, indexed by base theory
+  and formula fragment.
 - [docs/decisions/](docs/decisions/) — decision records for contested choices.
 
 ## Related work
