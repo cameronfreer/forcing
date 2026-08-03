@@ -38,21 +38,23 @@ Exit criteria:
   supplied countable family.
 
 This milestone is "Cohen generic diagonalizes a countable family" — not yet
-"adds a new real."
+the observer-relative avoidance theorem.
 
 ## M3 — Cohen forcing over a visibility context
 
 **Status: complete** ([#35](https://github.com/cameronfreer/forcing/issues/35)).
 
-Exit criterion: `G` is `M`-generic `→ c_G ∉ M.groundReals`.
+Exit criterion: `G` is `M`-generic `→ c_G ∉ M.designatedReals`.
 
-This is the first genuine "Cohen forcing adds a real" theorem. The ground model
-enters abstractly (a family of dense sets, a family of designated ground reals,
-and a closure hypothesis), so the formal conclusion is stated against the
-designated ground reals; the material presentation
+This is the **avoidance theorem**: the generic real avoids every designated
+real. The ground model enters abstractly (a family of dense sets, a family of
+designated reals, and a closure hypothesis), so the formal conclusion is stated
+against the designated reals. "Adds a new real" is reserved for the material
+theorem `realCode c_G ∈ M[G] ∧ realCode c_G ∉ M`, with `realCode` proved
+faithful: the material presentation
 ([#62](https://github.com/cameronfreer/forcing/issues/62)) bridges carrier
-membership to the ground reals, discharges the closure hypothesis, and upgrades
-the conclusion to `c_G ∉ M`.
+membership to the designated reals, discharges the closure hypothesis, and
+upgrades the conclusion to that material form.
 
 ## M4 — Names and external valuation semantics
 

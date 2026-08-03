@@ -74,11 +74,11 @@ test. Existence of generic filters is the countable-satisfiability theorem for t
 external hypothesis, never a field.
 
 The certified separation witnesses support the expository ordering of the test vocabularies:
-coordinate tests recognize totality but not newness
+coordinate tests recognize totality but not avoidance
 ([`totality_separation`](../Forcing/Cohen/Diagonal.lean)); adding diagonal tests recognizes
-newness but not full genericity
+avoidance of the designated reals but not full genericity
 ([`parity_separation`](../Forcing/Cohen/Diagonal.lean),
-[`parityReal_new_not_genericOver`](../Forcing/Cohen/Spectrum.lean)). These spectra are
+[`parityReal_avoiding_not_genericOver`](../Forcing/Cohen/Spectrum.lean)). These spectra are
 theorems about specific filters, not a formalized hierarchy of test languages.
 
 ## Descriptions: a name is a conditional expression
@@ -123,7 +123,7 @@ Both monotonicities are certified: genericity is antitone in visibility
 the name family ([`valuationImage_mono`](../Forcing/Name/ValuationImage.lean)). Genericity
 *constrains* which worlds are admissible; valuation *generates* the sets of a chosen world.
 The Cohen visibility context already couples an embryonic form of the pair — a test vocabulary
-(`visible`) with a designated-object vocabulary (`groundReals`) — as independent data
+(`visible`) with a designated-object vocabulary (`designatedReals`) — as independent data
 ([`CohenVisibilityContext`](../Forcing/Cohen/Visibility.lean)).
 
 ## The two missing arrows *(planned)*

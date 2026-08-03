@@ -12,10 +12,11 @@ The coordinate requirements make the generic real total (`Forcing/Cohen/Generic.
 *diagonal* requirements make it differ from each member of a supplied countable family. Together
 they give the external Cohen theorem, `exists_pfilter_total_diagonalizing`.
 
-**This is not "adds a new real."** The conclusion concerns only the supplied family; a real that
-differs from every member of some countable family need not be generic, and the ground model
-plays no part at this milestone. "Adds a new real" is reserved for the over-`M` theorem (M3), and
-`parity_separation` below shows the gap is real.
+**This is not even avoidance over `M`.** The conclusion concerns only the supplied family; a
+real that differs from every member of some countable family need not be generic, and no
+observer plays any part at this milestone. Avoidance of the designated reals is the over-`M`
+theorem (M3); "adds a new real" is reserved further still, for the material theorem
+`realCode c ∈ M[G] ∧ realCode c ∉ M`. `parity_separation` below shows the first gap is real.
 
 Diagonal attainability is where finiteness earns its keep: a condition decides only finitely many
 coordinates, so a fresh one is available, and `Bool` has another value to put there. (For

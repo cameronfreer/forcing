@@ -83,14 +83,16 @@ generic worlds.
 
 ## Qualified claims (do not overstate)
 
-- **"Adds a new real" is reserved for the over-`M` theorem** (M3). The purely
-  external statement is only "the generic diagonalizes a supplied countable
-  family." The abstract M3 interface earns the over-`M` phrase exactly through
-  its closure hypothesis (every ground real's diagonal dense set belongs to
-  `M`'s dense family), and its formal conclusion is `c_G ∉ M.groundReals` —
-  the interface does not provide a model carrier, so it must not claim
-  `c_G ∉ M`. The later material Cohen adapter (#75) discharges the pieces
-  separately: it identifies the designated ground reals with coded carrier
+- **"Adds a new real" is reserved for the material theorem**
+  `realCode c ∈ M[G] ∧ realCode c ∉ M`, with `realCode` proved faithful
+  (issue #62). The M3-layer theorem is **avoidance**: the abstract interface
+  earns its over-`M` phrase exactly through its closure hypothesis (every
+  designated real's diagonal dense set belongs to `M`'s dense family), and its
+  formal conclusion is `c_G ∉ M.designatedReals` — a designated family, not the
+  reals of a ground; the interface does not provide a model carrier, so it must
+  not claim `c_G ∉ M`. The purely external statement is weaker still: "the
+  generic diagonalizes a supplied countable family." The later material Cohen adapter (#75) discharges the pieces
+  separately: it identifies the designated reals with coded carrier
   elements (the `realCode` bridge), proves visibility of the diagonal tests
   from the material presentation, and only then concludes the material form —
   with external countability entering only where generic existence is proved.
