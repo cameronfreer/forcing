@@ -10,49 +10,49 @@ import Forcing.Model.Requirement
 # The Cohen visibility context and its obligations
 
 A `CohenVisibilityContext` is a visibility context over Cohen conditions together with its
-designated ground reals. The name says *context*: this is the deliberately abstract interface,
+designated reals. The name says *context*: this is the deliberately abstract interface,
 not a model — the reals are designated, not derived, and no claim is made that they are the
 reals of anything.
 
-`Sees` states the visibility obligations of the new-real argument: every coordinate requirement
-is visible, and — the **M3 bridge** — the diagonal requirement of every designated ground real
+`Sees` states the visibility obligations of the avoidance argument: every coordinate requirement
+is visible, and — the **M3 bridge** — the diagonal requirement of every designated real
 is visible. The abstract context *exposes* these obligations as an explicit hypothesis; a later
 material ground model must *prove* them. They are deliberately not baked into `GenericOver`,
 and the separating test `oddTrue` is deliberately not among them: the spectrum theorem consumes
-a visibility budget incomparable with the new-real theorem's, so its obligation stays separate.
+a visibility budget incomparable with the avoidance theorem's, so its obligation stays separate.
 
 Downstream statements use the forwarding projections (`Visible`, `visibleDenseOpen`,
 `GenericOver`) and never write `M.toVisibilityContext`.
 
 ## Main definitions
 
-* `Forcing.Cohen.CohenVisibilityContext`: a visibility context over `Cond` with designated ground
+* `Forcing.Cohen.CohenVisibilityContext`: a visibility context over `Cond` with designated
   reals.
-* `Forcing.Cohen.CohenVisibilityContext.Sees`: the visibility obligations of the new-real argument.
+* `Forcing.Cohen.CohenVisibilityContext.Sees`: the visibility obligations of the avoidance argument.
 
 ## Main results
 
 * `Forcing.Cohen.CohenVisibilityContext.Sees.meets_coordReq`,
   `Forcing.Cohen.CohenVisibilityContext.Sees.meets_diagReq`: a filter generic over a context that
   meets its obligations meets every coordinate requirement and every diagonal requirement
-  against the ground reals — the bridge lemmas the new-real theorem consumes.
+  against the designated reals — the bridge lemmas the avoidance theorem consumes.
 * `Forcing.Cohen.CohenVisibilityContext.sees_full`: the full context satisfies the obligations for
-  any choice of ground reals.
+  any choice of designated reals.
 -/
 
 namespace Forcing.Cohen
 
 open Order
 
-/-- A visibility context over Cohen conditions together with its designated ground reals. The name
+/-- A visibility context over Cohen conditions together with its designated reals. The name
 says *context*: this is the deliberately abstract interface, not a model — the reals are
 designated, not derived, and no claim is made that they are the reals of anything. The two
-fields are different in kind, deliberately: `visible` is a vocabulary of *tests*, `groundReals`
+fields are different in kind, deliberately: `visible` is a vocabulary of *tests*, `designatedReals`
 a designated vocabulary of *objects* — the pairing a material ground will later derive from one
 carrier rather than supply as independent data. -/
 @[ext] structure CohenVisibilityContext extends VisibilityContext Cond where
-  /-- The designated ground reals: the family the new-real theorem concludes against. -/
-  groundReals : Set (ℕ → Bool)
+  /-- The designated reals: the family the avoidance theorem concludes against. -/
+  designatedReals : Set (ℕ → Bool)
 
 namespace CohenVisibilityContext
 
@@ -70,15 +70,15 @@ abbrev visibleDenseOpen (M : CohenVisibilityContext) : Set (Set Cond) :=
 abbrev GenericOver (M : CohenVisibilityContext) (G : PFilter Cond) : Prop :=
   Forcing.GenericOver M.toVisibilityContext G
 
-/-- The visibility obligations of the Cohen new-real argument, bundled as a `Prop` so theorems
+/-- The visibility obligations of the Cohen avoidance argument, bundled as a `Prop` so theorems
 can take them as one explicit hypothesis. `visible_diagReq` is the **M3 bridge**
-`x ∈ M.groundReals → Visible M ((diagReq x).support)`: the abstract context exposes it, and a
+`x ∈ M.designatedReals → Visible M ((diagReq x).support)`: the abstract context exposes it, and a
 later material ground model must prove it. -/
 structure Sees (M : CohenVisibilityContext) : Prop where
   /-- Every coordinate requirement is visible. -/
   visible_coordReq : ∀ n, M.Visible (coordReq n).support
-  /-- The M3 bridge: the diagonal requirement of every designated ground real is visible. -/
-  visible_diagReq : ∀ x ∈ M.groundReals, M.Visible (diagReq x).support
+  /-- The M3 bridge: the diagonal requirement of every designated real is visible. -/
+  visible_diagReq : ∀ x ∈ M.designatedReals, M.Visible (diagReq x).support
 
 /-- Under the obligations, each coordinate requirement is a visible dense-open test. A thin
 specialization of the generic bridge `Requirement.mem_visibleDenseOpen`. -/
@@ -86,10 +86,10 @@ theorem Sees.coordReq_mem_visibleDenseOpen (hM : M.Sees) (n : ℕ) :
     (coordReq n).support ∈ M.visibleDenseOpen :=
   (coordReq n).mem_visibleDenseOpen (hM.visible_coordReq n)
 
-/-- Under the bridge, the diagonal requirement of each ground real is a visible dense-open
+/-- Under the bridge, the diagonal requirement of each designated real is a visible dense-open
 test. A thin specialization of the generic bridge `Requirement.mem_visibleDenseOpen`. -/
 theorem Sees.diagReq_mem_visibleDenseOpen (hM : M.Sees) {x : ℕ → Bool}
-    (hx : x ∈ M.groundReals) :
+    (hx : x ∈ M.designatedReals) :
     (diagReq x).support ∈ M.visibleDenseOpen :=
   (diagReq x).mem_visibleDenseOpen (hM.visible_diagReq x hx)
 
@@ -99,18 +99,18 @@ theorem Sees.meets_coordReq (hM : M.Sees) (hG : M.GenericOver G) (n : ℕ) :
     Meets G (coordReq n).support :=
   hG.meets_requirement (hM.visible_coordReq n)
 
-/-- A filter generic over `M` meets the diagonal requirement of every ground real. A thin
+/-- A filter generic over `M` meets the diagonal requirement of every designated real. A thin
 specialization of the generic `GenericOver.meets_requirement`. -/
 theorem Sees.meets_diagReq (hM : M.Sees) (hG : M.GenericOver G) {x : ℕ → Bool}
-    (hx : x ∈ M.groundReals) :
+    (hx : x ∈ M.designatedReals) :
     Meets G (diagReq x).support :=
   hG.meets_requirement (hM.visible_diagReq x hx)
 
-/-- The full Cohen context: sees everything, over any designated ground reals. -/
+/-- The full Cohen context: sees everything, over any designated reals. -/
 def full (R : Set (ℕ → Bool)) : CohenVisibilityContext :=
   ⟨VisibilityContext.full Cond, R⟩
 
-/-- The full context satisfies the visibility obligations for any choice of ground reals. -/
+/-- The full context satisfies the visibility obligations for any choice of designated reals. -/
 theorem sees_full (R : Set (ℕ → Bool)) : (full R).Sees :=
   ⟨fun _ ↦ VisibilityContext.visible_full, fun _ _ ↦ VisibilityContext.visible_full⟩
 

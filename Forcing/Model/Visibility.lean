@@ -16,7 +16,7 @@ The context is deliberately spartan:
 
 * **No countability.** Countability of the visible family is always an external hypothesis of an
   existence statement (Rasiowa–Sikorski), never a field of the context.
-* **No carrier-specific data.** Designated ground reals arrive with the Cohen layer, not here.
+* **No carrier-specific data.** Designated designated reals arrive with the Cohen layer, not here.
 * **No model of anything.** Visibility is an interface to be implemented by a later material
   ground model; nothing here is a claim about sets, transitivity, or ZFC.
 

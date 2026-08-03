@@ -5,7 +5,7 @@ import Forcing.Cohen.ConditionCode
 import Forcing.Cohen.Diagonal
 import Forcing.Cohen.Generic
 import Forcing.Cohen.Visibility
-import Forcing.Cohen.NewReal
+import Forcing.Cohen.Avoidance
 import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
