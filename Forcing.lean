@@ -9,6 +9,7 @@ import Forcing.Cohen.Avoidance
 import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
+import Forcing.Material.Carrier
 import Forcing.Model.GenericOver
 import Forcing.Model.Visibility
 import Forcing.Model.Requirement
