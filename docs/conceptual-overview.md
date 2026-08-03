@@ -103,10 +103,12 @@ Two certified failures shape the layer:
   ([`valuationImage_univ_eq_univ`](../Forcing/Name/ValuationImage.lean)). Restricting which
   descriptions belong to the ground is the mathematical content of "extension".
 
-## The two vocabularies face opposite ways
+## The vocabularies and their variances
+
+**Today** — certified and external, with the two vocabularies as independent data:
 
 ```text
-                         THE OBSERVER
+           THE OBSERVER  (today: external, independent data)
 
         tests it can ask              descriptions it can form
       visible dense-open sets            available names
@@ -118,13 +120,34 @@ Two certified failures shape the layer:
       admissible generic G   ────▶   evaluate the names at G
 ```
 
-Both monotonicities are certified: genericity is antitone in visibility
-([`GenericOver.anti`](../Forcing/Model/GenericOver.lean)); the valuation image is monotone in
-the name family ([`valuationImage_mono`](../Forcing/Name/ValuationImage.lean)). Genericity
-*constrains* which worlds are admissible; valuation *generates* the sets of a chosen world.
-The Cohen visibility context already couples an embryonic form of the pair — a test vocabulary
+**Planned** — after the material bridge (#62, milestone M5), both sides are projections of
+one carrier:
+
+```text
+        THE MATERIAL GROUND  (planned: one carrier, two projections)
+
+                   material presentation of P
+                    │                      │
+            derived visible tests   internal name family N_M
+                    │                      │
+                    ▼                      ▼
+            admissible generic G  ──▶  M[G], an indexed material set
+```
+
+Three variances, kept apart — the first two certified, the third a certified *failure*:
+
+| Enlarge… | Effect | Certificate |
+|---|---|---|
+| the visible tests | fewer generic filters (antitone) | [`GenericOver.anti`](../Forcing/Model/GenericOver.lean) |
+| the name family | larger valuation image (monotone) | [`valuationImage_mono`](../Forcing/Name/ValuationImage.lean) |
+| the condition oracle `S` | neither — an element can *change* | [`exists_not_zval_subset_zval`](../Forcing/Name/Valuation.lean) |
+
+Genericity *constrains* which generic oracles are admissible; valuation *generates* the sets a
+chosen oracle determines — "world" is deliberately avoided until `M[G]` exists. The Cohen
+visibility context already couples an embryonic form of the pair — a test vocabulary
 (`visible`) with a designated-object vocabulary (`designatedReals`) — as independent data
-([`CohenVisibilityContext`](../Forcing/Cohen/Visibility.lean)).
+([`CohenVisibilityContext`](../Forcing/Cohen/Visibility.lean)); the bridge's job is to replace
+"independent data" with two projections of one material presentation.
 
 ## The two missing arrows *(planned)*
 

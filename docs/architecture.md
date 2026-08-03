@@ -60,26 +60,17 @@ Consequences of poset-first sequencing:
   presentation, if ever wanted, is to be proved isomorphic — not used as the
   definition.
 
-## The two observer-relative vocabularies
+## The two observer-relative vocabularies (normative)
 
-The observer contributes two vocabularies, and they face opposite ways:
+- A material ground must **derive** its visible tests and its internal names
+  coherently from one carrier — never accept them as independent fields
+  (issue #62).
+- The forcing relation is the *persistent local judgment* on conditions; the
+  **truth lemma** (the forcing theorem) is the coherence statement connecting
+  the two vocabularies. Do not attribute the coherence to the relation itself.
 
-- **Tests.** A `VisibilityContext` fixes which dense-open tests count. More
-  visible tests admit *fewer* generic filters — genericity is antitone in
-  visibility (`GenericOver.anti`).
-- **Descriptions.** A name family fixes which conditional descriptions are
-  available. More names produce a *larger* valuation image — the image is
-  monotone in the family (`valuationImage_mono`) — and the unrestricted family
-  collapses to the ambient universe (`valuationImage_univ_eq_univ`).
-
-Genericity constrains which worlds are admissible; valuation generates the sets
-of a chosen world. A material ground must **derive both vocabularies coherently
-from one carrier** — never accept them as independent fields (issue #62). The
-forcing relation is the *persistent local judgment* on conditions; the **truth
-lemma** (the forcing theorem) is the coherence statement connecting the two
-vocabularies: the local conditions the ground recognizes as forcing a statement
-are exactly those securing it when the ground's names are evaluated at its
-generic worlds.
+The exposition — the opposing variances, the diagrams, and their certificates —
+lives in [conceptual-overview.md](conceptual-overview.md).
 
 ## Qualified claims (do not overstate)
 
