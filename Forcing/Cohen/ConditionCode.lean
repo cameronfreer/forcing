@@ -25,8 +25,9 @@ extensionality; it is not an assumption.
 
 The generic prerequisite is `natCode : ℕ ↪ ZFSet`, injectivity of the von Neumann naturals.
 The pinned mathlib has `PSet.ofNat` but no injectivity theorem for it; the rank computation
-`rank (ofNat n) = n` (`rank_ofNat`) gives a short proof and is a candidate for generic
-factoring or upstreaming.
+`rank (ofNat n) = n` gives a short proof. That computation is generic set-theory
+infrastructure with no Cohen content, so it stays private here until it is factored to a
+generic home or upstreamed; only `natCode` is public.
 
 ## Main definitions
 
@@ -36,9 +37,9 @@ factoring or upstreaming.
 
 ## Main results
 
-* `Forcing.Cohen.rank_ofNat`: the rank of the `n`-th von Neumann natural is `n`.
 * `Forcing.Cohen.pair_mem_cohenConditionCode_iff`: the membership characterization — the real
   payoff, and exactly what an internal presentation later needs.
+* `Forcing.Cohen.mem_cohenConditionCode_iff`: the full membership description of the code.
 -/
 
 namespace Forcing.Cohen
@@ -47,9 +48,10 @@ open FinitePartialFunction
 
 /-! ### Injectivity of the von Neumann naturals, by rank -/
 
-/-- The rank of the `n`-th von Neumann natural is `n`. Not in the pinned mathlib; a candidate
-for generic factoring or upstreaming. -/
-theorem rank_ofNat : ∀ n : ℕ, (PSet.ofNat n).rank = n
+/-- The rank of the `n`-th von Neumann natural is `n`. Not in the pinned mathlib. Private:
+generic set-theory infrastructure with no Cohen content, awaiting factoring to a generic home
+or upstreaming; the public interface is `natCode`. -/
+private theorem rank_ofNat : ∀ n : ℕ, (PSet.ofNat n).rank = n
   | 0 => PSet.rank_empty
   | n + 1 => by
     rw [PSet.ofNat, PSet.rank_insert, rank_ofNat n, max_eq_left (Order.le_succ _),
@@ -128,7 +130,7 @@ def cohenConditionCode : ConditionCode Cond where
     rw [← pair_mem_graphRepr_iff, ← pair_mem_graphRepr_iff, h']
 
 /-- The full membership description of the code. -/
-theorem mem_mk_repr_iff {p : Cond} {y : ZFSet.{0}} :
+theorem mem_cohenConditionCode_iff {p : Cond} {y : ZFSet.{0}} :
     y ∈ ZFSet.mk (cohenConditionCode.repr p) ↔
       ∃ n b, p.lookup n = some b ∧ y = ZFSet.pair (natCode n) (boolCode b) :=
   mem_mk_graphRepr_iff
