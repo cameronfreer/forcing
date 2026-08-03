@@ -10,6 +10,7 @@ import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
 import Forcing.Material.Carrier
+import Forcing.Material.ForcingPresentation
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless
 import Forcing.Model.Visibility
