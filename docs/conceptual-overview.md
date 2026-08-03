@@ -24,7 +24,7 @@ persistent local forcing judgments.
 **The certified/planned split.** The external architecture is certified below: the two
 equivalences, observer-relative genericity, the name semantics with its two certified
 failures, and the two opposing monotonicities. The two final arrows — the material bridge
-(#62) and the truth lemma (M5) — are planned, and the closing section states exactly what each
+(#62, milestone M5) and the truth lemma (M6) — are planned, and the closing section states exactly what each
 must provide. Until the bridge lands, external valuation produces a `valuationImage`; it has
 not yet earned the name "extension".
 
@@ -137,11 +137,11 @@ What is deliberately not yet a theorem:
    proved rather than hypothesized, and the visibility obligations (`Sees`) discharged. For
    Cohen forcing the endpoint is `M[G] = M[c_G]` against an independently characterized
    extension, not one made true by definition.
-2. **The truth lemma** *(planned — M5)*: the forcing relation as the persistent local judgment
+2. **The truth lemma** *(planned — M6)*: the forcing relation as the persistent local judgment
    whose motivation is already certified — raw valuation is unstable under new information
    (`exists_not_zval_subset_zval`) — connecting stable local truth to actual generic
    evaluation, with the regular-open Boolean-value description a comparison theorem thereafter
-   (M6).
+   (M9).
 
 These are precisely the coherence theorems between the two vocabularies: the tests `M` can ask
 and the descriptions `M` can form, synchronized through one material carrier.

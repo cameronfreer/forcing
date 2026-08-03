@@ -61,28 +61,53 @@ upgrades the conclusion to that material form.
 **Status: complete** ([#54](https://github.com/cameronfreer/forcing/issues/54)).
 
 Typed/intensional `P`-names, valuation, check and generic names, and valuation
-images of selected name families. A material ground-model presentation
-([#62](https://github.com/cameronfreer/forcing/issues/62)) is required before
-the resulting object is called `M[G]`, and is a named prerequisite for M5.
+images of selected name families. A material ground-model presentation is
+required before the resulting object is called `M[G]` — that presentation is
+M5.
 
-## M5 — Forcing theorem and preservation
+## M5 — Material ground models and `M[G]`
+
+**Status: in progress**
+([#62](https://github.com/cameronfreer/forcing/issues/62), staged as
+[#71](https://github.com/cameronfreer/forcing/issues/71)–[#75](https://github.com/cameronfreer/forcing/issues/75)).
+
+Material carriers, the internal (no-junk) forcing presentation, the ground's
+internal name family with its smallness evidence, and `M[G]` as an indexed
+material set — ending at the material avoidance upgrade, the theorem that
+finally earns "adds a new real".
+
+## M6 — External forcing relation and truth lemma
 
 **Status: planned.**
 
-Prerequisite: the material ground/internal-name presentation
-([#62](https://github.com/cameronfreer/forcing/issues/62)).
+The forcing relation by direct recursion on formulas (never via Boolean
+values), persistence under strengthening, and the semantic truth lemma
+connecting stable local truth to generic evaluation. The atomic
+membership/equality spike
+([#93](https://github.com/cameronfreer/forcing/issues/93)) precedes the full
+formula stack and need not wait for M5.
 
-Internal forcing relation (defined by direct recursion on formulas, not via
-Boolean values), definability, truth lemma, ZFC axioms in `M[G]`, closure and ccc
-preservation.
-
-## M6 — Boolean completion and Boolean-valued models
+## M7 — Internal definability and ZFC in `M[G]`
 
 **Status: planned.**
 
-Separative completion, complete regular algebra (via `Heyting.Regular` on lower
-sets), `B`-names, and carefully scoped comparison theorems — distinguishing
-external completeness from completeness internal to `M`.
+Definability of the forcing relation over the ground, and verification of the
+ZFC axioms in `M[G]`.
+
+## M8 — Preservation
+
+**Status: planned.**
+
+Closure and ccc preservation, cardinal arithmetic consequences.
+
+## M9 — Boolean completion and Boolean-valued models
+
+**Status: planned.**
+
+The regular/Boolean completion of the already-existing separative quotient
+(complete regular algebra via `Heyting.Regular` on lower sets), `B`-names, and
+carefully scoped comparison theorems — distinguishing external completeness
+from completeness internal to `M`.
 
 ## Later endpoint work
 

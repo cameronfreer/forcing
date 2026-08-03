@@ -49,11 +49,11 @@ Consequences of poset-first sequencing:
 
 - **The forcing relation is defined by direct recursion on formulas** (density
   clauses), not as `e(p) ≤ ⟦φ⟧_B`. The Boolean-value characterization is a
-  comparison theorem proved when the completion exists (M6), not a definition.
+  comparison theorem proved when the completion exists (M9), not a definition.
 - `M[G]` is constructed without reference to any external regular-open algebra.
 - The Boolean completion is planned order-natively as the regular
   (double-negation-stable) elements of `LowerSet P` — lower sets are the opens of
-  the forcing Alexandrov topology. Expected (to be certified in Lean at M6): the
+  the forcing Alexandrov topology. Expected (to be certified in Lean at M9): the
   Heyting complement of `D : LowerSet P` is the lower set of conditions
   incompatible with every member of `D`, and `Dᶜᶜ = {p | D is dense below p}`,
   recovering the classical regular-open completion. The topological
