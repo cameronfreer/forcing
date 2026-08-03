@@ -61,6 +61,9 @@ lake build
 ## Documentation
 
 - [ROADMAP.md](ROADMAP.md) — outcome-based milestones, exit criteria, and status.
+- [docs/conceptual-overview.md](docs/conceptual-overview.md) — theorem-first statement of the
+  architecture: objects, tests, and descriptions relative to an observer; every claim certified
+  or explicitly marked planned.
 - [docs/architecture.md](docs/architecture.md) — stable design constraints and
   layer boundaries.
 - [docs/mathlib-v4.32.2.md](docs/mathlib-v4.32.2.md) — verified inventory of what
