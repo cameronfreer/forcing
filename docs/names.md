@@ -93,7 +93,8 @@ extensional boundary of §3 was placed where it is.
 > [`ConditionCode`](../Forcing/Name/GenName.lean) — a representation `repr : P → PSet` with
 > injective extensional image. A structure, not a typeclass: different material grounds will
 > code conditions differently, and nothing at this layer fixes a canonical one. (A concrete
-> code for Cohen conditions is tracked as a parallel spike, issue #63.)
+> code for Cohen conditions — structural, with a full membership characterization — is
+> [`cohenConditionCode`](../Forcing/Cohen/ConditionCode.lean).)
 
 Then [`genName κ`](../Forcing/Name/GenName.lean) — one branch per condition, each tagged with
 itself and carrying the condition's code, checked — needs only `[Top P]`, and its valuation
@@ -180,6 +181,8 @@ forcing theorem, not an optional refinement.
 ---
 
 Related: [why-genericity.md](why-genericity.md) tells the genericity story this chapter
-continues; issue #62 owns the material restriction; issue #63 owns the Cohen condition code.
+continues; [conceptual-overview.md](conceptual-overview.md) states the architecture both
+documents converge on; issue #62 owns the material restriction; the Cohen condition code lives
+in [`Forcing/Cohen/ConditionCode.lean`](../Forcing/Cohen/ConditionCode.lean).
 The forcing relation, by direct recursion on formulas, is the next chapter; Boolean values are
 a comparison theorem two chapters away.
