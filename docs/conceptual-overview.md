@@ -12,15 +12,21 @@ owns it. There is no third kind of claim.
 
 ## The thesis
 
-A forcing presentation provides finite facts about possible objects. Filters collect all the
-finite facts belonging to one partial object. Requirements are the persistent, locally
-attainable tests on those facts. A visibility context determines which tests count; a material
-ground will also determine which conditional descriptions are available. Genericity selects the
-objects passing every visible test, and valuation turns the available descriptions into the
-extension. The forcing relation is the stable local semantics connecting the two sides
-*(planned — M5)*.
+A forcing presentation provides conditions carrying partial information. On the
+finite-partial-function carrier, filters are exactly partial objects, represented by all of
+their finite facts. Requirements are the persistent, locally attainable tests on conditions. A
+visibility context determines which tests count, while external valuation evaluates a chosen
+family of conditional descriptions along a condition set. The planned material bridge derives
+both vocabularies — visible tests and available descriptions — from one carrier, and thereby
+earns the construction `M[G]`; the planned truth lemma connects that evaluation semantics to
+persistent local forcing judgments.
 
-Everything before the final sentence is certified, as follows.
+**The certified/planned split.** The external architecture is certified below: the two
+equivalences, observer-relative genericity, the name semantics with its two certified
+failures, and the two opposing monotonicities. The two final arrows — the material bridge
+(#62) and the truth lemma (M5) — are planned, and the closing section states exactly what each
+must provide. Until the bridge lands, external valuation produces a `valuationImage`; it has
+not yet earned the name "extension".
 
 ## Objects: a filter is a partial object
 
@@ -41,10 +47,11 @@ genericity is exactly totality of the partial object
 ([`forall_meets_coordReq_iff_isSome_unionFun`](../Forcing/GenericUnion.lean)).
 
 **Scope.** This equivalence is a theorem about the finite-partial-function carrier, not about
-filters on an arbitrary order. For a general forcing notion the certified statement is weaker
-— a filter is a coherent, complete, based collection of finite facts — and the *object* it
-presents exists carrier by carrier. Reading the correspondence as an ideal/domain completion
-is an informal gloss, not a formalized theorem.
+filters on an arbitrary order. For a general forcing notion the certified statement is just
+the definition — a filter is a nonempty, downward-directed, weakening-closed collection of
+conditions; conditions need not be finite, and the *object* a filter presents exists carrier
+by carrier. Reading the correspondence as an ideal/domain completion is an informal gloss, not
+a formalized theorem.
 
 ## Tests: a requirement is a dense-open set
 
@@ -66,7 +73,7 @@ test. Existence of generic filters is the countable-satisfiability theorem for t
 ([`exists_pfilter_genericOver`](../Forcing/Model/GenericOver.lean)), with countability an
 external hypothesis, never a field.
 
-The test vocabularies are strictly ordered in expressiveness, witnessed rather than asserted:
+The certified separation witnesses support the expository ordering of the test vocabularies:
 coordinate tests recognize totality but not newness
 ([`totality_separation`](../Forcing/Cohen/Diagonal.lean)); adding diagonal tests recognizes
 newness but not full genericity
