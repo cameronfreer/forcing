@@ -156,6 +156,10 @@ of the pilot stand unchanged.
   `IsAtomless`, the dense-open complement of every forcing filter
   (`isDenseOpen_compl_pfilter`), and the visibility refutation
   (`not_genericOver_of_visible_compl`).
+- [`Forcing/Property/Linked.lean`](../Forcing/Property/Linked.lean) — width (B1): linked and
+  centered families (nonempty-finite-subset convention), σ-variants as explicit covers, the
+  chain (`IsCentered.isLinked`, `IsSigmaCentered.isSigmaLinked`), and the certified
+  external-vacuity warning (`isSigmaCentered_of_countable`).
 
 (Rows are added as modules land; a module row is the only place this document makes
 implementation claims.)

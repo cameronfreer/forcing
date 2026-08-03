@@ -14,6 +14,7 @@ import Forcing.Material.ForcingPresentation
 import Forcing.Material.Names
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless
+import Forcing.Property.Linked
 import Forcing.Model.Visibility
 import Forcing.Model.Requirement
 import Forcing.Name.Basic
