@@ -7,9 +7,9 @@ import Forcing.Cohen.Diagonal
 import Forcing.Model.Requirement
 
 /-!
-# The Cohen ground context and its visibility obligations
+# The Cohen visibility context and its obligations
 
-A `CohenGroundContext` is a ground/visibility context over Cohen conditions together with its
+A `CohenVisibilityContext` is a visibility context over Cohen conditions together with its
 designated ground reals. The name says *context*: this is the deliberately abstract interface,
 not a model — the reals are designated, not derived, and no claim is made that they are the
 reals of anything.
@@ -22,21 +22,21 @@ and the separating test `oddTrue` is deliberately not among them: the spectrum t
 a visibility budget incomparable with the new-real theorem's, so its obligation stays separate.
 
 Downstream statements use the forwarding projections (`Visible`, `visibleDenseOpen`,
-`GenericOver`) and never write `M.toGroundContext`.
+`GenericOver`) and never write `M.toVisibilityContext`.
 
 ## Main definitions
 
-* `Forcing.Cohen.CohenGroundContext`: a ground context over `Cond` with designated ground
+* `Forcing.Cohen.CohenVisibilityContext`: a visibility context over `Cond` with designated ground
   reals.
-* `Forcing.Cohen.CohenGroundContext.Sees`: the visibility obligations of the new-real argument.
+* `Forcing.Cohen.CohenVisibilityContext.Sees`: the visibility obligations of the new-real argument.
 
 ## Main results
 
-* `Forcing.Cohen.CohenGroundContext.Sees.meets_coordReq`,
-  `Forcing.Cohen.CohenGroundContext.Sees.meets_diagReq`: a filter generic over a context that
+* `Forcing.Cohen.CohenVisibilityContext.Sees.meets_coordReq`,
+  `Forcing.Cohen.CohenVisibilityContext.Sees.meets_diagReq`: a filter generic over a context that
   meets its obligations meets every coordinate requirement and every diagonal requirement
   against the ground reals — the bridge lemmas the new-real theorem consumes.
-* `Forcing.Cohen.CohenGroundContext.sees_full`: the full context satisfies the obligations for
+* `Forcing.Cohen.CohenVisibilityContext.sees_full`: the full context satisfies the obligations for
   any choice of ground reals.
 -/
 
@@ -44,34 +44,37 @@ namespace Forcing.Cohen
 
 open Order
 
-/-- A ground context over Cohen conditions together with its designated ground reals. The name
+/-- A visibility context over Cohen conditions together with its designated ground reals. The name
 says *context*: this is the deliberately abstract interface, not a model — the reals are
-designated, not derived, and no claim is made that they are the reals of anything. -/
-@[ext] structure CohenGroundContext extends GroundContext Cond where
+designated, not derived, and no claim is made that they are the reals of anything. The two
+fields are different in kind, deliberately: `visible` is a vocabulary of *tests*, `groundReals`
+a designated vocabulary of *objects* — the pairing a material ground will later derive from one
+carrier rather than supply as independent data. -/
+@[ext] structure CohenVisibilityContext extends VisibilityContext Cond where
   /-- The designated ground reals: the family the new-real theorem concludes against. -/
   groundReals : Set (ℕ → Bool)
 
-namespace CohenGroundContext
+namespace CohenVisibilityContext
 
-variable {M : CohenGroundContext} {G : PFilter Cond} {D : Set Cond}
+variable {M : CohenVisibilityContext} {G : PFilter Cond} {D : Set Cond}
 
 /-- Forwarding projection: `M` can see the set of conditions `D`. -/
-abbrev Visible (M : CohenGroundContext) (D : Set Cond) : Prop :=
-  M.toGroundContext.Visible D
+abbrev Visible (M : CohenVisibilityContext) (D : Set Cond) : Prop :=
+  M.toVisibilityContext.Visible D
 
 /-- Forwarding projection: the visible dense-open family of the underlying context. -/
-abbrev visibleDenseOpen (M : CohenGroundContext) : Set (Set Cond) :=
-  M.toGroundContext.visibleDenseOpen
+abbrev visibleDenseOpen (M : CohenVisibilityContext) : Set (Set Cond) :=
+  M.toVisibilityContext.visibleDenseOpen
 
 /-- Forwarding projection: genericity over the underlying context. -/
-abbrev GenericOver (M : CohenGroundContext) (G : PFilter Cond) : Prop :=
-  Forcing.GenericOver M.toGroundContext G
+abbrev GenericOver (M : CohenVisibilityContext) (G : PFilter Cond) : Prop :=
+  Forcing.GenericOver M.toVisibilityContext G
 
 /-- The visibility obligations of the Cohen new-real argument, bundled as a `Prop` so theorems
 can take them as one explicit hypothesis. `visible_diagReq` is the **M3 bridge**
 `x ∈ M.groundReals → Visible M ((diagReq x).support)`: the abstract context exposes it, and a
 later material ground model must prove it. -/
-structure Sees (M : CohenGroundContext) : Prop where
+structure Sees (M : CohenVisibilityContext) : Prop where
   /-- Every coordinate requirement is visible. -/
   visible_coordReq : ∀ n, M.Visible (coordReq n).support
   /-- The M3 bridge: the diagonal requirement of every designated ground real is visible. -/
@@ -104,30 +107,30 @@ theorem Sees.meets_diagReq (hM : M.Sees) (hG : M.GenericOver G) {x : ℕ → Boo
   hG.meets_requirement (hM.visible_diagReq x hx)
 
 /-- The full Cohen context: sees everything, over any designated ground reals. -/
-def full (R : Set (ℕ → Bool)) : CohenGroundContext :=
-  ⟨GroundContext.full Cond, R⟩
+def full (R : Set (ℕ → Bool)) : CohenVisibilityContext :=
+  ⟨VisibilityContext.full Cond, R⟩
 
 /-- The full context satisfies the visibility obligations for any choice of ground reals. -/
 theorem sees_full (R : Set (ℕ → Bool)) : (full R).Sees :=
-  ⟨fun _ ↦ GroundContext.visible_full, fun _ _ ↦ GroundContext.visible_full⟩
+  ⟨fun _ ↦ VisibilityContext.visible_full, fun _ _ ↦ VisibilityContext.visible_full⟩
 
 /-!
 ### Sanity examples
 
 The forwarding projections are definitionally the underlying notions, so no downstream
-statement needs `M.toGroundContext`; and the obligations do not mention `oddTrue`, whose
+statement needs `M.toVisibilityContext`; and the obligations do not mention `oddTrue`, whose
 visibility is a separate hypothesis of the spectrum theorem.
 -/
 
-example : M.GenericOver G ↔ Forcing.GenericOver M.toGroundContext G :=
+example : M.GenericOver G ↔ Forcing.GenericOver M.toVisibilityContext G :=
   .rfl
 
-example : M.Visible D ↔ M.toGroundContext.Visible D :=
+example : M.Visible D ↔ M.toVisibilityContext.Visible D :=
   .rfl
 
 example (hM : M.Sees) (hG : M.GenericOver G) (n : ℕ) : Meets G (coordReq n).support :=
   hM.meets_coordReq hG n
 
-end CohenGroundContext
+end CohenVisibilityContext
 
 end Forcing.Cohen

@@ -148,7 +148,7 @@ generic's name over a supplied coding, and valuation images of chosen families â
 collapse certifying why the family must be chosen. What it deliberately does not provide is
 the *material* side: a ground whose internal name family makes the image a genuine extension,
 with the checked-ground and generic-name memberships proved rather than hypothesized, and the
-visibility obligations of the ground context discharged. That is issue #62, the unique point
+visibility obligations of the visibility context discharged. That is issue #62, the unique point
 where external semantics becomes a material extension â€” and it is a named prerequisite for the
 forcing theorem, not an optional refinement.
 

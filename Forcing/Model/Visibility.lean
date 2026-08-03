@@ -6,10 +6,10 @@ Authors: Cameron Freer
 import Forcing.Order.Basic
 
 /-!
-# The abstract ground/visibility context
+# The abstract visibility context
 
 Genericity over a ground model quantifies over the tests *visible to the model*. This file
-introduces the minimal interface that makes such quantification possible: a `GroundContext` is
+introduces the minimal interface that makes such quantification possible: a `VisibilityContext` is
 nothing but the family of sets of conditions the ground model can see.
 
 The context is deliberately spartan:
@@ -26,14 +26,14 @@ family; it is deliberately not defined in this file.
 
 ## Main definitions
 
-* `Forcing.GroundContext P`: the visibility interface.
-* `Forcing.GroundContext.Visible`: `M` can see the set of conditions `D`.
-* `Forcing.GroundContext.visibleDenseOpen`: the visible dense-open tests.
+* `Forcing.VisibilityContext P`: the visibility interface.
+* `Forcing.VisibilityContext.Visible`: `M` can see the set of conditions `D`.
+* `Forcing.VisibilityContext.visibleDenseOpen`: the visible dense-open tests.
 
 ## Main results
 
-* `Forcing.GroundContext.visibleDenseOpen_mono`: a context that sees more has more tests.
-* `Forcing.GroundContext.full`, `Forcing.GroundContext.empty`: the extreme contexts, and the
+* `Forcing.VisibilityContext.visibleDenseOpen_mono`: a context that sees more has more tests.
+* `Forcing.VisibilityContext.full`, `Forcing.VisibilityContext.empty`: the extreme contexts, and the
   sanity examples separating `Visible` from `IsDenseOpen` in both directions.
 -/
 
@@ -41,28 +41,28 @@ namespace Forcing
 
 variable {P : Type*} [Preorder P]
 
-/-- An abstract ground/visibility context over the forcing notion `P`: the family of sets of
+/-- An abstract visibility context over the forcing notion `P`: the family of sets of
 conditions the ground model can see. Deliberately minimal — no countability (that is always an
 external hypothesis of an existence statement), no carrier-specific data, and no claim to model
 anything. -/
-@[ext] structure GroundContext (P : Type*) [Preorder P] where
+@[ext] structure VisibilityContext (P : Type*) [Preorder P] where
   /-- The sets of conditions the ground model can see. -/
   visible : Set (Set P)
 
-namespace GroundContext
+namespace VisibilityContext
 
-variable {M M' : GroundContext P} {D : Set P}
+variable {M M' : VisibilityContext P} {D : Set P}
 
 /-- `M` can see the set of conditions `D`. Independent of `IsDenseOpen D` — see the sanity
 examples below. -/
-def Visible (M : GroundContext P) (D : Set P) : Prop :=
+def Visible (M : VisibilityContext P) (D : Set P) : Prop :=
   D ∈ M.visible
 
 theorem visible_def : M.Visible D ↔ D ∈ M.visible :=
   .rfl
 
 /-- The visible dense-open family: the tests that count for genericity over `M`. -/
-def visibleDenseOpen (M : GroundContext P) : Set (Set P) :=
+def visibleDenseOpen (M : VisibilityContext P) : Set (Set P) :=
   {D ∈ M.visible | IsDenseOpen D}
 
 @[simp] theorem mem_visibleDenseOpen :
@@ -76,7 +76,7 @@ theorem visibleDenseOpen_mono (h : M.visible ⊆ M'.visible) :
 
 /-- The full context: sees every set of conditions. Genericity over it will be genericity for
 every dense open set. -/
-def full (P : Type*) [Preorder P] : GroundContext P :=
+def full (P : Type*) [Preorder P] : VisibilityContext P :=
   ⟨Set.univ⟩
 
 @[simp] theorem visible_full : (full P).Visible D :=
@@ -86,7 +86,7 @@ def full (P : Type*) [Preorder P] : GroundContext P :=
   Set.sep_univ
 
 /-- The empty context: sees nothing. Genericity over it will be trivial. -/
-def empty (P : Type*) [Preorder P] : GroundContext P :=
+def empty (P : Type*) [Preorder P] : VisibilityContext P :=
   ⟨∅⟩
 
 @[simp] theorem not_visible_empty : ¬(empty P).Visible D :=
@@ -116,6 +116,6 @@ example (h : M.visible ⊆ M'.visible) (hD : D ∈ M.visibleDenseOpen) :
     D ∈ M'.visibleDenseOpen :=
   visibleDenseOpen_mono h hD
 
-end GroundContext
+end VisibilityContext
 
 end Forcing

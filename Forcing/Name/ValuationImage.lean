@@ -15,7 +15,7 @@ set containing `⊤` the image of *all* names is the whole universe
 (`valuationImage_univ_eq_univ`). Restricting which names belong to the ground is what makes a
 genuine extension possible.
 
-This file is entirely model-independent: no `GenericOver`, no ground contexts, no composition
+This file is entirely model-independent: no `GenericOver`, no visibility contexts, no composition
 with genericity. That composition is the business of the material layer — the unique point
 where external semantics becomes a material extension — and importing the model layer here
 would reverse the intended dependency. Accordingly there is no `M[G]` here, no ZFC, no truth

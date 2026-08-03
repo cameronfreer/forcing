@@ -17,9 +17,10 @@ contested choices get a short decision record in `docs/decisions/`.
    (`ZFSet`) presentations arrive only at the ground-model layer, with explicit
    absoluteness bridges.
 5. **`GenericFor` is distinct from `GenericOver`.** `GenericFor 𝒟 G` (meeting a
-   supplied family of dense sets) is pure order theory. `GenericOver M P G`
-   (meeting every dense set belonging to `M`) is model-relative. The kernel knows
-   only the former.
+   supplied family of dense sets) is pure order theory. `GenericOver M G` (meeting
+   every dense-open test visible to `M`) is observer-relative: `M` is a
+   `VisibilityContext` — a vocabulary of tests, not a model. The kernel knows only
+   the former.
 6. **Names remain intensional.** `P`-names and `B`-names are inductive trees; no
    quotient by (Boolean) extensional equality until the ultrafilter/model
    boundary.

@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Cohen.Ground
+import Forcing.Cohen.Visibility
 
 /-!
 # The context-relative spectrum: newness over `M` does not imply `M`-genericity
@@ -40,7 +40,7 @@ namespace Forcing.Cohen
 
 open Order FinitePartialFunction
 
-variable {M : CohenGroundContext} {x : ℕ → ℕ → Bool}
+variable {M : CohenVisibilityContext} {x : ℕ → ℕ → Bool}
 
 /-- The witness avoids the ground reals: `parityReal x` differs from `x i` at coordinate
 `2 * i`, and the enumeration covers `M.groundReals`. Uses only the covering enumeration — no
@@ -82,7 +82,7 @@ enumeration of any family of designated ground reals it covers.
 -/
 
 example (x : ℕ → ℕ → Bool) :
-    ¬(CohenGroundContext.full (Set.range x)).GenericOver (ofFunction (parityReal x)) :=
-  not_genericOver_parityReal GroundContext.visible_full
+    ¬(CohenVisibilityContext.full (Set.range x)).GenericOver (ofFunction (parityReal x)) :=
+  not_genericOver_parityReal VisibilityContext.visible_full
 
 end Forcing.Cohen

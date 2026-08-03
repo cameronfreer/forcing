@@ -3,11 +3,11 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Model.Ground
+import Forcing.Model.Visibility
 import Forcing.Order.RasiowaSikorski
 
 /-!
-# Genericity over a ground context
+# Genericity over a visibility context
 
 `GenericOver M G` says the filter `G` meets every dense-open test visible to the context `M`.
 By definition it is `GenericFor` of the visible dense-open family: model-relative genericity is
@@ -21,7 +21,7 @@ The last two results record where the ground model's closure properties first ma
 every visible *dense* set implies genericity outright (`genericOver_of_forall_isDense`), but it
 is a priori the stronger demand — the converse requires the persistent form of each visible
 test to be visible, i.e. the visible family closed under downward closure, stated as an
-explicit hypothesis and deliberately not a field of `GroundContext`.
+explicit hypothesis and deliberately not a field of `VisibilityContext`.
 
 ## Main definitions
 
@@ -40,13 +40,13 @@ explicit hypothesis and deliberately not a field of `GroundContext`.
 
 namespace Forcing
 
-open Order GroundContext
+open Order VisibilityContext
 
-variable {P : Type*} [Preorder P] {M M' : GroundContext P} {G : PFilter P}
+variable {P : Type*} [Preorder P] {M M' : VisibilityContext P} {G : PFilter P}
 
-/-- Genericity over a ground context: meeting every visible dense-open test. By definition this
+/-- Genericity over a visibility context: meeting every visible dense-open test. By definition this
 is `GenericFor` of the visible dense-open family — no new predicate machinery. -/
-def GenericOver (M : GroundContext P) (G : PFilter P) : Prop :=
+def GenericOver (M : VisibilityContext P) (G : PFilter P) : Prop :=
   GenericFor M.visibleDenseOpen G
 
 theorem genericOver_iff :
@@ -88,7 +88,7 @@ under downward closure, genericity over `M` is equivalent to meeting every visib
 The reverse implication needs no closure (`genericOver_of_forall_isDense`); it is the forward
 one — a generic filter meets every visible dense set — that requires the persistent form of
 each visible test to be visible. The closure is an explicit hypothesis, deliberately not a
-field of `GroundContext`. -/
+field of `VisibilityContext`. -/
 theorem genericOver_iff_forall_isDense
     (hM : ∀ D, M.Visible D → M.Visible ↑(lowerClosure D)) :
     GenericOver M G ↔ ∀ D, M.Visible D → IsDense D → Meets G D :=

@@ -13,7 +13,7 @@ The passage from visibility to meeting is generic, not Cohen-specific: a require
 support is visible is a visible dense-open test (`Requirement.mem_visibleDenseOpen`), so a
 filter generic over the context meets it (`GenericOver.meets_requirement`). Every forcing
 notion reuses this bridge; carrier-specific files keep only thin named specializations (see
-`Forcing/Cohen/Ground.lean`).
+`Forcing/Cohen/Visibility.lean`).
 
 The layer boundary is deliberate: the `Requirement` supplies dense-openness, the context
 supplies visibility, and `GenericOver` supplies meeting. No layer duplicates another's job.
@@ -29,7 +29,7 @@ namespace Forcing
 
 open Order
 
-variable {P : Type*} [Preorder P] {M : GroundContext P} {G : PFilter P}
+variable {P : Type*} [Preorder P] {M : VisibilityContext P} {G : PFilter P}
 
 /-- A requirement whose support is visible is a visible dense-open test: visibility is the
 hypothesis, dense-openness comes with being a requirement. -/

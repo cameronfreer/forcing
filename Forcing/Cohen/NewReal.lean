@@ -3,12 +3,12 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Cohen.Ground
+import Forcing.Cohen.Visibility
 
 /-!
 # The new-real theorem
 
-Over a Cohen ground context whose visibility obligations hold, an `M`-generic filter's real is
+Over a Cohen visibility context whose visibility obligations hold, an `M`-generic filter's real is
 total and lies outside the designated ground reals; combined with external countability of the
 visible family, such filters exist through every condition. The combined corollary is the
 theorem that earns the phrase **adds a new real**.
@@ -33,7 +33,7 @@ namespace Forcing.Cohen
 
 open Order FinitePartialFunction
 
-variable {M : CohenGroundContext} {G : PFilter Cond}
+variable {M : CohenVisibilityContext} {G : PFilter Cond}
 
 /-- Adequacy, totality half: an `M`-generic filter's union is total. Uses only the visibility
 obligations and genericity — no countability. -/
@@ -83,8 +83,8 @@ The adequacy statements have no countability hypothesis; over the full context (
 the obligations for any designated reals) they apply to any generic filter directly.
 -/
 
-example {R : Set (ℕ → Bool)} (hG : (CohenGroundContext.full R).GenericOver G)
+example {R : Set (ℕ → Bool)} (hG : (CohenVisibilityContext.full R).GenericOver G)
     {c : ℕ → Bool} (hc : ∀ n, genericFun G n = some (c n)) : c ∉ R :=
-  not_mem_groundReals_of_genericOver (CohenGroundContext.sees_full R) hG hc
+  not_mem_groundReals_of_genericOver (CohenVisibilityContext.sees_full R) hG hc
 
 end Forcing.Cohen
