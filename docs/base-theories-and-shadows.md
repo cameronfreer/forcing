@@ -51,6 +51,12 @@ the actual mechanism of cardinal/cofinality preservation, and the reason ROADMAP
 route is stated with the codomain qualification. Homogeneity is the width-one extreme: for an
 invariant sentence, the truth-value spectrum is a singleton.
 
+**Definitional caution.** The primitive is the *predicate*
+`PossibleAt p τ x := ∃ q ≤ p, q ⊩ τ = x̌`, not the spectrum `Poss_p(τ)` as an object: in a
+weak theory the collection of all such `x` may not exist internally — the existence of a
+coded cover is precisely what the shadow must provide. Do not assume Separation or Collection
+in the definition of the very object whose coding is under investigation.
+
 ## Worked shadow 2: symmetry (the homogeneity shadow)
 
 Equivariance, fixed parameters, and orbit compatibility are **not** sufficient; the argument
@@ -65,6 +71,17 @@ also needs the relevant decisions to exist. The local package for one formula `�
 Together: the top condition decides this `Γ`-formula. Full weak homogeneity is the universal
 wrapper over formulas and parameters. This `HomogeneousFor`-style interface is the intended
 first shadow, over #93's atomic fragment.
+
+**Naming discipline.** Shadows are named by content — *fragment-relative,
+parameter-relative homogeneity* — with KPU one instantiation, never baked into the name.
+
+**The rigid-base caveat.** Over arithmetic the base structure is rigid: an arbitrary
+coordinate permutation preserves neither `+`, `×`, order, nor named number parameters. An
+arithmetic homogeneity shadow therefore applies only to parameter-free formulas, formulas
+invariant under a specified definable group, a separate generic coordinate sort, or an
+urelement presentation in which symmetry acts only on the forcing sort. Separating the
+**rigid base structure** from the **symmetric generic coordinates** is the strongest argument
+for eventually supporting urelements.
 
 ## Worked shadow 3: collection (the KP shadow)
 
@@ -96,7 +113,9 @@ with the middle notion (`Σ₁`-collecting forcing) the likely generalization ta
 | bounded arithmetic | bounded fragments | bounded induction/collection |
 
 Supporting literature: forcing against weak arithmetic with partially definable forcing
-relations ([Atserias–Müller](https://ucrisportal.univie.ac.at/en/publications/partially-definable-forcing-and-bounded-arithmetic/));
+relations ([Atserias–Müller](https://ucrisportal.univie.ac.at/en/publications/partially-definable-forcing-and-bounded-arithmetic/)),
+with random-variable forcing for bounded arithmetic compared to set-theoretic random forcing
+in [arXiv:2603.10908](https://arxiv.org/abs/2603.10908);
 an axiomatic treatment of forcing over varied bases
 ([Freire–Holy](https://www.cambridge.org/core/journals/review-of-symbolic-logic));
 Jensen-style forcing over weak bases replacing full ccc machinery by control of *definable*
@@ -110,6 +129,22 @@ indexed by formula complexity and by the axiom scheme being preserved — the `B
 scheme is the most ccc-like row (bounded coded witness spectra). Correspondences of the form
 "ccc ⇝ `BΣₙ`-witness bounds" are **research hypotheses**, not established theorems.
 
+## Axiom-by-axiom shadows for arithmetic
+
+Indexed by the **target scheme** (the orthogonal lookup direction to the translation table
+below). Every entry is a **candidate proof obligation or research hypothesis**, not an
+established correspondence:
+
+| Target scheme | Candidate forcing shadow |
+|---|---|
+| `IΣ⁰ₙ` | forcing relation for `Σ⁰ₙ`, persistence, and a least-counterexample or induction argument |
+| `BΣ⁰ₙ` | a coded bound on possible witnesses — the most ccc-like row |
+| `Δ⁰₁`-comprehension | uniform coding of two-sided decisions |
+| arithmetical comprehension | a name family closed under arithmetical definitions/jumps — closure alone is **not** a preservation theorem; the full route is the obligation |
+| `WKL₀` | a compactness/path/fusion shadow for internal infinite trees — a research direction, not yet a defined shadow |
+| `Γ`-conservation | `Γ`-homogeneity plus a `Γ`-forcing theorem |
+| standard-system preservation | every relevant newly definable set captured or controlled by an old code |
+
 **Genericity note.** Computability-theoretic *n*-genericity
 ([Feferman](https://math.stanford.edu/~feferman/papers.html); Mathias-style genericity
 hierarchies, e.g. [arXiv:1201.6084](https://arxiv.org/abs/1201.6084)) is already an instance
@@ -121,9 +156,10 @@ are indexed by the scheme being preserved, never by one "arithmetic ccc".
 
 ## What is deliberately deferred
 
-- **Shadow predicates in Lean** (`PossibleValuesCovered`, `WitnessesCollected`,
-  `EquivariantFor`, `DecisionsCoded`, `Resolves`): wait for #93; each is introduced only
-  when a theorem uses it, with the classical property as a universal wrapper afterward.
+- **Shadow predicates in Lean** (`PossibleAt`, `PossibleValuesCovered`,
+  `ΓAntichainCoding`, `ΓDecisionCoding`, `WitnessesCollected`, `EquivariantFor`,
+  `DecisionsCoded`, `Resolves`): wait for #93; each is introduced only when a theorem uses
+  it, with the classical property as a universal wrapper afterward.
 - **A KPU urelement universe** (`USet U`): a second foundational set representation alongside
   `PSet`/`ZFSet` — not a small generalization of the material layer. Postponed until the
   ordinary material forcing theorem is complete, a concrete KPU theorem is selected, and it
@@ -132,6 +168,32 @@ are indexed by the scheme being preserved, never by one "arithmetic ccc".
 - **Three later pilots, kept distinct** (not one tranche): arithmetic Cohen forcing
   (`Σ⁰ₙ`-visible families, weak/full *n*-genericity, fragment-relative decisions); KPU
   forcing over atoms; KP preservation by witness collection.
+
+**The HYP bridge (candidate architecture, schematic).** For a structure `𝓜`, the least
+admissible set above it gives `𝓜 → HYP(𝓜) → HYP(𝓜)[G]`: the arithmetic domain and its
+relations live in the urelement sort; names, tests, and recursive constructions live in the
+admissible set above it; forcing keeps the urelement structure fixed; the new sets project
+back to a second-order arithmetic extension. This is a *candidate* architecture — not a
+promise that every arithmetic model has a canonical `HYP` construction fitting the eventual
+Lean interface. **Overshoot caveat:** `HYP(𝓜)` may be far stronger than `RCA₀` or bounded
+arithmetic — the right bridge for admissible and hyperarithmetic phenomena, the wrong tool
+for tight reverse-mathematical calibration, which routes through direct arithmetic forcing or
+Mathias's provident sets. This caveat is why the arithmetic and KPU pilots remain separate.
+
+## Translation table
+
+Indexed by the **classical source property** (orthogonal to the axiom-by-axiom table's
+target-scheme index). Every non-classical entry is a research hypothesis:
+
+| Classical property | Local shadow | KPU/KP form | Arithmetic form |
+|---|---|---|---|
+| atomless | a relevant condition has a visible incompatible split | `A`-visible splitting | definable splitting giving a new predicate relative to old definable sets |
+| separative | future compatibility distinguishes two conditions | visible/`Γ`-separativity | equivalence by the same `Γ`-forcing behavior |
+| homogeneous | equivariance + parameter invariance + orbit compatibility + decider density, for one formula | `A`-coded action fixing urelements, `Γ = Δ₀` or `Σ₁` | definable action and `Σ⁰ₙ`-equivariance |
+| ccc | a small possibility cover for a name with a ground-valued codomain | `A`-set of possible witnesses; internal `δ`-cc one certificate | coded/definable antichains or bounded witness spectra |
+| `<κ`-distributive | one condition resolves a specified test family | resolves `A`-coded families | resolves coded families; adds no objects in a selected definability class |
+| proper | master condition for a selected observer | master over an admissible substructure | master over a coded submodel/cut; standard-system or induction-fragment preservation |
+| complete Boolean algebra | all relevant infinitary truth operations exist | complete for `A`-coded joins only | Boolean operations only for coded/formula-generated families |
 
 ## The research program
 
