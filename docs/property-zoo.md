@@ -24,7 +24,7 @@ core forcing semantics + typed structural certificate ⟹ extension observable
 
 — never a universal `Certificate`, `Shadow`, or property-zoo structure.
 
-## The five levels (normative — see architecture.md)
+## Levels of forcing properties (normative — see architecture.md)
 
 Properties live on different objects, and the difference is essential:
 
@@ -66,9 +66,9 @@ resolution data).
   later fusion and Prikry properties. Chain: lower-bound certificate ⟹ simultaneous
   resolution of dense tests ⟹ control of names for short sequences. Distributivity is stated
   natively in the test vocabulary (small intersections of dense-open tests are dense); "adds
-  no new `<κ`-sequences" is its semantic consequence, never its definition. Closure implies
-  strategic closure, **not** conversely; game conventions must be frozen before that
-  implication is formalized.
+  no new `<κ`-sequences" is its semantic consequence, never its definition. Under the standard game
+  convention, closure supplies a winning strategy — hence strategic closure — and the converse
+  can fail; the formal statement awaits frozen game conventions (length, limit-stage mover).
 - **Width / incompatibility control.** (σ-)linked, (σ-)centered, κ-cc, Knaster, precaliber,
   caliber. These bound the width of incompatible possibilities. The proof pattern they feed:
   a deciding antichain for a name *with a ground-valued codomain* is a family of incompatible
@@ -112,6 +112,36 @@ Every property added to the library fills in all eight fields at issue time:
 | **Transport** | Behavior under order iso, dense embedding, separativization, completion — *a field to fill honestly, not a theorem quota*: "dense embedding: false / one direction / repaired by a dense-presentation form" is a legitimate answer, and counterexamples are as valuable as transport lemmas |
 | **Composition** | Products? Which iteration support (finite / countable / revised countable / `<κ`)? |
 | **Strictness** | Which reverse implications fail, by what example? |
+
+## How the axes interact with genericity
+
+There is no single "weaken genericity" reading of the zoo — the axes touch different parts of
+the architecture. **Branching** supplies opportunities genericity exploits (the atomless pair
+above). **Depth** compresses families of obligations: for a name `ḟ` of a sequence, each
+coordinate gives a dense test `D_α = {p | p decides ḟ(α)}`, and distributivity hands one
+condition resolving all `D_α` for `α < λ < κ` — closure is a structural way to build that
+condition. This display is the concrete bridge from the current test API to M8's depth proof
+pattern. **Width** bounds how many incompatible answers a deciding antichain can contain —
+orthogonal to weakening genericity. **Lifting** localizes an observer's obligations below a
+master condition; semiproperness genuinely weakens what must be controlled. **Symmetry**
+reduces dependence on which generic is chosen.
+
+## Composition is a future obligation
+
+Many properties were engineered to survive a particular iteration technology. The pairing is
+directional — "the standard support technology for this certificate family" — never a
+characterization, and its hypotheses are deferred:
+
+| Certificate family | Standard support technology |
+|---|---|
+| ccc | finite-support iterations |
+| proper | countable-support iterations |
+| semiproper | revised countable support |
+| `<κ`-closure | appropriate `<κ`-support iterations |
+
+Iterations and products are deliberately **absent from the M5–M9 roadmap**: the endpoint
+independence results need single-step forcings. Composition enters with the examples ladder
+(products) and an eventual iteration RFC alongside the post-M9 properness RFC.
 
 ## The doctrine connection
 
