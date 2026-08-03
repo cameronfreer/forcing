@@ -171,6 +171,10 @@ and the descriptions `M` can form, synchronized through one material carrier.
 
 ---
 
+This document is the *horizontal* story — what forcing is. The classical forcing properties
+(ccc, closure, properness, homogeneity, …) form a vertical control theory over it — what a
+particular forcing does and why; their discipline lives in [property-zoo.md](property-zoo.md).
+
 Related: [why-genericity.md](why-genericity.md) derives the test side in discovery order;
 [names.md](names.md) derives the description side the same way;
 [architecture.md](architecture.md) records the layer boundaries and the qualified claims;

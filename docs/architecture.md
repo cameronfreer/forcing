@@ -34,6 +34,19 @@ contested choices get a short decision record in `docs/decisions/`.
    completion" — never the unqualified phrase.
 8. **Proof theory is downstream and detachable.** The semantic library never
    depends on a derivation calculus.
+9. **Every infinitary property declares its quantification universe.** Any
+   property quantifying over sequences, subsets, antichains, families,
+   strategies, or joins is labeled external, `M`-internal, or
+   observer/coding-relative once material grounds are in scope — instances
+   include ccc/κ-cc, Knaster/precaliber/caliber, closure, distributivity,
+   strategic closure, and homogeneity when the automorphisms must be coded in
+   `M`. (Constraint 7 remains the load-bearing Boolean special case, consumed
+   directly by M9.) External ccc is nearly vacuous for externally countable
+   posets and cannot be the hypothesis behind internal preservation. Five
+   property levels are never conflated: raw presentation ≠ dense presentation
+   ≠ Boolean invariant ≠ `M`-internal property ≠ semantic extension effect.
+   The taxonomy and per-property cards live in
+   [property-zoo.md](property-zoo.md).
 
 ## Layer boundaries
 
