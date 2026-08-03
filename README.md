@@ -25,10 +25,10 @@ narrower dependencies.
 |---|---|---|
 | Order kernel | `Forcing/Order/` | conditions, compatibility, dense/predense/dense-open sets, forcing filters, family-relative genericity, Rasiowa–Sikorski, antichains, maximal antichains, dense embeddings, separative quotients, requirements |
 | Finite conditions | `Forcing/FinitePartialFunction.lean`, `Forcing/GenericUnion.lean` | the shared carrier of finite-condition forcing notions; the correspondence between filters and partial functions; coordinate requirements and totality of the generic union |
-| Names | `Forcing/Name/` | external name semantics: intensional `P`-names, valuation against condition sets, check and generic names, and selected-name valuation images with the certified collapse of the unrestricted image |
-| Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
-| Material layer | `Forcing/Material/` | material carriers — transitive sets with a membership-only interface; the layer on which internal presentations, internal names, and `M[G]` are built |
 | Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the avoidance theorem over a visibility context |
+| Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
+| Names | `Forcing/Name/` | external name semantics: intensional `P`-names, valuation against condition sets, check and generic names, and selected-name valuation images with the certified collapse of the unrestricted image |
+| Material layer | `Forcing/Material/` | material carriers — transitive sets with a membership-only interface; the layer on which internal presentations, internal names, and `M[G]` are built |
 
 Milestones, their exit criteria, and their status live in [ROADMAP.md](ROADMAP.md);
 active work is on
