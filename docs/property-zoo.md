@@ -122,8 +122,13 @@ of the pilot stand unchanged.
 
 ## Implemented property modules
 
-(None yet. Rows are added as modules land; a module row is the only place this document
-makes implementation claims.)
+- [`Forcing/Property/Atomless.lean`](../Forcing/Property/Atomless.lean) — branching:
+  `IsAtomless`, the dense-open complement of every forcing filter
+  (`isDenseOpen_compl_pfilter`), and the visibility refutation
+  (`not_genericOver_of_visible_compl`).
+
+(Rows are added as modules land; a module row is the only place this document makes
+implementation claims.)
 
 ---
 
