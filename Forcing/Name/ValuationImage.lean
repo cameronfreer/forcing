@@ -53,6 +53,14 @@ def valuationImage (N : Set (PName P)) (S : Set P) : Set ZFSet.{u} :=
 theorem mem_valuationImage (hn : τ ∈ N) : zval S τ ∈ valuationImage N S :=
   Set.mem_image_of_mem _ hn
 
+/-- Membership via a **semantic representative**: if some name of the family values to `x`,
+then `x` lands in the image. The workhorse of the material layer's representative discipline —
+membership demands are stated up to valuation, never as literal membership of a distinguished
+name such as `checkZF x` or `genName κ`. -/
+theorem mem_valuationImage_of_mem_of_zval_eq (hn : τ ∈ N) {x : ZFSet.{u}}
+    (h : zval S τ = x) : x ∈ valuationImage N S :=
+  h ▸ mem_valuationImage hn
+
 /-- The image is monotone in the *family*. Contrast: valuation is **not** monotone in the
 *condition set* (`exists_not_zval_subset_zval`). -/
 theorem valuationImage_mono (h : N ⊆ N') : valuationImage N S ⊆ valuationImage N' S :=
