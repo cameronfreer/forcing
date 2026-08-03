@@ -11,6 +11,7 @@ import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
 import Forcing.Material.Carrier
 import Forcing.Material.ForcingPresentation
+import Forcing.Material.Extension
 import Forcing.Material.Names
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless
