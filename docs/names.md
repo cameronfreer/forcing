@@ -143,15 +143,22 @@ bureaucracy, it is the mathematical content of "extension".
 
 ## 9. The honest stopping point
 
-None of this is `M[G]`, and the library does not use the notation. What external name
+None of this is `M[G]`, and the external layer does not use the notation. What external name
 semantics provides is: names, valuation against arbitrary condition sets, check names, the
 generic's name over a supplied coding, and valuation images of chosen families — with the
-collapse certifying why the family must be chosen. What it deliberately does not provide is
-the *material* side: a ground whose internal name family makes the image a genuine extension,
-with the checked-ground and generic-name memberships proved rather than hypothesized, and the
-visibility obligations of the visibility context discharged. That is issue #62, the unique point
-where external semantics becomes a material extension — and it is a named prerequisite for the
-forcing theorem, not an optional refinement.
+collapse certifying why the family must be chosen.
+
+The *material* side now exists, one layer up in `Forcing/Material/`: an internal name family
+with its smallness evidence kept
+([`InternalNamePresentation`](../Forcing/Material/Names.lean)), and `M[G]` as an indexed
+transitive carrier ([`extensionCarrier`](../Forcing/Material/Extension.lean)) whose
+underlying set is exactly the valuation image of that family
+([`toSet_extensionSet`](../Forcing/Material/Extension.lean)) — with the checked-ground and
+generic-name memberships *proved* from semantic representatives
+([`HasCanonicalNames`](../Forcing/Material/Names.lean)) rather than hypothesized. What
+remains of issue #62 is the Cohen synchronization (#75): the visibility obligations derived
+from internal test codes, and the material avoidance upgrade. The truth lemma is a milestone
+further (M6).
 
 ---
 
