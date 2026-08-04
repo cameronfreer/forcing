@@ -23,10 +23,13 @@ persistent local forcing judgments.
 
 **The certified/planned split.** The external architecture is certified below: the two
 equivalences, observer-relative genericity, the name semantics with its two certified
-failures, and the two opposing monotonicities. The two final arrows — the material bridge
-(#62, milestone M5) and the truth lemma (M6) — are planned, and the closing section states exactly what each
-must provide. Until the bridge lands, external valuation produces a `valuationImage`; it has
-not yet earned the name "extension".
+failures, and the two opposing monotonicities. So is the description side of the material
+bridge: internal names and the **indexed `M[G]`** —
+[`extensionCarrier`](../Forcing/Material/Extension.lean), a genuine transitive `ZFSet` whose
+underlying set equals the valuation image of the internal family, with the ground-inclusion
+and generic-code memberships proved. Two arrows remain planned: derived visibility and the
+Cohen synchronization (#75), and the truth lemma (M6); the closing section states exactly
+what each must provide.
 
 ## Objects: a filter is a partial object
 
@@ -124,14 +127,16 @@ Two certified failures shape the layer:
 one carrier:
 
 ```text
-        THE MATERIAL GROUND  (planned: one carrier, two projections)
+     THE MATERIAL GROUND  (right side certified; left side is #75)
 
                    material presentation of P
                     │                      │
             derived visible tests   internal name family N_M
+              (planned — #75)        (certified — Names.lean)
                     │                      │
                     ▼                      ▼
             admissible generic G  ──▶  M[G], an indexed material set
+                                      (certified — extensionCarrier)
 ```
 
 Three variances, kept apart — the first two certified, the third a certified *failure*:
@@ -143,23 +148,34 @@ Three variances, kept apart — the first two certified, the third a certified *
 | the condition oracle `S` | neither — an element can *change* | [`exists_not_zval_subset_zval`](../Forcing/Name/Valuation.lean) |
 
 Genericity *constrains* which generic oracles are admissible; valuation *generates* the sets a
-chosen oracle determines — "world" is deliberately avoided until `M[G]` exists. The Cohen
+chosen oracle determines — "world" stays reserved until the two vocabularies are
+synchronized through one material presentation (#75); the indexed `M[G]` itself is now
+certified. The Cohen
 visibility context already couples an embryonic form of the pair — a test vocabulary
 (`visible`) with a designated-object vocabulary (`designatedReals`) — as independent data
 ([`CohenVisibilityContext`](../Forcing/Cohen/Visibility.lean)); the bridge's job is to replace
 "independent data" with two projections of one material presentation.
 
-## The two missing arrows *(planned)*
+## The remaining arrows
 
+The description side of the material bridge is **certified**: material carriers
+([`MaterialCarrier`](../Forcing/Material/Carrier.lean)), the no-junk internal presentation
+([`InternalForcingPresentation`](../Forcing/Material/ForcingPresentation.lean)), the internal
+name family with smallness kept
+([`InternalNamePresentation`](../Forcing/Material/Names.lean)), and `M[G]` as an indexed
+transitive carrier ([`extensionCarrier`](../Forcing/Material/Extension.lean)), with the
+ground-inclusion and generic-code memberships proved from semantic representatives
+([`HasCanonicalNames.mem_extensionCarrier_of_mem`,
+`HasCanonicalNames.zval_genName_mem_extensionCarrier`](../Forcing/Material/Extension.lean)).
 What is deliberately not yet a theorem:
 
-1. **The material bridge** *(planned — #62, staged as #71–#75)*: a material ground `M` from
-   which both vocabularies are *derived* — visible tests and internal names obtained coherently
-   from one carrier, never supplied as independent fields — with `M[G]` defined as the
-   valuation image of `M`'s internal names, the checked-ground and generic-name memberships
-   proved rather than hypothesized, and the visibility obligations (`Sees`) discharged. For
-   Cohen forcing the endpoint is `M[G] = M[c_G]` against an independently characterized
-   extension, not one made true by definition.
+1. **Derived visibility and the Cohen synchronization** *(planned — #75)*: the visibility
+   context obtained as externalizations of internal test codes (a material presentation must
+   *carry* those codes; they do not follow from transitivity), `designatedReals` derived as
+   the materially coded reals, `Sees` proved from membership laws rather than assumed, and
+   the material avoidance upgrade that earns "adds a new real". For Cohen forcing the
+   eventual endpoint is `M[G] = M[c_G]` against an independently characterized extension,
+   not one made true by definition.
 2. **The truth lemma** *(planned — M6)*: the forcing relation as the persistent local judgment
    whose motivation is already certified — raw valuation is unstable under new information
    (`exists_not_zval_subset_zval`) — connecting stable local truth to actual generic
