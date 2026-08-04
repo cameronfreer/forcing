@@ -112,6 +112,22 @@ def externalizeSubset (d : ZFSet.{u}) : Set P :=
     p ∈ Pres.externalizeSubset d ↔ ZFSet.mk (Pres.conditionCode.repr p) ∈ d :=
   Iff.rfl
 
+/-- An **internal subset**: an element of the carrier all of whose members lie in the
+internal condition set. The generic input to externalization — internal test codes, derived
+visibility, and countability arguments all consume it. -/
+def InternalSubset :=
+  {d : M // (d : ZFSet.{u}).toSet ⊆ (Pres.conditionSet : ZFSet.{u}).toSet}
+
+variable {Pres}
+
+/-- Externalization of an internal subset: the derived map, specialized. -/
+def InternalSubset.externalize (d : Pres.InternalSubset) : Set P :=
+  Pres.externalizeSubset (d.1 : ZFSet.{u})
+
+@[simp] theorem InternalSubset.mem_externalize {d : Pres.InternalSubset} {p : P} :
+    p ∈ d.externalize ↔ ZFSet.mk (Pres.conditionCode.repr p) ∈ (d.1 : ZFSet.{u}) :=
+  Iff.rfl
+
 /-!
 ### Sanity examples
 
