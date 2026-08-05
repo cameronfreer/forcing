@@ -168,27 +168,29 @@ transitive carrier ([`extensionCarrier`](../Forcing/Material/Extension.lean)), w
 ground-inclusion and generic-code memberships proved from semantic representatives
 ([`HasCanonicalNames.mem_extensionCarrier_of_mem`,
 `HasCanonicalNames.zval_genName_mem_extensionCarrier`](../Forcing/Material/Extension.lean)).
+
+So is the synchronization: the visibility context is obtained as externalizations of carried
+internal test codes ([`derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)),
+`designatedReals` is derived as the materially coded reals (so avoidance *is* material
+nonmembership, by `Iff.rfl`), `Sees` is proved from the codes' membership laws
+([`sees_derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)), and the material
+theorem earns the reserved phrase: countability-free adequacy
+([`exists_realCode_mem_not_mem`](../Forcing/Cohen/NewReal.lean)) and the packaged existence
+theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)).
+
 What is deliberately not yet a theorem:
 
-1. **Derived visibility and the Cohen synchronization** — now **certified**: the visibility
-   context is obtained as externalizations of carried internal test codes
-   ([`derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)), `designatedReals` is
-   derived as the materially coded reals (so avoidance *is* material nonmembership, by
-   `Iff.rfl`), `Sees` is proved from the codes' membership laws
-   ([`sees_derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)), and the material
-   theorem earns the reserved phrase: countability-free adequacy
-   ([`exists_realCode_mem_not_mem`](../Forcing/Cohen/NewReal.lean)) and the packaged
-   existence theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)). Still open on this
-   arrow: the eventual `M[G] = M[c_G]`, against an independently characterized extension,
-   not one made true by definition (a later milestone, with minimality).
-2. **The truth lemma** *(planned — M6)*: the forcing relation as the persistent local judgment
+1. **The truth lemma** *(planned — M6)*: the forcing relation as the persistent local judgment
    whose motivation is already certified — raw valuation is unstable under new information
    (`exists_not_zval_subset_zval`) — connecting stable local truth to actual generic
    evaluation, with the regular-open Boolean-value description a comparison theorem thereafter
    (M9).
+2. **The Cohen endpoint of the certified arrow**: the eventual `M[G] = M[c_G]`, against an
+   independently characterized extension, not one made true by definition (a later milestone,
+   with minimality).
 
-These are precisely the coherence theorems between the two vocabularies: the tests `M` can ask
-and the descriptions `M` can form, synchronized through one material carrier.
+The first is the remaining coherence theorem between the two vocabularies: the tests `M` can
+ask and the descriptions `M` can form, synchronized through one material carrier.
 
 ---
 
