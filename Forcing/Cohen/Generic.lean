@@ -16,8 +16,9 @@ Cohen names and records what the instantiation gives.
 At this milestone the statements are about a *supplied* family of tests: the coordinate
 requirements make the generic real total, and Rasiowa–Sikorski provides such filters. Nothing
 here says "avoids the designated reals" — that is the over-`M` theorem (M3), with "adds a new
-real" reserved further still for the material `M[G]` — and the diagonal requirements that
-separate this level from the next come in the next file.
+real" reserved further still for the material `M[G]` (certified in
+`Forcing/Cohen/NewReal.lean`) — and the diagonal requirements that separate this level from
+the next come in the next file.
 
 ## Main definitions
 

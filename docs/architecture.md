@@ -87,9 +87,10 @@ lives in [conceptual-overview.md](conceptual-overview.md).
 
 ## Qualified claims (do not overstate)
 
-- **"Adds a new real" is reserved for the material theorem**
-  `realCode c ∈ M[G] ∧ realCode c ∉ M`, with `realCode` proved faithful
-  (issue #62). The M3-layer theorem is **avoidance**: the abstract interface
+- **"Adds a new real" is used exactly at the certified material theorem**
+  `realCode c ∈ M[G] ∧ realCode c ∉ M` — `Forcing.Cohen.addsNewReal`, with
+  `realCode` proved faithful — and nowhere weaker. The M3-layer theorem is
+  **avoidance**: the abstract interface
   earns its over-`M` phrase exactly through its closure hypothesis (every
   designated real's diagonal dense set belongs to `M`'s dense family), and its
   formal conclusion is `c_G ∉ M.designatedReals` — a designated family, not the

@@ -155,10 +155,11 @@ transitive carrier ([`extensionCarrier`](../Forcing/Material/Extension.lean)) wh
 underlying set is exactly the valuation image of that family
 ([`toSet_extensionSet`](../Forcing/Material/Extension.lean)) — with the checked-ground and
 generic-name memberships *proved* from semantic representatives
-([`HasCanonicalNames`](../Forcing/Material/Names.lean)) rather than hypothesized. What
-remains of issue #62 is the Cohen synchronization (#75): the visibility obligations derived
-from internal test codes, and the material avoidance upgrade. The truth lemma is a milestone
-further (M6).
+([`HasCanonicalNames`](../Forcing/Material/Names.lean)) rather than hypothesized. The Cohen
+synchronization is certified too: visibility derived from carried internal test codes
+([`sees_derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)), and the material
+new-real theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)) — issue #62 is complete.
+The truth lemma is a milestone further (M6).
 
 ---
 

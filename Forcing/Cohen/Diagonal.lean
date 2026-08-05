@@ -16,7 +16,8 @@ they give the external Cohen theorem, `exists_pfilter_total_diagonalizing`.
 real that differs from every member of some countable family need not be generic, and no
 observer plays any part at this milestone. Avoidance of the designated reals is the over-`M`
 theorem (M3); "adds a new real" is reserved further still, for the material theorem
-`realCode c ∈ M[G] ∧ realCode c ∉ M`. `parity_separation` below shows the first gap is real.
+`realCode c ∈ M[G] ∧ realCode c ∉ M` (certified in `Forcing/Cohen/NewReal.lean`).
+`parity_separation` below shows the first gap is real.
 
 Diagonal attainability is where finiteness earns its keep: a condition decides only finitely many
 coordinates, so a fresh one is available, and `Bool` has another value to put there. (For

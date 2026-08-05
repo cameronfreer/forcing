@@ -296,7 +296,8 @@ composing it with countable existence
 theorem**: [`exists_genericReal_avoiding_designatedReals`](../Forcing/Cohen/Avoidance.lean).
 The phrase **adds a new real** is reserved further still, for the material theorem
 `realCode c ∈ M[G] ∧ realCode c ∉ M` with `realCode` proved faithful — a designated family is
-not the reals of a ground, and no claim is made here that anything is *new*.
+not the reals of a ground, and no claim is made here that anything is *new*. (That material
+theorem is now certified: [`addsNewReal`](../Forcing/Cohen/NewReal.lean).)
 
 The spectrum relativizes too, and the easy-to-forget obligation lands where it must: the
 separating test `oddTrue` has to be *visible* to `M`, as a standalone hypothesis. Under it,
@@ -334,9 +335,10 @@ development keeps them apart.
 **What M3 does not claim.** The context is an interface, not a model: nothing above is a
 countable transitive model or a model of ZFC, and `M.designatedReals` is designated rather than
 derived from any membership relation. Nothing constructs `M[G]`. And the conclusion is
-`c ∉ M.designatedReals` — upgrading it to the material form (`realCode c ∉ M`) is precisely
-the job of the later material instantiation, which must prove the `Sees` obligations instead
-of assuming them.
+`c ∉ M.designatedReals` — and the material instantiation that upgrades it to
+`realCode c ∉ M`, proving the `Sees` obligations instead of assuming them, is now certified
+([`sees_derivedContext`](../Forcing/Cohen/MaterialPresentation.lean),
+[`addsNewReal`](../Forcing/Cohen/NewReal.lean)).
 
 The story continues one layer up in [names.md](names.md): what the extension contains before
 `G` is chosen, and why a genuine extension must choose its names.
