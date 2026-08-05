@@ -22,9 +22,11 @@ import Forcing.Property.Atomless
 import Forcing.Property.Linked
 import Forcing.Model.Visibility
 import Forcing.Model.Requirement
+import Forcing.Name.Atomic
 import Forcing.Name.Basic
 import Forcing.Name.Check
 import Forcing.Name.GenName
+import Forcing.Name.Subname
 import Forcing.Name.ValuationImage
 import Forcing.Name.Valuation
 import Forcing.Order.Antichain
@@ -32,6 +34,7 @@ import Forcing.Order.Basic
 import Forcing.Order.Dual
 import Forcing.Order.Embedding
 import Forcing.Order.Filter
+import Forcing.Order.Localize
 import Forcing.Order.RasiowaSikorski
 import Forcing.Order.Requirement
 import Forcing.Order.Separative
