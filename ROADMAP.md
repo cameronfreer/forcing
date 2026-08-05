@@ -47,14 +47,14 @@ the observer-relative avoidance theorem.
 Exit criterion: `G` is `M`-generic `→ c_G ∉ M.designatedReals`.
 
 This is the **avoidance theorem**: the generic real avoids every designated
-real. The ground model enters abstractly (a family of dense sets, a family of
-designated reals, and a closure hypothesis), so the formal conclusion is stated
-against the designated reals. "Adds a new real" is reserved for the material
-theorem `realCode c_G ∈ M[G] ∧ realCode c_G ∉ M`, with `realCode` proved
-faithful: the material presentation
-([#62](https://github.com/cameronfreer/forcing/issues/62)) bridges carrier
-membership to the designated reals, discharges the closure hypothesis, and
-upgrades the conclusion to that material form.
+real. The observer enters abstractly — a visibility context with designated
+reals and explicit `Sees` obligations — so the formal conclusion is stated
+against the designated reals. "Adds a new real" is used only at the material
+theorem `realCode c_G ∈ M[G] ∧ realCode c_G ∉ M`: M5's material presentation
+([#62](https://github.com/cameronfreer/forcing/issues/62)) has now derived the
+visibility context, discharged the `Sees` obligations from carried internal
+test codes, and upgraded the conclusion to that material form
+(`Forcing.Cohen.addsNewReal`).
 
 ## M4 — Names and external valuation semantics
 
@@ -77,14 +77,15 @@ finally earns "adds a new real".
 
 ## M6 — External forcing relation and truth lemma
 
-**Status: planned.**
+**Status: in progress**
+([#130](https://github.com/cameronfreer/forcing/issues/130)).
 
 The forcing relation by direct recursion on formulas (never via Boolean
 values), persistence under strengthening, and the semantic truth lemma
-connecting stable local truth to generic evaluation. The atomic
-membership/equality spike
-([#93](https://github.com/cameronfreer/forcing/issues/93)) precedes the full
-formula stack and need not wait for M5.
+connecting stable local truth to generic evaluation — quantifiers relative to
+a subname-closed name family, and visibility hypotheses naming localized
+tests explicitly. The atomic membership/equality spike
+([#93](https://github.com/cameronfreer/forcing/issues/93)) led the milestone.
 
 ## M7 — Internal definability and ZFC in `M[G]`
 
