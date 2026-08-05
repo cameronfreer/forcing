@@ -67,13 +67,12 @@ M5.
 
 ## M5 — Material ground models and `M[G]`
 
-**Status: in progress**
-([#62](https://github.com/cameronfreer/forcing/issues/62), staged as
-[#71](https://github.com/cameronfreer/forcing/issues/71)–[#75](https://github.com/cameronfreer/forcing/issues/75)).
+**Status: complete** ([#62](https://github.com/cameronfreer/forcing/issues/62)).
 
 Material carriers, the internal (no-junk) forcing presentation, the ground's
-internal name family with its smallness evidence, and `M[G]` as an indexed
-material set — ending at the material avoidance upgrade, the theorem that
+internal name family with its smallness evidence, `M[G]` as an indexed
+material set, and the Cohen material adapter with visibility derived from
+internal test codes — ending at `Forcing.Cohen.addsNewReal`, the theorem that
 finally earns "adds a new real".
 
 ## M6 — External forcing relation and truth lemma
