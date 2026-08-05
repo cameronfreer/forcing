@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Material.ForcingPresentation
-import Forcing.Cohen.Avoidance
+import Forcing.Cohen.Visibility
 import Forcing.Cohen.RealName
 
 /-!
@@ -116,21 +116,16 @@ theorem countable_visibleDenseOpen_derivedContext (hM : (M : Set ZFSet.{0}).Coun
   (C.countable_visible_derivedContext hM).mono (Set.sep_subset _ _)
 
 /-!
-### Sanity examples
+### Sanity example
 
-The condition code is fixed, not free; both derived projections read off definitionally; and
-the derived context composes with the M3 avoidance theorem with no glue — an `M`-generic
-filter's real avoids every materially coded real.
+The condition code is fixed, not free; both derived projections read off definitionally. The
+composition with the M3 avoidance theorem lives downstream, in the final composition module —
+this file deliberately does not import the adequacy layer.
 -/
 
 example (p : Cond) :
     ZFSet.mk (C.forcing.conditionCode.repr p) = graphCode p.lookup := by
   rw [C.conditionCode_eq]; rfl
-
-example {G : Order.PFilter Cond} (hG : C.derivedContext.GenericOver G) {c : ℕ → Bool}
-    (hc : ∀ n, genericFun G n = some (c n)) : realCode c ∉ M :=
-  C.not_mem_designatedReals_iff.1
-    (not_mem_designatedReals_of_genericOver C.sees_derivedContext hG hc)
 
 end CohenMaterialPresentation
 

@@ -7,6 +7,7 @@ import Forcing.Cohen.Generic
 import Forcing.Cohen.Visibility
 import Forcing.Cohen.Avoidance
 import Forcing.Cohen.MaterialPresentation
+import Forcing.Cohen.NewReal
 import Forcing.Cohen.RealName
 import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
