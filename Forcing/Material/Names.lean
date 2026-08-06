@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Material.ForcingPresentation
+import Forcing.Name.Subname
 import Forcing.Name.ValuationImage
 
 /-!
@@ -91,6 +92,11 @@ theorem elems_mem_names {τ : PName P} (hτ : τ ∈ N.names) (j : τ.Idx) :
     τ.elems j ∈ N.names := by
   obtain ⟨i, rfl⟩ := hτ
   exact N.subname_closed i j
+
+/-- The internal name family is subname-closed, in the structural sense the adequacy and
+truth layers consume. -/
+theorem subnameClosed_names : SubnameClosed N.names :=
+  fun _ hτ i ↦ N.elems_mem_names hτ i
 
 section Canonical
 

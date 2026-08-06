@@ -40,7 +40,6 @@ corollary (`forces_adequacy_of_genericOver`) discharges them from visibility —
 
 ## Main definitions
 
-* `Forcing.SubnameClosed`: families closed under immediate subnames.
 * `Forcing.eqObstruction`, `Forcing.eqDecision`: the equality obstruction and decision tests.
 
 ## Main results
@@ -58,12 +57,6 @@ open PName Order
 
 variable {P : Type u} [Preorder P] {p q : P} {τ σ : PName P} {𝒩 : Set (PName P)}
 variable {G : PFilter P}
-
-/-- A family of names closed under immediate subnames — what keeps the mutual adequacy
-induction inside the family. (`InternalNamePresentation.names` is the material instance, via
-`elems_mem_names`.) -/
-def SubnameClosed (𝒩 : Set (PName P)) : Prop :=
-  ∀ τ ∈ 𝒩, ∀ i : τ.Idx, τ.elems i ∈ 𝒩
 
 /-- The **membership obstruction**: conditions activating a branch of `τ` no strengthening of
 which forces the corresponding membership in `σ`. Lower by quantifier narrowing. -/
