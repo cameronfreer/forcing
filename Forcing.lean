@@ -23,6 +23,7 @@ import Forcing.Property.Linked
 import Forcing.Model.Visibility
 import Forcing.Model.Requirement
 import Forcing.Name.Atomic
+import Forcing.Name.AtomicAdequacy
 import Forcing.Name.Basic
 import Forcing.Name.Check
 import Forcing.Name.GenName
