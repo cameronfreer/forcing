@@ -26,7 +26,9 @@ import Forcing.Name.Atomic
 import Forcing.Name.AtomicAdequacy
 import Forcing.Name.Basic
 import Forcing.Name.Check
+import Forcing.Name.FormulaForcing
 import Forcing.Name.GenName
+import Forcing.Name.MemLang
 import Forcing.Name.Subname
 import Forcing.Name.ValuationImage
 import Forcing.Name.Valuation
