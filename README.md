@@ -74,6 +74,8 @@ lake build
   each definition introduced by the failure it repairs.
 - [docs/names.md](docs/names.md) — external name semantics in the same discovery order, ending
   at the honest stopping point before `M[G]`.
+- [docs/why-forcing.md](docs/why-forcing.md) — the forcing relation derived in the same
+  discovery order, from certified valuation nonmonotonicity to the truth lemma.
 - [docs/property-zoo.md](docs/property-zoo.md) — the vertical control theory: property levels,
   axes, and the property-card discipline for structural certificates.
 - [docs/base-theories-and-shadows.md](docs/base-theories-and-shadows.md) — research RFC:

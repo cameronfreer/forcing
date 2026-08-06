@@ -56,8 +56,9 @@ def memLang : FirstOrder.Language := ⟨fun _ ↦ Empty, memRel⟩
 
 ## Consequences
 
-M6 item 6 implements the formula forcing relation at the audited signatures —
-`ForcesFormula 𝒩 v p φ xs` on `memLang.BoundedFormula`, Syntax-only imports — and item 7's
-truth lemma states realization over `extensionCarrier N G` through the audited bridge. The
-spike prototypes are scratch material, superseded by the real implementations; this record
-is the durable output.
+Both consumers have landed at the audited signatures: `ForcesFormula` over
+`memLang.BoundedFormula` with Syntax-only imports (`Forcing/Name/FormulaForcing.lean`), and
+the truth lemma stating realization over `extensionCarrier N G` through the audited bridge
+(`Forcing/Material/TruthLemma.lean`, with the carrier semantics in
+`Forcing/Material/Semantics.lean`). The spike prototypes were scratch material, superseded
+by those implementations; this record is the durable output.

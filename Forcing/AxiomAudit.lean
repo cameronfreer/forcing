@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Cohen.NewReal
+import Forcing.Material.TruthLemma
 
 /-!
 # The headline axiom audit
@@ -27,9 +28,12 @@ namespace Forcing
 def axiomAllowlist : List Name :=
   [``propext, ``Classical.choice, ``Quot.sound]
 
-/-- The audited headline declarations. Extend at each milestone close. -/
+/-- The audited headline declarations. Extend at each milestone close. Each entry is the
+*composed* milestone theorem — the axiom collector follows dependencies, so auditing it
+audits its entire stack; listing components would duplicate coverage. -/
 def auditedHeadlines : List Name :=
-  [``Forcing.Cohen.addsNewReal]
+  [``Forcing.Cohen.addsNewReal,
+    ``Forcing.InternalNamePresentation.truth_lemma_of_genericOver]
 
 set_option linter.hashCommand false in
 open Elab Command in

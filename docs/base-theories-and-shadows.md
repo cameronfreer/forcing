@@ -1,9 +1,10 @@
 # RFC: base theories and shadows
 
-**Status: research RFC.** Nothing in this document is implemented, and nothing in it may be
-implemented before the external forcing relation exists — the atomic membership/equality
-spike (#93) is the designated first consumer of any shadow predicate. Until then "shadow" is
-methodological vocabulary. Claims below are design heuristics or cited literature, never
+**Status: research RFC.** The no-code trigger has **fired**: the external forcing relation
+now exists (`ForcesMem`/`ForcesEq`/`ForcesFormula`, with the truth lemma certified), so
+shadow predicates *may* now be implemented — but the shadows themselves remain research work
+until a theorem consumes them, and each is still introduced only at its first consumer.
+"Shadow" stays methodological vocabulary until then. Claims below are design heuristics or cited literature, never
 certified statements; the certified/planned discipline of
 [conceptual-overview.md](conceptual-overview.md) applies with everything here on the
 *planned* side.
@@ -158,8 +159,9 @@ are indexed by the scheme being preserved, never by one "arithmetic ccc".
 
 - **Shadow predicates in Lean** (`PossibleAt`, `PossibleValuesCovered`,
   `ΓAntichainCoding`, `ΓDecisionCoding`, `WitnessesCollected`, `EquivariantFor`,
-  `DecisionsCoded`, `Resolves`): wait for #93; each is introduced only when a theorem uses
-  it, with the classical property as a universal wrapper afterward.
+  `DecisionsCoded`, `Resolves`): the forcing relation now exists, so these are
+  *implementable* — but each is still introduced only when a theorem uses it, with the
+  classical property as a universal wrapper afterward.
 - **A KPU urelement universe** (`USet U`): a second foundational set representation alongside
   `PSet`/`ZFSet` — not a small generalization of the material layer. Postponed until the
   ordinary material forcing theorem is complete, a concrete KPU theorem is selected, and it

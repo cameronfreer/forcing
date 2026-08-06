@@ -159,7 +159,9 @@ generic-name memberships *proved* from semantic representatives
 synchronization is certified too: visibility derived from carried internal test codes
 ([`sees_derivedContext`](../Forcing/Cohen/MaterialPresentation.lean)), and the material
 new-real theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)) — issue #62 is complete.
-The truth lemma is a milestone further (M6).
+So is the truth lemma
+([`truth_lemma_of_genericOver`](../Forcing/Material/TruthLemma.lean)); its discovery-order
+account is [why-forcing.md](why-forcing.md).
 
 ---
 
@@ -189,8 +191,8 @@ The truth lemma is a milestone further (M6).
 ---
 
 Related: [why-genericity.md](why-genericity.md) tells the genericity story this chapter
-continues; [conceptual-overview.md](conceptual-overview.md) states the architecture both
-documents converge on; issue #62 owns the material restriction; the Cohen condition code lives
-in [`Forcing/Cohen/ConditionCode.lean`](../Forcing/Cohen/ConditionCode.lean).
-The forcing relation, by direct recursion on formulas, is the next chapter; Boolean values are
+continues; [why-forcing.md](why-forcing.md) is the next chapter — the forcing relation by
+direct recursion, through to the truth lemma; [conceptual-overview.md](conceptual-overview.md)
+states the architecture the three converge on; the Cohen condition code lives in
+[`Forcing/Cohen/ConditionCode.lean`](../Forcing/Cohen/ConditionCode.lean). Boolean values are
 a comparison theorem two chapters away.

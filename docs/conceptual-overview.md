@@ -27,10 +27,11 @@ failures, and the two opposing monotonicities. So is the description side of the
 bridge: internal names and the **indexed `M[G]`** —
 [`extensionCarrier`](../Forcing/Material/Extension.lean), a genuine transitive `ZFSet` whose
 underlying set equals the valuation image of the internal family, with the ground-inclusion
-and generic-code memberships proved. One arrow remains planned: the truth
-lemma (M6); the closing section states what it must provide. The Cohen synchronization is
-certified — visibility derived from internal test codes, and the material new-real theorem
-([`addsNewReal`](../Forcing/Cohen/NewReal.lean)).
+and generic-code memberships proved. The truth lemma is now certified too
+([`truth_lemma`, `truth_lemma_of_genericOver`](../Forcing/Material/TruthLemma.lean)); the
+Cohen synchronization likewise — visibility derived from internal test codes, and the
+material new-real theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)). The closing
+section records the single remaining uncertified arrow.
 
 ## Objects: a filter is a partial object
 
@@ -178,19 +179,21 @@ theorem earns the reserved phrase: countability-free adequacy
 ([`exists_realCode_mem_not_mem`](../Forcing/Cohen/NewReal.lean)) and the packaged existence
 theorem ([`addsNewReal`](../Forcing/Cohen/NewReal.lean)).
 
+The truth lemma — the coherence theorem between the two vocabularies — is **certified**:
+the forcing relation is the persistent local judgment
+([`ForcesFormula`, `ForcesFormula.mono`](../Forcing/Name/FormulaForcing.lean)), and
+realization in the extension carrier is equivalent to forcing along the filter, with
+genericity's exact role only the conversion of visible dense-open tests into meetings
+([`truth_lemma`, `truth_lemma_of_genericOver`](../Forcing/Material/TruthLemma.lean); the
+discovery-order account is [why-forcing.md](why-forcing.md)). The Boolean-value description
+remains a comparison theorem (M9), and internality — definability, obligations proved from
+the material presentation, ZFC in `M[G]` — is M7.
+
 What is deliberately not yet a theorem:
 
-1. **The truth lemma** *(planned — M6)*: the forcing relation as the persistent local judgment
-   whose motivation is already certified — raw valuation is unstable under new information
-   (`exists_not_zval_subset_zval`) — connecting stable local truth to actual generic
-   evaluation, with the regular-open Boolean-value description a comparison theorem thereafter
-   (M9).
-2. **The Cohen endpoint of the certified arrow**: the eventual `M[G] = M[c_G]`, against an
+1. **The Cohen endpoint of the certified arrows**: the eventual `M[G] = M[c_G]`, against an
    independently characterized extension, not one made true by definition (a later milestone,
    with minimality).
-
-The first is the remaining coherence theorem between the two vocabularies: the tests `M` can
-ask and the descriptions `M` can form, synchronized through one material carrier.
 
 ---
 
