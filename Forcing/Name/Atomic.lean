@@ -22,8 +22,10 @@ p ⊩ τ = σ   iff   every branch activated below p on either side is forced to
 orientations, so the well-founded measure is the *unordered* pair of names under
 `Sym2.GameAdd Subname` — the `fst_snd` constructor supplies exactly the argument swap that
 equality's second inclusion needs, so no separate left/right membership components and no
-coherence proof are required. Only the ordinary membership and equality relations are
-exposed.
+coherence proof are required. The recursive pair is `memWitness`/`ForcesEq`, with `ForcesMem`
+the nonrecursive public wrapper — so the witness set is a named object (the adequacy layer's
+localized tests speak about it directly) while only the ordinary membership and equality
+relations carry the forcing reading.
 
 The unfolding laws (`forcesMem_iff`, `forcesEq_iff`) are named `↔`-laws, deliberately **not**
 `@[simp]` until their rewriting behavior is understood. **Persistence** (`ForcesMem.mono`,
@@ -63,19 +65,20 @@ local instance : WellFoundedRelation (Sym2 (PName P)) where
 
 mutual
 
-/-- Atomic forcing, membership: the branches of `σ` that decide agreement with `τ` are dense
-below `p`. -/
-def ForcesMem (p : P) (τ σ : PName P) : Prop :=
-  IsDenseBelow {q | ∃ i : σ.Idx, q ≤ σ.conds i ∧ ForcesEq q τ (σ.elems i)} p
+/-- The membership-witness predicate: `q` activates a branch of `σ` on which agreement with
+`τ` is forced. `Prop`-valued so it can share the mutual block with `ForcesEq`; the named
+*set* is `memWitness`, its nonrecursive wrapper. -/
+def MemWitness (q : P) (τ σ : PName P) : Prop :=
+  ∃ i : σ.Idx, q ≤ σ.conds i ∧ ForcesEq q τ (σ.elems i)
 termination_by s(τ, σ)
 decreasing_by
   exact Sym2.GameAdd.snd (subname_elems σ i)
 
 /-- Atomic forcing, equality: every branch activated below `p`, on either side, is forced to
-belong to the other side. -/
+belong to the other side (spelled through `MemWitness`; the public form is `forcesEq_iff`). -/
 def ForcesEq (p : P) (τ σ : PName P) : Prop :=
-  (∀ i : τ.Idx, ∀ q ≤ p, q ≤ τ.conds i → ForcesMem q (τ.elems i) σ) ∧
-    (∀ j : σ.Idx, ∀ q ≤ p, q ≤ σ.conds j → ForcesMem q (σ.elems j) τ)
+  (∀ i : τ.Idx, ∀ q ≤ p, q ≤ τ.conds i → IsDenseBelow {r | MemWitness r (τ.elems i) σ} q) ∧
+    (∀ j : σ.Idx, ∀ q ≤ p, q ≤ σ.conds j → IsDenseBelow {r | MemWitness r (σ.elems j) τ} q)
 termination_by s(τ, σ)
 decreasing_by
   · exact Sym2.GameAdd.fst (subname_elems τ i)
@@ -83,11 +86,27 @@ decreasing_by
 
 end
 
+/-- The **membership witness set**: the conditions activating a branch of `σ` on which
+agreement with `τ` is forced. The named object the adequacy layer's localized tests speak
+about. -/
+def memWitness (τ σ : PName P) : Set P :=
+  {q | MemWitness q τ σ}
+
+/-- Atomic forcing, membership: the membership witnesses are dense below `p`. The
+nonrecursive public wrapper of the kernel. -/
+def ForcesMem (p : P) (τ σ : PName P) : Prop :=
+  IsDenseBelow (memWitness τ σ) p
+
+theorem mem_memWitness_iff {q : P} :
+    q ∈ memWitness τ σ ↔ ∃ i : σ.Idx, q ≤ σ.conds i ∧ ForcesEq q τ (σ.elems i) := by
+  change MemWitness q τ σ ↔ _
+  rw [MemWitness]
+
 /-- The named unfolding law for membership. Deliberately not `@[simp]`. -/
 theorem forcesMem_iff :
     ForcesMem p τ σ ↔
       IsDenseBelow {q | ∃ i : σ.Idx, q ≤ σ.conds i ∧ ForcesEq q τ (σ.elems i)} p := by
-  rw [ForcesMem]
+  simp only [ForcesMem, memWitness, MemWitness]
 
 /-- The named unfolding law for equality. Deliberately not `@[simp]`. -/
 theorem forcesEq_iff :
@@ -95,11 +114,11 @@ theorem forcesEq_iff :
       (∀ i : τ.Idx, ∀ q ≤ p, q ≤ τ.conds i → ForcesMem q (τ.elems i) σ) ∧
         (∀ j : σ.Idx, ∀ q ≤ p, q ≤ σ.conds j → ForcesMem q (σ.elems j) τ) := by
   rw [ForcesEq]
+  exact Iff.rfl
 
 /-- **Persistence** for membership: pullback stability of `IsDenseBelow`. -/
-theorem ForcesMem.mono (h : ForcesMem p τ σ) (hqp : q ≤ p) : ForcesMem q τ σ := by
-  rw [forcesMem_iff] at h ⊢
-  exact h.mono_condition hqp
+theorem ForcesMem.mono (h : ForcesMem p τ σ) (hqp : q ≤ p) : ForcesMem q τ σ :=
+  IsDenseBelow.mono_condition h hqp
 
 /-- **Persistence** for equality: narrow the quantifiers. -/
 theorem ForcesEq.mono (h : ForcesEq p τ σ) (hqp : q ≤ p) : ForcesEq q τ σ := by
