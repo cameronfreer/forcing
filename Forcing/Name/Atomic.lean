@@ -55,8 +55,9 @@ open PName
 variable {P : Type u} [Preorder P] {p q : P} {τ σ : PName P}
 
 /-- The well-founded measure of the atomic kernel: unordered pairs of names, one coordinate
-descending at a time. -/
-instance : WellFoundedRelation (Sym2 (PName P)) where
+descending at a time. **Local**: the kernel needs it only during termination checking, and
+nothing downstream should inherit it as a global default measure on `Sym2 (PName P)`. -/
+local instance : WellFoundedRelation (Sym2 (PName P)) where
   rel := Sym2.GameAdd Subname
   wf := subname_wellFounded.sym2_gameAdd
 
