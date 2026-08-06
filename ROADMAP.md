@@ -77,8 +77,7 @@ finally earns "adds a new real".
 
 ## M6 — External forcing relation and truth lemma
 
-**Status: in progress**
-([#130](https://github.com/cameronfreer/forcing/issues/130)).
+**Status: complete** ([#130](https://github.com/cameronfreer/forcing/issues/130)).
 
 The forcing relation by direct recursion on formulas (never via Boolean
 values), persistence under strengthening, and the semantic truth lemma
