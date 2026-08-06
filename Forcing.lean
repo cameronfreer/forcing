@@ -17,6 +17,8 @@ import Forcing.Material.Carrier
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.Extension
 import Forcing.Material.Names
+import Forcing.Material.Semantics
+import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless
 import Forcing.Property.Linked
@@ -27,6 +29,7 @@ import Forcing.Name.AtomicAdequacy
 import Forcing.Name.Basic
 import Forcing.Name.Check
 import Forcing.Name.FormulaForcing
+import Forcing.Name.FormulaTests
 import Forcing.Name.GenName
 import Forcing.Name.MemLang
 import Forcing.Name.Subname

@@ -3,6 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
+import Mathlib.Data.Set.Defs
 import Forcing.Name.Basic
 
 /-!
@@ -13,7 +14,9 @@ well-foundedness is the recursion principle the atomic forcing kernel runs on �
 numerical or ordinal rank: the actual problem downstream is well-founded recursion on a pair
 of names where either coordinate may descend, and the structural relation feeds
 `Sym2.GameAdd` directly. A `PName.rank` would be introduced only if the structural approach
-genuinely failed; it has not.
+genuinely failed; it has not. `SubnameClosed` is the family-level form — the preorder-free
+structural notion that keeps mutual name inductions inside a family. The module is
+order-free throughout.
 
 ## Main definitions
 
@@ -36,6 +39,11 @@ def Subname (σ τ : PName P) : Prop :=
 
 theorem subname_elems (τ : PName P) (i : τ.Idx) : Subname (τ.elems i) τ :=
   ⟨i, rfl⟩
+
+/-- A family of names closed under immediate subnames — the preorder-free structural notion
+that keeps mutual name inductions inside a family. -/
+def SubnameClosed (𝒩 : Set (PName P)) : Prop :=
+  ∀ τ ∈ 𝒩, ∀ i : τ.Idx, τ.elems i ∈ 𝒩
 
 /-- The subname relation is well-founded: names are well-founded trees. -/
 theorem subname_wellFounded : WellFounded (Subname (P := P)) := by
