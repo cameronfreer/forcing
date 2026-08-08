@@ -33,6 +33,7 @@ import Forcing.Name.Check
 import Forcing.Name.FormulaForcing
 import Forcing.Name.FormulaTests
 import Forcing.Name.GenName
+import Forcing.Name.Homogeneity
 import Forcing.Name.MemLang
 import Forcing.Name.Subname
 import Forcing.Name.ValuationImage

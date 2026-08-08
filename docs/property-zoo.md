@@ -161,6 +161,11 @@ of the pilot stand unchanged.
   chain (`IsCentered.isLinked`, `IsSigmaCentered.isSigmaLinked`), and the certified
   external-vacuity warning (`isSigmaCentered_of_countable`).
 
+- [`Forcing/Name/Homogeneity.lean`](../Forcing/Name/Homogeneity.lean) — symmetry: the
+  homogeneity shadow at one formula (`HomogeneousFor`), its condition-local payoff
+  (`forcesFormula_of_exists` — no `[OrderTop P]`), and classical weak homogeneity as the
+  universal envelope only.
+
 (Rows are added as modules land; a module row is the only place this document makes
 implementation claims.)
 
