@@ -46,6 +46,12 @@ scoped instance (M : MaterialCarrier.{u}) : memLang.Structure M where
   funMap f _ := f.elim
   RelMap := fun r x ↦ match r with | .mem => (x 0 : ZFSet) ∈ (x 1 : ZFSet)
 
+/-- The membership relation is interpreted as `ZFSet` membership of the underlying
+elements. -/
+@[simp] theorem relMap_mem {M : MaterialCarrier.{u}} {x : Fin 2 → M} :
+    Language.Structure.RelMap (L := memLang) memRel.mem x ↔ (x 0 : ZFSet.{u}) ∈ (x 1 : ZFSet.{u}) :=
+  Iff.rfl
+
 namespace InternalNamePresentation
 
 variable {M : MaterialCarrier.{u}} {P : Type u} {N : InternalNamePresentation M P}

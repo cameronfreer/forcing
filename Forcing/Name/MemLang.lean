@@ -22,6 +22,7 @@ Semantic realization arrives only with the truth-lemma layer.
 ## Main definitions
 
 * `Forcing.memRel`, `Forcing.memLang`: the membership language.
+* `Forcing.memFormula`: the atomic membership formula.
 * `Forcing.evalTerm`: function-free term evaluation into names.
 -/
 
@@ -38,6 +39,12 @@ inductive memRel : ℕ → Type
 /-- The function-free membership language, graph-pattern. -/
 def memLang : FirstOrder.Language :=
   ⟨fun _ ↦ Empty, memRel⟩
+
+/-- The membership relation applied to two terms — the only atomic formula shape of the
+language, named once so downstream axioms and codings need not spell the relation out. -/
+def memFormula {α : Type v} {n : ℕ} (t₁ t₂ : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  Language.Relations.boundedFormula₂ (L := memLang) memRel.mem t₁ t₂
 
 /-- Evaluate a function-free term into names. No `Structure` instance is needed: the function
 cases are impossible. -/
