@@ -88,10 +88,14 @@ tests explicitly. The atomic membership/equality spike
 
 ## M7 — Internal definability and ZFC in `M[G]`
 
-**Status: planned.**
+**Status: in progress**
+([#142](https://github.com/cameronfreer/forcing/issues/142)).
 
-Definability of the forcing relation over the ground, and verification of the
-ZFC axioms in `M[G]`.
+The model-bearing ground interface (theory-indexed, never silently ZFC),
+internal codes for conditions, names, assignments, and formulas, definability
+of the forcing relation over the ground, the material truth lemma discharging
+M6's visibility obligations, and verification of the ZFC axioms in `M[G]`
+axiom by axiom with each ground-theory cost visible.
 
 ## M8 — Preservation
 

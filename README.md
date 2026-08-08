@@ -28,7 +28,7 @@ narrower dependencies.
 | Cohen forcing | `Forcing/Cohen/` | `Fn(ω, 2)`; the generic real; diagonalization of a supplied countable family; the strict genericity spectrum; the avoidance theorem over a visibility context; the material adapter and the new-real theorem |
 | Visibility contexts | `Forcing/Model/` | observer-relative genericity: visibility contexts (an interface, deliberately not yet a ground model), genericity over a context, existence from external countability, the requirement–visibility bridge |
 | Names | `Forcing/Name/` | external name semantics: intensional `P`-names, valuation against condition sets, check and generic names, and selected-name valuation images with the certified collapse of the unrestricted image |
-| Material layer | `Forcing/Material/` | material carriers (transitive sets with a membership-only interface), the no-junk internal forcing presentation, the internal name family (small enumeration, semantic representatives), and the material extension — `M[G]` as an indexed transitive carrier |
+| Material layer | `Forcing/Material/` | material carriers (transitive sets with a membership-only interface), the no-junk internal forcing presentation, the internal name family (small enumeration, semantic representatives), the material extension — `M[G]` as an indexed transitive carrier — and theory-indexed material grounds |
 | Property kernel | `Forcing/Property/` | external order-level structural certificates (branching, width, depth), per the property-card discipline of `docs/property-zoo.md` |
 
 Milestones, their exit criteria, and their status live in [ROADMAP.md](ROADMAP.md);
