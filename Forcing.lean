@@ -17,6 +17,7 @@ import Forcing.Material.Carrier
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.Extension
 import Forcing.Material.Ground
+import Forcing.Material.NameCoding
 import Forcing.Material.Names
 import Forcing.Material.Semantics
 import Forcing.Material.TruthLemma
