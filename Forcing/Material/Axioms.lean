@@ -1,0 +1,111 @@
+/-
+Copyright (c) 2026 Cameron Freer. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Cameron Freer
+-/
+import Forcing.Material.Ground
+import Forcing.Name.MemLang
+
+/-!
+# Named axioms of the membership language, and their closure consequences
+
+The theory ledger opens here. Each axiom is a **named sentence** of `memLang`, and its
+consequence for a ground is a **reusable theorem** taking the membership of that sentence in
+the theory as an explicit hypothesis — never a field on `MaterialGround`, and never an
+implied background theory. A theorem's price is exactly the sentences it cites through
+`MaterialGround.realize_of_mem`.
+
+The two axioms introduced here are the ones the assignment coding actually needs:
+
+* `emptySetSentence` — some set has no members;
+* `pairingSentence` — any two sets have an unordered pair.
+
+Together they close a ground under `∅`, singletons, unordered pairs, and hence Kuratowski
+pairs (`pair_mem`), which is all that finite tagged-tree coding requires. **The distinction
+that will recur**: each individual finite code is built by finite recursion and costs only
+these finite closure axioms; a single *internal collection* of all such codes is a
+substantially more expensive demand (Infinity and more), and is not made here.
+
+Transitivity of the carrier does the rest of the work: the axioms speak about elements of the
+ground, and transitivity is what turns "no member of `x` lies in the ground" into "`x` is
+empty" and "the members of `c` inside the ground are exactly `a` and `b`" into an equality of
+sets.
+
+## Main definitions
+
+* `Forcing.emptySetSentence`, `Forcing.pairingSentence`: the named axioms.
+
+## Main results
+
+* `Forcing.MaterialGround.empty_mem`, `Forcing.MaterialGround.insert_pair_mem`,
+  `Forcing.MaterialGround.singleton_mem`, `Forcing.MaterialGround.pair_mem`: the closure
+  consequences, each priced by the sentences it cites.
+-/
+
+universe u
+
+namespace Forcing
+
+open FirstOrder Language
+
+/-- **The empty-set axiom**: some set has no members. -/
+def emptySetSentence : memLang.Sentence :=
+  ∃' ∀' ∼(memFormula &1 &0)
+
+/-- **The pairing axiom**: any two sets have an unordered pair. -/
+def pairingSentence : memLang.Sentence :=
+  ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ ((&3 =' &0) ⊔ (&3 =' &1)))
+
+namespace MaterialGround
+
+variable {T : memLang.Theory} (M : MaterialGround.{u} T)
+
+/-- **Closure under `∅`**, priced at the empty-set axiom. Transitivity supplies the step from
+"no member of the witness lies in the ground" to "the witness is empty". -/
+theorem empty_mem (h : emptySetSentence ∈ T) : (∅ : ZFSet.{u}) ∈ M := by
+  have hr := M.realize_of_mem h
+  have key : ∃ x : ↥M.toMaterialCarrier, ∀ y : ↥M.toMaterialCarrier,
+      (y : ZFSet.{u}) ∉ (x : ZFSet.{u}) := by
+    simpa [emptySetSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
+  obtain ⟨x, hx⟩ := key
+  have hxe : (x : ZFSet.{u}) = ∅ := by
+    refine (ZFSet.eq_empty _).2 fun z hz ↦ ?_
+    exact hx ⟨z, mem_trans hz x.2⟩ hz
+  exact hxe ▸ x.2
+
+/-- **Closure under unordered pairs**, priced at the pairing axiom. -/
+theorem insert_pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M)
+    (hy : y ∈ M) : ({x, y} : ZFSet.{u}) ∈ M := by
+  have hr := M.realize_of_mem h
+  have key : ∀ a b : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
+      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔ z = a ∨ z = b) := by
+    simpa [pairingSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
+  obtain ⟨c, hc⟩ := key ⟨x, hx⟩ ⟨y, hy⟩
+  have hce : (c : ZFSet.{u}) = {x, y} := by
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · have hzM : z ∈ M := mem_trans hz c.2
+      rcases (hc ⟨z, hzM⟩).1 (by simpa using hz) with h1 | h1
+      · exact ZFSet.mem_pair.2 (Or.inl (congrArg Subtype.val h1))
+      · exact ZFSet.mem_pair.2 (Or.inr (congrArg Subtype.val h1))
+    · rcases ZFSet.mem_pair.1 hz with rfl | rfl
+      · simpa using (hc ⟨z, hx⟩).2 (Or.inl rfl)
+      · simpa using (hc ⟨z, hy⟩).2 (Or.inr rfl)
+  exact hce ▸ c.2
+
+/-- **Closure under singletons**: the diagonal case of pairing. -/
+theorem singleton_mem (h : pairingSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M) :
+    ({x} : ZFSet.{u}) ∈ M := by
+  have hpair := M.insert_pair_mem h hx hx
+  have hxx : ({x, x} : ZFSet.{u}) = {x} :=
+    ZFSet.ext fun z ↦ by simp
+  rwa [hxx] at hpair
+
+/-- **Closure under Kuratowski pairs** — three applications of pairing, and the only closure
+the finite tagged-tree codings need. -/
+theorem pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M) (hy : y ∈ M) :
+    ZFSet.pair x y ∈ M :=
+  M.insert_pair_mem h (M.singleton_mem h hx) (M.insert_pair_mem h hx hy)
+
+end MaterialGround
+
+end Forcing

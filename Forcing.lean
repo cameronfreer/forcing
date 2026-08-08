@@ -13,6 +13,8 @@ import Forcing.Cohen.RealName
 import Forcing.Cohen.Spectrum
 import Forcing.FinitePartialFunction
 import Forcing.GenericUnion
+import Forcing.Material.AssignmentCoding
+import Forcing.Material.Axioms
 import Forcing.Material.Carrier
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.Extension
