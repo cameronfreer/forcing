@@ -1,6 +1,7 @@
 -- Root module for the `Forcing` library. Import every library file here.
 import Forcing.AxiomAudit
 import Forcing.Basic
+import Forcing.Coding.Nat
 import Forcing.Cohen.Basic
 import Forcing.Cohen.ConditionCode
 import Forcing.Cohen.Diagonal
