@@ -4,7 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Material.Ground
-import Forcing.Name.MemLang
+import Forcing.Syntax.MemLang
+import Forcing.Coding.Nat
 
 /-!
 # Named axioms of the membership language, and their closure consequences
@@ -18,10 +19,14 @@ implied background theory. A theorem's price is exactly the sentences it cites t
 The two axioms introduced here are the ones the assignment coding actually needs:
 
 * `emptySetSentence` — some set has no members;
-* `pairingSentence` — any two sets have an unordered pair.
+* `pairingSentence` — any two sets have an unordered pair;
+* `binaryUnionSentence` — any two sets have a union.
 
-Together they close a ground under `∅`, singletons, unordered pairs, and hence Kuratowski
-pairs (`pair_mem`), which is all that finite tagged-tree coding requires. **The distinction
+Empty set and pairing close a ground under `∅`, singletons, unordered pairs, and hence
+Kuratowski pairs (`pair_mem`). Binary union is what `insert` costs — and therefore what the
+von Neumann numerals cost (`natCode_mem`), a dependency-mining result rather than a
+prediction: the successor code is an `insert`, so numeral membership prices at empty set,
+pairing, **and** union, while still never reaching Infinity. **The distinction
 that will recur**: each individual finite code is built by finite recursion and costs only
 these finite closure axioms; a single *internal collection* of all such codes is a
 substantially more expensive demand (Infinity and more), and is not made here.
@@ -55,6 +60,10 @@ def emptySetSentence : memLang.Sentence :=
 /-- **The pairing axiom**: any two sets have an unordered pair. -/
 def pairingSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ ((&3 =' &0) ⊔ (&3 =' &1)))
+
+/-- **The binary-union axiom**: any two sets have a union. -/
+def binaryUnionSentence : memLang.Sentence :=
+  ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
 
 namespace MaterialGround
 
@@ -100,11 +109,48 @@ theorem singleton_mem (h : pairingSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M)
     ZFSet.ext fun z ↦ by simp
   rwa [hxx] at hpair
 
+/-- **Closure under binary unions**, priced at the union axiom. -/
+theorem union_mem (h : binaryUnionSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M)
+    (hy : y ∈ M) : x ∪ y ∈ M := by
+  have hr := M.realize_of_mem h
+  have key : ∀ a b : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
+      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔
+        (z : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∨ (z : ZFSet.{u}) ∈ (b : ZFSet.{u})) := by
+    simpa [binaryUnionSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
+      using hr
+  obtain ⟨c, hc⟩ := key ⟨x, hx⟩ ⟨y, hy⟩
+  have hce : (c : ZFSet.{u}) = x ∪ y := by
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · exact ZFSet.mem_union.2 ((hc ⟨z, mem_trans hz c.2⟩).1 hz)
+    · rcases ZFSet.mem_union.1 hz with h1 | h1
+      · exact (hc ⟨z, mem_trans h1 hx⟩).2 (Or.inl h1)
+      · exact (hc ⟨z, mem_trans h1 hy⟩).2 (Or.inr h1)
+  exact hce ▸ c.2
+
+/-- **Closure under `insert`**: a singleton unioned on, priced at pairing and union. -/
+theorem insert_mem (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    {x y : ZFSet.{u}} (hx : x ∈ M) (hy : y ∈ M) : insert x y ∈ M := by
+  have hun := M.union_mem hu (M.singleton_mem hp hx) hy
+  have hsu : ({x} : ZFSet.{u}) ∪ y = insert x y :=
+    ZFSet.ext fun z ↦ by simp [ZFSet.mem_union, ZFSet.mem_singleton, ZFSet.mem_insert_iff]
+  rwa [hsu] at hun
+
 /-- **Closure under Kuratowski pairs** — three applications of pairing, and the only closure
 the finite tagged-tree codings need. -/
 theorem pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M) (hy : y ∈ M) :
     ZFSet.pair x y ∈ M :=
   M.insert_pair_mem h (M.singleton_mem h hx) (M.insert_pair_mem h hx hy)
+
+/-- **Closure under the von Neumann numerals** — the dependency-mining result: the successor
+code is an `insert`, so numerals price at empty set, pairing, and union. Infinity is **not**
+required: each individual numeral is built by finite recursion. -/
+theorem natCode_mem {T : memLang.Theory} (M : MaterialGround.{0} T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T) :
+    ∀ n : ℕ, natCode n ∈ M
+  | 0 => M.empty_mem he
+  | n + 1 => by
+    rw [natCode_succ]
+    exact M.insert_mem hp hu (M.natCode_mem he hp hu n) (M.natCode_mem he hp hu n)
 
 end MaterialGround
 
