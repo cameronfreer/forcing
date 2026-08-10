@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Mathlib.SetTheory.ZFC.Rank
+import Forcing.Coding.Nat
 import Forcing.Cohen.Basic
 import Forcing.Name.GenName
 
@@ -27,16 +27,14 @@ pair (natCode n) (boolCode b) ∈ graphCode f  ↔  f n = some b
 (`pair_mem_graphCode_iff`). Injectivity of the codes then *follows* from extensionality
 (`graphCode_injective`); it is never an assumption.
 
-The generic prerequisite is `natCode : ℕ ↪ ZFSet`, injectivity of the von Neumann naturals.
-The pinned mathlib has `PSet.ofNat` but no injectivity theorem for it; the rank computation
-`rank (ofNat n) = n` gives a short proof. That computation is generic set-theory
-infrastructure with no Cohen content, so it stays private here until it is factored to a
-generic home or upstreamed; only `natCode` is public.
+The generic prerequisite `natCode : ℕ ↪ ZFSet` now lives in `Forcing/Coding/Nat.lean`,
+factored out when formula coding became its second consumer; the Cohen-facing name is kept as
+an abbreviation so downstream statements are unchanged.
 
 ## Main definitions
 
-* `Forcing.Cohen.natCode`, `Forcing.Cohen.boolCode`: injective codes for coordinates and
-  values.
+* `Forcing.Cohen.natCode` (the generic code, re-exposed), `Forcing.Cohen.boolCode`: injective
+  codes for coordinates and values.
 * `Forcing.Cohen.graphCode`: the partial graph code, shared by conditions and reals.
 * `Forcing.Cohen.cohenConditionCode`: the finite-graph `ConditionCode Cond`.
 
@@ -53,24 +51,11 @@ namespace Forcing.Cohen
 
 open FinitePartialFunction
 
-/-! ### Injectivity of the von Neumann naturals, by rank -/
+/-! ### The coordinate and value codes -/
 
-/-- The rank of the `n`-th von Neumann natural is `n`. Not in the pinned mathlib. Private:
-generic set-theory infrastructure with no Cohen content, awaiting factoring to a generic home
-or upstreaming; the public interface is `natCode`. -/
-private theorem rank_ofNat : ∀ n : ℕ, (PSet.ofNat n).rank = n
-  | 0 => PSet.rank_empty
-  | n + 1 => by
-    rw [PSet.ofNat, PSet.rank_insert, rank_ofNat n, max_eq_left (Order.le_succ _),
-      Nat.cast_succ, Order.succ_eq_add_one]
-
-/-- The `n`-th von Neumann natural, as a `ZFSet`; injective by the rank computation. -/
-def natCode : ℕ ↪ ZFSet.{0} where
-  toFun n := ZFSet.mk (PSet.ofNat n)
-  inj' m n h := by
-    have hr := congrArg ZFSet.rank h
-    rw [ZFSet.rank_mk, ZFSet.rank_mk, rank_ofNat, rank_ofNat] at hr
-    exact_mod_cast hr
+/-- The von Neumann code of a coordinate — the generic `Forcing.natCode`, kept under the
+Cohen-facing name. -/
+abbrev natCode : ℕ ↪ ZFSet.{0} := Forcing.natCode
 
 /-- Booleans coded as the first two von Neumann naturals. -/
 def boolCode : Bool ↪ ZFSet.{0} where
