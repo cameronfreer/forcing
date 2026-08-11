@@ -1,0 +1,88 @@
+# ADR 0005 — internal definability of forcing is schematic, not uniform
+
+**Status: decided** (spike #154; gates M7 item 3, tracker #142).
+
+## Context
+
+Item 3 must define the forcing relation *inside* the ground. The tempting target is a single
+internally definable predicate
+
+```text
+Force(p, formulaCode φ, assignmentCode a)
+```
+
+handling every formula code uniformly. Layer 4's coding makes that look available: formula
+codes exist, `IsFormulaCode` parses them, and each code lies in the ground.
+
+## Decision
+
+**Do not define a uniform `Force`.** For trivial forcing such a predicate specializes to a
+uniform truth predicate for the ground, which at the intended strength contradicts Tarski's
+theorem. The definability theorem is **schematic**:
+
+1. atomic membership and equality get fixed, uniform internal definitions on condition and
+   name codes;
+2. an **external compiler** `forcesDef : memLang.BoundedFormula (Fin k) n → memLang.BoundedFormula …`
+   produces a defining formula for each external formula;
+3. structural induction proves that `forcesDef φ` realizes exactly `ForcesFormula … φ`;
+4. layer 4's finite-closure theorem shows each individual `forcesDef φ`'s code lies in the
+   ground.
+
+`formulaCode` and `IsFormulaCode` remain valuable — for parsing, coding transformations,
+scheme indexing, and proving each defining formula internally available. **They must not be
+turned into an internal full truth predicate.** The uniformity that Tarski forbids is
+uniformity in `φ`; uniformity in the *name codes* (the atomic recursion) is fine, and is
+exactly what 3b provides.
+
+## The split
+
+* **3a** — named Separation, Replacement/Collection, and Foundation scheme infrastructure.
+* **3b** — uniform definability of `ForcesMem`/`ForcesEq` by internal well-founded recursion
+  on name codes.
+* **3c** — the external compiler and its per-formula correctness theorem.
+
+## Spike findings
+
+The prototype compiled the compiler skeleton and the atomic recursion skeleton, with each
+remaining obligation isolated as a sorry annotated by the axiom it needs.
+
+**Where the costs actually are (3b).** The recursion is the usual "there is a coherent
+computation covering this pair of name codes":
+
+* **Foundation** — uniqueness of the computation, by ∈-induction on the pair;
+* **Separation + Replacement/Collection** — existence: carving the computation out of the
+  candidate partial computations and collecting the stage approximations;
+* **Infinity — only for uniformity in the pair.** The existence statement takes a transitive
+  set containing the two codes as a *parameter*; the recursion itself never needs Infinity.
+  Supplying such a set for arbitrary codes is transitive closure, and *that* is what costs
+  Infinity. The distinction is the spike's main result: **Infinity constructs uniformity, not
+  the recursion.** 3b should therefore state the parameterized version first and charge
+  Infinity only where the uniform version is actually wanted.
+* **No Power Set.** The candidate computations are bounded by Collection over a fixed
+  transitive set, not by a power set. Recorded as a negative finding — if an implementation
+  reaches for Power Set, that is a signal the construction has drifted.
+
+**The compiler is cheap (3c)**, as expected, with two findings:
+
+* **Assignment lookup is finite.** Because the compiler runs per formula, the arity `n` and
+  each index are fixed numerals, so reading the `i`-th entry of the reversed snoc-list is a
+  *fixed finite block* of existentials. No internal recursion and no scheme is needed for
+  assignments — layer 3's snoc law is the whole interface, and no syntactic substitution
+  appears anywhere.
+* **Projections are relational.** The language is function-free, so lookup and pairing are
+  expressed by relations rather than terms: cheap, but syntactically bulky, and worth a
+  helper (`pairDef`, `lookupDef`) rather than inline repetition.
+
+The compiler's cases are otherwise light: falsum to falsum; equality and membership invoke
+the two atomic definitions; implication quantifies over coded strengthenings; universal
+quantification ranges over internally recognized name codes and extends the coded assignment
+by pairing.
+
+## Consequences
+
+3a formalizes the schemes as *named, instance-indexed* sentence families, consistent with the
+ledger discipline: an instance is cited where it is used, and a scheme is never assumed
+wholesale. 3b states the parameterized recursion first. 3c consumes both and produces the
+per-formula correctness theorem — the honest form of "the forcing relation is definable over
+the ground". The spike prototypes are scratch and are not committed; this record is the
+durable output.
