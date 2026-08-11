@@ -32,6 +32,8 @@ here.
 
 * `Forcing.MaterialCarrier.ext`: membership-level extensionality.
 * `Forcing.MaterialCarrier.mem_trans`: an element of an element is an element.
+* `Forcing.MaterialCarrier.exists_minimal`: Foundation, unconditionally — carriers are
+  transitive collections of ambient well-founded sets.
 -/
 
 universe u
@@ -73,6 +75,17 @@ instance : SetLike MaterialCarrier.{u} ZFSet.{u} where
 /-- Transitivity in public membership notation: an element of an element is an element. -/
 theorem mem_trans (hxy : x ∈ y) (hyM : y ∈ M) : x ∈ M :=
   M.isTransitive.mem_trans hxy hyM
+
+/-- **Foundation is free for material carriers.** A carrier is a transitive collection of
+ambient `ZFSet`s, and ambient membership is well-founded, so every inhabited member has an
+`∈`-minimal element — with transitivity placing that element, and everything relevant below
+it, back in the carrier. Dependency mining: the recursion layer must **not** be charged
+Foundation over transitive `ZFSet` carriers. -/
+theorem exists_minimal (M : MaterialCarrier.{u}) {a x : ZFSet.{u}} (ha : a ∈ M)
+    (hx : x ∈ a) :
+    ∃ y, y ∈ a ∧ y ∈ M ∧ ∀ z, z ∈ y → z ∉ a := by
+  obtain ⟨y, hya, hmin⟩ := ZFSet.mem_wf.has_min {w : ZFSet.{u} | w ∈ a} ⟨x, hx⟩
+  exact ⟨y, hya, M.mem_trans hya ha, fun z hzy hza ↦ hmin z hza hzy⟩
 
 /-!
 ### Sanity examples

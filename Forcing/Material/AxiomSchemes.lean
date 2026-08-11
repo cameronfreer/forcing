@@ -31,10 +31,15 @@ add a reverse "every member of `b` is used" clause — either would silently tur
 Replacement or Strong Collection.
 
 Nothing here smuggles in nonemptiness: the empty carrier satisfies all of these vacuously,
-and `memLang.nonemptyTheory` remains the separate price. Foundation is exposed as the
-minimal-element consequence that the recursion layer consumes; **no global well-founded
-membership instance is installed**, and any relation instance stays local to the proof that
-needs it.
+and `memLang.nonemptyTheory` remains the separate price.
+
+**Foundation is free** (`realize_foundationSentence`, and `MaterialGround.exists_minimal`
+with no hypothesis): a material carrier is a transitive collection of ambient well-founded
+sets, so `MaterialCarrier.exists_minimal` gives the minimal-element consequence
+unconditionally. The sentence stays named for general model-theoretic use — models of `T`
+in other settings may need it as an axiom — but the recursion layer must **not** be charged
+for it here. No global well-founded membership instance is installed, and any relation
+instance stays local to the proof that needs it.
 
 ## Main definitions
 
@@ -238,23 +243,32 @@ theorem exists_collection {φ : memLang.BoundedFormula (Fin k) 2}
       snoc₂_at, snoc₄_at] using hr
   exact key params a hwit
 
-/-- **Foundation, semantically**: the minimal-element consequence the recursion layer
-consumes. No global well-founded instance is installed. -/
-theorem exists_minimal (hf : foundationSentence ∈ T) {a : ↥M.toMaterialCarrier}
-    {x : ↥M.toMaterialCarrier} (hx : (x : ZFSet.{u}) ∈ (a : ZFSet.{u})) :
+/-- **Foundation is free here** — no hypothesis on `T`. A material carrier is a transitive
+collection of ambient well-founded sets, so the minimal-element consequence the recursion
+layer consumes is `MaterialCarrier.exists_minimal`, available unconditionally. The
+`foundationSentence` remains a named sentence for general model-theoretic use, but it is
+**not a cost of recursion over transitive `ZFSet` carriers**. -/
+theorem exists_minimal {a : ↥M.toMaterialCarrier} {x : ↥M.toMaterialCarrier}
+    (hx : (x : ZFSet.{u}) ∈ (a : ZFSet.{u})) :
     ∃ y : ↥M.toMaterialCarrier, (y : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧
       ∀ z : ↥M.toMaterialCarrier, (z : ZFSet.{u}) ∈ (y : ZFSet.{u}) →
         (z : ZFSet.{u}) ∉ (a : ZFSet.{u}) := by
-  have hr := M.realize_of_mem hf
+  obtain ⟨y, hya, hyM, hmin⟩ := M.toMaterialCarrier.exists_minimal a.2 hx
+  exact ⟨⟨y, hyM⟩, hya, fun z hzy hza ↦ hmin z hzy hza⟩
+
+/-- **Every material carrier models Foundation**, with no theory hypothesis — the audit
+result, stated where the sentence lives. -/
+theorem realize_foundationSentence : ↥M.toMaterialCarrier ⊨ foundationSentence := by
   have key : ∀ b : ↥M.toMaterialCarrier,
       (∃ w : ↥M.toMaterialCarrier, (w : ZFSet.{u}) ∈ (b : ZFSet.{u})) →
       ∃ y : ↥M.toMaterialCarrier, (y : ZFSet.{u}) ∈ (b : ZFSet.{u}) ∧
         ¬∃ z : ↥M.toMaterialCarrier, (z : ZFSet.{u}) ∈ (y : ZFSet.{u}) ∧
           (z : ZFSet.{u}) ∈ (b : ZFSet.{u}) := by
-    simpa [foundationSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
-      using hr
-  obtain ⟨y, hya, hmin⟩ := key a ⟨x, hx⟩
-  exact ⟨y, hya, fun z hzy hza ↦ hmin ⟨z, hzy, hza⟩⟩
+    rintro b ⟨w, hw⟩
+    obtain ⟨y, hyb, hmin⟩ := M.exists_minimal hw
+    exact ⟨y, hyb, fun ⟨z, hzy, hzb⟩ ↦ hmin z hzy hzb⟩
+  simpa [foundationSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
+    using key
 
 /-!
 ### Acceptance pressure test
