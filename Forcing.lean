@@ -26,6 +26,7 @@ import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
 import Forcing.Material.Names
+import Forcing.Material.RecursionEntry
 import Forcing.Material.Semantics
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
