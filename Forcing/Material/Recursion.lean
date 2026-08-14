@@ -224,4 +224,105 @@ theorem eqClause_orientation {R p x y z : ZFSet.{0}} {c q : P}
 
 end Orientation
 
+/-! ### Observational agreement, and locality
+
+Coherence constrains only the two tagged slices, so the right notion of sameness is
+**observational agreement at a state**, never equality of graphs. Locality is the primary
+theorem — two graphs coherent over *different* domains agree at every state lying in both —
+and same-domain uniqueness is its specialization.
+
+The clause-congruence lemmas below know nothing about rank or domains, which leaves the
+induction itself as pure dependency routing: rank supplies descent, domain preservation
+supplies eligibility for the induction hypothesis. -/
+
+section Locality
+
+variable {condSet orderCode : ZFSet.{0}}
+
+/-- Two candidate graphs **agree at a state**: their two tagged slices coincide there. -/
+def AgreeAt (condSet R S x y : ZFSet.{0}) : Prop :=
+  (∀ p ∈ condSet, entry memWitnessTag p x y ∈ R ↔ entry memWitnessTag p x y ∈ S) ∧
+    (∀ p ∈ condSet, entry eqTag p x y ∈ R ↔ entry eqTag p x y ∈ S)
+
+/-- Congruence for the density clause: agreement of the membership slice suffices. -/
+private theorem denseMem_congr {R S q x y : ZFSet.{0}}
+    (h : ∀ p ∈ condSet, entry memWitnessTag p x y ∈ R ↔ entry memWitnessTag p x y ∈ S) :
+    DenseMem condSet orderCode R q x y ↔ DenseMem condSet orderCode S q x y := by
+  constructor
+  · intro hd r hr hrq
+    obtain ⟨s, hs, hsr, he⟩ := hd r hr hrq
+    exact ⟨s, hs, hsr, (h s hs).1 he⟩
+  · intro hd r hr hrq
+    obtain ⟨s, hs, hsr, he⟩ := hd r hr hrq
+    exact ⟨s, hs, hsr, (h s hs).2 he⟩
+
+/-- Congruence for the membership clause: agreement of the equality slice at every relevant
+state suffices. -/
+private theorem memClause_congr {R S q x y : ZFSet.{0}} (hq : q ∈ condSet)
+    (h : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet →
+      ∀ p ∈ condSet, (entry eqTag p x z ∈ R ↔ entry eqTag p x z ∈ S)) :
+    MemClause condSet orderCode R q x y ↔ MemClause condSet orderCode S q x y := by
+  constructor
+  · rintro ⟨c, z, hb, hc, hord, he⟩
+    exact ⟨c, z, hb, hc, hord, (h c z hb hc q hq).1 he⟩
+  · rintro ⟨c, z, hb, hc, hord, he⟩
+    exact ⟨c, z, hb, hc, hord, (h c z hb hc q hq).2 he⟩
+
+/-- Congruence for the equality clause: the two families of density agreements suffice. -/
+private theorem eqClause_congr {R S p x y : ZFSet.{0}}
+    (h₁ : ∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ∀ q,
+      (DenseMem condSet orderCode R q z y ↔ DenseMem condSet orderCode S q z y))
+    (h₂ : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ∀ q,
+      (DenseMem condSet orderCode R q z x ↔ DenseMem condSet orderCode S q z x)) :
+    EqClause condSet orderCode R p x y ↔ EqClause condSet orderCode S p x y := by
+  constructor
+  · rintro ⟨hx, hy⟩
+    exact ⟨fun c z hb hc q hqm hqp hqc ↦ (h₁ c z hb hc q).1 (hx c z hb hc q hqm hqp hqc),
+      fun c z hb hc q hqm hqp hqc ↦ (h₂ c z hb hc q).1 (hy c z hb hc q hqm hqp hqc)⟩
+  · rintro ⟨hx, hy⟩
+    exact ⟨fun c z hb hc q hqm hqp hqc ↦ (h₁ c z hb hc q).2 (hx c z hb hc q hqm hqp hqc),
+      fun c z hb hc q hqm hqp hqc ↦ (h₂ c z hb hc q).2 (hy c z hb hc q hqm hqp hqc)⟩
+
+/-- **Locality**: graphs coherent over *different* domains agree at every state lying in
+both. Consumes only exact coherence, transitivity, and ambient rank — no material
+membership, no scheme, no name coding, and no forcing relation. -/
+theorem agreeAt_of_coherent {A B R S : ZFSet.{0}} (hA : A.IsTransitive) (hB : B.IsTransitive)
+    (hR : AtomicCoherentOn condSet orderCode A R)
+    (hS : AtomicCoherentOn condSet orderCode B S) :
+    ∀ x y, x ∈ A → y ∈ A → x ∈ B → y ∈ B → AgreeAt condSet R S x y := by
+  have hwf : WellFounded fun u v : ZFSet.{0} × ZFSet.{0} ↦
+      Sym2.GameAdd (· < ·) (rankPair u.1 u.2) (rankPair v.1 v.2) :=
+    InvImage.wf _ rankPair_wf
+  suffices H : ∀ u : ZFSet.{0} × ZFSet.{0}, u.1 ∈ A → u.2 ∈ A → u.1 ∈ B → u.2 ∈ B →
+      AgreeAt condSet R S u.1 u.2 from fun x y hxA hyA hxB hyB ↦ H (x, y) hxA hyA hxB hyB
+  intro u
+  induction u using hwf.induction with
+  | _ u ih =>
+    obtain ⟨x, y⟩ := u
+    intro hxA hyA hxB hyB
+    refine ⟨fun p hp ↦ ?_, fun p hp ↦ ?_⟩
+    · rw [hR.1 p hp x hxA y hyA, hS.1 p hp x hxB y hyB]
+      exact memClause_congr hp fun c z hb hc ↦
+        (ih (x, z) (descent_right hb) hxA (branch_mem_domain hA hyA hb) hxB
+          (branch_mem_domain hB hyB hb)).2
+    · rw [hR.2 p hp x hxA y hyA, hS.2 p hp x hxB y hyB]
+      refine eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
+        (fun c z hb hc q ↦ denseMem_congr ?_)
+      · exact (ih (z, y) (descent_left hb) (branch_mem_domain hA hxA hb) hyA
+          (branch_mem_domain hB hxB hb) hyB).1
+      · exact (ih (z, x) (descent_swap hb) (branch_mem_domain hA hyA hb) hxA
+          (branch_mem_domain hB hyB hb) hxB).1
+
+/-- **Observational uniqueness**: two graphs coherent over the same domain agree at every
+state of it. This is also the junk-independence certificate — coherence never mentions
+elements outside the two tagged slices, so candidate graphs may differ arbitrarily elsewhere
+with no semantic effect, and equality of graphs is neither claimed nor true. -/
+theorem agreeAt_of_coherent_same {A R S : ZFSet.{0}} (hA : A.IsTransitive)
+    (hR : AtomicCoherentOn condSet orderCode A R)
+    (hS : AtomicCoherentOn condSet orderCode A S) :
+    ∀ x y, x ∈ A → y ∈ A → AgreeAt condSet R S x y :=
+  fun x y hx hy ↦ agreeAt_of_coherent hA hA hR hS x y hx hy hx hy
+
+end Locality
+
 end Forcing
