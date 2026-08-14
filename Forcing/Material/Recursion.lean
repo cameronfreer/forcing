@@ -6,13 +6,34 @@ Authors: Cameron Freer
 import Mathlib.Order.GameAdd
 import Mathlib.SetTheory.ZFC.Rank
 import Forcing.Material.RecursionEntry
+import Forcing.Material.ForcingPresentation
 
 /-!
-# The atomic recursion: descent machinery
+# The atomic recursion: coherence clauses and descent machinery
 
-**Checkpoint module.** The coherence clauses, uniqueness, locality, existence, and
-correctness of the recursion graph are built here in subsequent steps; this file currently
-establishes only the descent machinery those proofs run on, and exports nothing.
+The coded clauses of the atomic recursion, mirroring the external kernel exactly, together
+with the rank machinery its inductions run on. Uniqueness, locality, existence, correctness,
+and the first-order compilation of these clauses follow in subsequent steps.
+
+**The clauses are ZFSet-level semantic predicates**, parameterized by the coded condition set
+and order code as *plain sets*. Two dependency facts fall out of that shape and are worth
+recording: the clauses need the coded forcing presentation and transitivity of the domain
+`A`, but **neither `A ∈ M` nor any theory axiom**; and **`InternalNameCoding` is not needed
+here at all** — raw coherence treats members shaped like coded branches directly, and the
+name coding enters only with correctness against the typed relations.
+
+Coherence is imposed **exactly** — membership in each tagged slice is an `↔` with its clause,
+not mere closure under it — and only for valid condition codes and domain elements. Other
+elements of a candidate graph stay unconstrained, so the uniqueness to come is
+**observational**: agreement on the two tagged slices, never whole-set equality. For
+malformed ambient sets the branch quantifiers range only over branches whose first coordinate
+is a condition code, which makes the recursion total on arbitrary `x, y ∈ A` without a master
+predicate of name codes.
+
+Orientation is the one thing that could typecheck while being mathematically wrong: the
+equality and density clauses nest three order comparisons, so each occurrence has a named
+typed reading (`pair_mem_orderCode_iff` and the `orientation` theorems) fixing its direction
+against the stored smaller-is-stronger convention.
 
 The external kernel (`Forcing/Name/Atomic.lean`) descends along the *structurally visible*
 immediate-subname relation. The material representation inserts several Kuratowski-pair
@@ -87,5 +108,120 @@ coordinate, with the arguments swapped. -/
 private theorem descent_swap {c z x y : ZFSet.{0}} (h : ZFSet.pair c z ∈ y) :
     Sym2.GameAdd (· < ·) (rankPair z x) (rankPair x y) :=
   Sym2.GameAdd.fst_snd (rank_lt_of_pair_mem h)
+
+/-! ### The coherence clauses -/
+
+section Clauses
+
+variable (condSet orderCode : ZFSet.{0})
+
+/-- **Density of the membership-witness slice** below a condition: every strengthening has a
+further strengthening carrying a witness. -/
+def DenseMem (R q x y : ZFSet.{0}) : Prop :=
+  ∀ r ∈ condSet, ZFSet.pair r q ∈ orderCode →
+    ∃ s ∈ condSet, ZFSet.pair s r ∈ orderCode ∧ entry memWitnessTag s x y ∈ R
+
+/-- **The membership-witness clause**: some branch of `y` is activated by `q` and its subname
+is forced equal to `x`. -/
+def MemClause (R q x y : ZFSet.{0}) : Prop :=
+  ∃ c z, ZFSet.pair c z ∈ y ∧ c ∈ condSet ∧ ZFSet.pair q c ∈ orderCode ∧
+    entry eqTag q x z ∈ R
+
+/-- **The forced-equality clause**: the two inclusions, each saying that every branch
+activated below `p` on one side is densely a member of the other. Branch quantifiers range
+only over branches whose first coordinate is a condition code, so the clause is total on
+arbitrary domain elements. -/
+def EqClause (R p x y : ZFSet.{0}) : Prop :=
+  (∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ∀ q ∈ condSet,
+      ZFSet.pair q p ∈ orderCode → ZFSet.pair q c ∈ orderCode →
+      DenseMem condSet orderCode R q z y) ∧
+    (∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ∀ q ∈ condSet,
+      ZFSet.pair q p ∈ orderCode → ZFSet.pair q c ∈ orderCode →
+      DenseMem condSet orderCode R q z x)
+
+/-- **Coherence on a domain**: each tagged slice of the graph is *exactly* its clause, at
+valid condition codes and domain elements. Elements outside those slices are unconstrained —
+uniqueness will therefore be observational. -/
+def AtomicCoherentOn (A R : ZFSet.{0}) : Prop :=
+  (∀ q ∈ condSet, ∀ x ∈ A, ∀ y ∈ A,
+      (entry memWitnessTag q x y ∈ R ↔ MemClause condSet orderCode R q x y)) ∧
+    (∀ p ∈ condSet, ∀ x ∈ A, ∀ y ∈ A,
+      (entry eqTag p x y ∈ R ↔ EqClause condSet orderCode R p x y))
+
+end Clauses
+
+/-! ### Domain preservation
+
+The recursive arguments of every clause stay inside the domain — proved from transitivity
+alone, with no rank and no theory axiom, so that rank descent never stands in for closure of
+the recursion domain. -/
+
+/-- The subname code carried by a branch of a domain element is itself in the domain. -/
+theorem branch_mem_domain {A c z y : ZFSet.{0}} (hA : A.IsTransitive) (hy : y ∈ A)
+    (h : ZFSet.pair c z ∈ y) : z ∈ A :=
+  mem_of_pair_mem hA hy h
+
+/-- The recursive argument of the membership-witness clause stays in the domain. -/
+theorem memClause_domain {condSet orderCode A R q x y : ZFSet.{0}} (hA : A.IsTransitive)
+    (hy : y ∈ A) (h : MemClause condSet orderCode R q x y) :
+    ∃ c z, ZFSet.pair c z ∈ y ∧ z ∈ A ∧ ZFSet.pair q c ∈ orderCode ∧
+      entry eqTag q x z ∈ R := by
+  obtain ⟨c, z, hb, -, hord, he⟩ := h
+  exact ⟨c, z, hb, branch_mem_domain hA hy hb, hord, he⟩
+
+/-! ### Orientation
+
+Each order comparison of the clauses gets a named typed reading. A reversal would still
+typecheck against the raw `ZFSet` definitions, so these are the guard rails. -/
+
+section Orientation
+
+variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
+  (Pres : InternalForcingPresentation M P)
+
+/-- The stored orientation: a coded pair lies in the order code exactly when the *first*
+condition strengthens the second (smaller is stronger). -/
+theorem pair_mem_orderCode_iff (a b : P) :
+    ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr a)) (ZFSet.mk (Pres.conditionCode.repr b)) ∈
+        (Pres.orderCode : ZFSet.{0}) ↔ a ≤ b :=
+  Pres.order_iff b a
+
+/-- Orientation of `MemClause`: its comparison says the witness condition **strengthens the
+branch's** condition. -/
+theorem memClause_orientation {R x y z : ZFSet.{0}} {q c : P}
+    (hb : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr c)) z ∈ y)
+    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hle : q ≤ c)
+    (he : entry eqTag (ZFSet.mk (Pres.conditionCode.repr q)) x z ∈ R) :
+    MemClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+      (ZFSet.mk (Pres.conditionCode.repr q)) x y :=
+  ⟨_, z, hb, hc, (pair_mem_orderCode_iff Pres q c).2 hle, he⟩
+
+/-- Orientation of `DenseMem`: the hypothesis reads "`r` strengthens `q`" and the conclusion
+"`s` strengthens `r`" — density *below*, not above. -/
+theorem denseMem_orientation {R q x y : ZFSet.{0}} {r : P}
+    (h : DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R q x y)
+    (hr : ZFSet.mk (Pres.conditionCode.repr r) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hrq : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr r)) q ∈ (Pres.orderCode : ZFSet.{0})) :
+    ∃ s ∈ (Pres.conditionSet : ZFSet.{0}),
+      ZFSet.pair s (ZFSet.mk (Pres.conditionCode.repr r)) ∈ (Pres.orderCode : ZFSet.{0}) ∧
+        entry memWitnessTag s x y ∈ R :=
+  h _ hr hrq
+
+/-- Orientation of `EqClause`: its comparisons read "`q` strengthens `p`" and "`q`
+strengthens the branch's condition" — both downward. -/
+theorem eqClause_orientation {R p x y z : ZFSet.{0}} {c q : P}
+    (h : EqClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R p x y)
+    (hb : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr c)) z ∈ x)
+    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hq : ZFSet.mk (Pres.conditionCode.repr q) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hqp : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr q)) p ∈
+      (Pres.orderCode : ZFSet.{0}))
+    (hqc : q ≤ c) :
+    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+      (ZFSet.mk (Pres.conditionCode.repr q)) z y :=
+  h.1 _ z hb hc _ hq hqp ((pair_mem_orderCode_iff Pres q c).2 hqc)
+
+end Orientation
 
 end Forcing
