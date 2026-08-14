@@ -25,18 +25,20 @@ arrive with the graph itself.
 
 ## Main definitions
 
-* `Forcing.entry`: the tagged tuple.
-* `Forcing.memWitnessTag`, `Forcing.eqTag`: the two relation tags.
+* `Forcing.AtomicRecursion.entry`: the tagged tuple.
+* `Forcing.AtomicRecursion.memWitnessTag`, `Forcing.AtomicRecursion.eqTag`: the two relation tags.
 
 ## Main results
 
-* `Forcing.entry_inj`: entries determine tag, condition, and both name codes.
+* `Forcing.AtomicRecursion.entry_inj`: entries determine tag, condition, and both name codes.
 * `Forcing.MaterialGround.entry_mem`: entries lie in the ground, priced at finite closure.
 -/
 
 namespace Forcing
 
 open FirstOrder
+
+namespace AtomicRecursion
 
 /-- The tag of a membership-witness entry. -/
 def memWitnessTag : ℕ := 0
@@ -65,7 +67,11 @@ theorem entry_memWitness_ne_eq {p x y p' x' y' : ZFSet.{0}} :
     entry memWitnessTag p x y ≠ entry eqTag p' x' y' := by
   simp [entry_inj, memWitnessTag, eqTag]
 
+end AtomicRecursion
+
 namespace MaterialGround
+
+open AtomicRecursion
 
 variable {T : memLang.Theory} (M : MaterialGround.{0} T)
 variable (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
@@ -80,6 +86,8 @@ theorem entry_mem {tag : ℕ} {p x y : ZFSet.{0}} (hpm : p ∈ M) (hx : x ∈ M)
 
 end MaterialGround
 
+namespace AtomicRecursion
+
 /-!
 ### Sanity examples
 
@@ -93,5 +101,7 @@ example {p x y : ZFSet.{0}} (h : entry memWitnessTag p x y = entry eqTag p x y) 
 example {tag : ℕ} {p x y p' x' y' : ZFSet.{0}}
     (h : entry tag p x y = entry tag p' x' y') : x = x' :=
   (entry_inj.1 h).2.2.1
+
+end AtomicRecursion
 
 end Forcing
