@@ -30,19 +30,21 @@ coded set of all formulas.
   pairing, and union.
 -/
 
+universe u
+
 namespace Forcing
 
 open FirstOrder
 
 namespace MaterialGround
 
-variable {T : memLang.Theory} (M : MaterialGround.{0} T)
+variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 variable (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
 
 include he hp hu in
 /-- A node lies in the ground when its payload does: tags and arities are numerals, and the
 node is built from Kuratowski pairs. -/
-theorem node_mem {tag k n : ℕ} {payload : ZFSet.{0}} (hx : payload ∈ M) :
+theorem node_mem {tag k n : ℕ} {payload : ZFSet.{u}} (hx : payload ∈ M) :
     node tag k n payload ∈ M :=
   M.pair_mem hp (M.natCode_mem he hp hu tag)
     (M.pair_mem hp (M.pair_mem hp (M.natCode_mem he hp hu k) (M.natCode_mem he hp hu n)) hx)

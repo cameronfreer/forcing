@@ -34,6 +34,8 @@ arrive with the graph itself.
 * `Forcing.MaterialGround.entry_mem`: entries lie in the ground, priced at finite closure.
 -/
 
+universe u
+
 namespace Forcing
 
 open FirstOrder
@@ -51,19 +53,19 @@ theorem memWitnessTag_ne_eqTag : memWitnessTag ≠ eqTag := by
 
 /-- A **graph entry**: at condition code `p`, the relation marked by `tag` holds between the
 name codes `x` and `y`. -/
-def entry (tag : ℕ) (p x y : ZFSet.{0}) : ZFSet.{0} :=
+def entry (tag : ℕ) (p x y : ZFSet.{u}) : ZFSet.{u} :=
   ZFSet.pair (natCode tag) (ZFSet.pair p (ZFSet.pair x y))
 
 /-- **The entry law**: an entry determines its tag, its condition, and both name codes — so
 the two tagged halves of the graph cannot interfere. -/
-@[simp] theorem entry_inj {tag tag' : ℕ} {p x y p' x' y' : ZFSet.{0}} :
+@[simp] theorem entry_inj {tag tag' : ℕ} {p x y p' x' y' : ZFSet.{u}} :
     entry tag p x y = entry tag' p' x' y' ↔ tag = tag' ∧ p = p' ∧ x = x' ∧ y = y' := by
   simp only [entry, ZFSet.pair_inj]
   exact ⟨fun ⟨h1, h2, h3, h4⟩ ↦ ⟨natCode.injective h1, h2, h3, h4⟩,
     fun ⟨h1, h2, h3, h4⟩ ↦ ⟨congrArg _ h1, h2, h3, h4⟩⟩
 
 /-- Membership-witness entries are never equality entries. -/
-theorem entry_memWitness_ne_eq {p x y p' x' y' : ZFSet.{0}} :
+theorem entry_memWitness_ne_eq {p x y p' x' y' : ZFSet.{u}} :
     entry memWitnessTag p x y ≠ entry eqTag p' x' y' := by
   simp [entry_inj, memWitnessTag, eqTag]
 
@@ -73,13 +75,13 @@ namespace MaterialGround
 
 open AtomicRecursion
 
-variable {T : memLang.Theory} (M : MaterialGround.{0} T)
+variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 variable (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
 
 include he hp hu in
 /-- **Entries lie in the ground**, priced at exactly the finite closure axioms: the tag is a
 numeral and the tuple is nested Kuratowski pairs. -/
-theorem entry_mem {tag : ℕ} {p x y : ZFSet.{0}} (hpm : p ∈ M) (hx : x ∈ M) (hy : y ∈ M) :
+theorem entry_mem {tag : ℕ} {p x y : ZFSet.{u}} (hpm : p ∈ M) (hx : x ∈ M) (hy : y ∈ M) :
     entry tag p x y ∈ M :=
   M.pair_mem hp (M.natCode_mem he hp hu tag)
     (M.pair_mem hp hpm (M.pair_mem hp hx hy))
@@ -95,10 +97,10 @@ Entries at the two tags are distinguishable, and an entry determines its parts �
 facts the simultaneous recursion needs in order to carry both relations in one graph.
 -/
 
-example {p x y : ZFSet.{0}} (h : entry memWitnessTag p x y = entry eqTag p x y) : False :=
+example {p x y : ZFSet.{u}} (h : entry memWitnessTag p x y = entry eqTag p x y) : False :=
   entry_memWitness_ne_eq h
 
-example {tag : ℕ} {p x y p' x' y' : ZFSet.{0}}
+example {tag : ℕ} {p x y p' x' y' : ZFSet.{u}}
     (h : entry tag p x y = entry tag p' x' y') : x = x' :=
   (entry_inj.1 h).2.2.1
 

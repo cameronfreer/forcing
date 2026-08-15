@@ -144,9 +144,9 @@ theorem pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M) (h
 /-- **Closure under the von Neumann numerals** — the dependency-mining result: the successor
 code is an `insert`, so numerals price at empty set, pairing, and union. Infinity is **not**
 required: each individual numeral is built by finite recursion. -/
-theorem natCode_mem {T : memLang.Theory} (M : MaterialGround.{0} T)
+theorem natCode_mem {T : memLang.Theory} (M : MaterialGround.{u} T)
     (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T) :
-    ∀ n : ℕ, natCode n ∈ M
+    ∀ n : ℕ, natCode.{u} n ∈ M
   | 0 => M.empty_mem he
   | n + 1 => by
     rw [natCode_succ]
