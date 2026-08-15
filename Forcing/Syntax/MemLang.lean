@@ -22,6 +22,7 @@ depending on the other.
 
 * `Forcing.memRel`, `Forcing.memLang`: the membership language.
 * `Forcing.memFormula`: the atomic membership formula.
+* `Forcing.unorderedPairDef`, `Forcing.pairDef`: the pair relations, as builders over terms.
 -/
 
 universe v
@@ -43,5 +44,33 @@ language, named once so downstream axioms and codings need not spell the relatio
 def memFormula {α : Type v} {n : ℕ} (t₁ t₂ : memLang.Term (α ⊕ Fin n)) :
     memLang.BoundedFormula α n :=
   Language.Relations.boundedFormula₂ (L := memLang) memRel.mem t₁ t₂
+
+/-! ### Pair formulas
+
+Builders over **terms**, not over fixed variable positions, so a consumer can splice them
+anywhere without relabelling a fixed three-variable formula. Syntax only; their realization
+laws live in the material semantics layer. -/
+
+/-- Weakening of a term into one more bound variable. -/
+def liftTerm {α : Type v} {n : ℕ} (t : memLang.Term (α ⊕ Fin n)) :
+    memLang.Term (α ⊕ Fin (n + 1)) :=
+  t.relabel (Sum.map id Fin.castSucc)
+
+/-- `z` is the unordered pair `{x, y}`. -/
+def unorderedPairDef {α : Type v} {n : ℕ} (x y z : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm z) ⇔
+    ((&(Fin.last n) =' liftTerm x) ⊔ (&(Fin.last n) =' liftTerm y)))
+
+/-- `z` is the Kuratowski pair `⟨x, y⟩`, i.e. `{{x}, {x, y}}`. The two intermediate sets are
+quantified rather than named, so the builder needs no auxiliary variables from its caller. -/
+def pairDef {α : Type v} {n : ℕ} (x y z : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (unorderedPairDef (liftTerm (liftTerm x)) (liftTerm (liftTerm x))
+        (&(Fin.castSucc (Fin.last n))) ⊓
+      (unorderedPairDef (liftTerm (liftTerm x)) (liftTerm (liftTerm y))
+        (&(Fin.last (n + 1))) ⊓
+      unorderedPairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+        (liftTerm (liftTerm z))))
 
 end Forcing
