@@ -117,7 +117,9 @@ only definitions, implications, and order-level theorems.
 
 ## M9 — Boolean completion and Boolean-valued models
 
-**Status: planned.**
+**Status: planned**
+([#169](https://github.com/cameronfreer/forcing/issues/169), four layers with
+distinct dependencies; the external algebra is unblocked today).
 
 The regular/Boolean completion of the already-existing separative quotient
 (complete regular algebra via `Heyting.Regular` on lower sets), `B`-names, and
@@ -151,7 +153,7 @@ completeness of regular elements — depends only on the M1 kernel, and the
 theory. What is **not** automatically unblocked is the *material* Boolean layer:
 a coded Boolean algebra with internal completeness, and the Boolean new-real
 theorem, both of which need the material coding infrastructure. The M9 tracker
-records that split.
+records that split ([#169](https://github.com/cameronfreer/forcing/issues/169)).
 
 ## Later endpoint work
 
