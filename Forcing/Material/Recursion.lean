@@ -58,6 +58,15 @@ about *closure of the recursion domain*, and conflating them would let rank desc
 for domain closure. Using ambient rank does **not** reintroduce Foundation as a ground-theory
 cost: it proves externally that any two coherent candidate graphs agree, while Separation and
 Collection remain the only costs of constructing such a graph inside the carrier.
+
+## Stages
+
+`StageValue` names the value the construction assigns at one state, computed against an
+already-collected history. It is introduced **before any scheme is consumed**, so the first
+ledger charge can describe the construction rather than two arbitrary sentences. Its four
+properties are functionality (`stageValue_unique`), totality from a bound
+(`stageValue_exists_of_bound`, the Collection pressure test), and dependence on observable
+predecessors only (`stageValue_congr`, and `stageValue_congr_of_coherent` via locality).
 -/
 
 universe u
@@ -330,6 +339,105 @@ theorem agreeAt_of_coherent_same {A R S : ZFSet.{u}} (hA : A.IsTransitive)
   fun x y hx hy ↦ agreeAt_of_coherent hA hA hR hS x y hx hy hx hy
 
 end Locality
+
+/-! ### Stages
+
+The recursion is built stage by stage: the stage at a state is the single set holding **both**
+tagged slices there, computed from the already-collected predecessor history. Naming it before
+any scheme is consumed is what makes the first ledger charge describe the *construction*
+rather than two arbitrary sentences.
+
+Three facts matter before Separation and Collection appear. The relation is **functional** in
+its value, so a stage is determined by its history. It is **total** — every state has a stage,
+including malformed ones — which is the Collection pressure test: Collection needs a total
+witness relation on its indexing set, and here malformed members simply fail the clause
+guards and contribute nothing, exactly as they do in coherence. And it depends only on the
+**observable predecessor slices**, so histories agreeing there give equal stages. -/
+
+section Stage
+
+variable {condSet orderCode : ZFSet.{u}}
+
+/-- The stage at a state: the set holding both tagged slices, computed against `history`.
+Malformed members of `x` and `y` are ignored exactly as the coherence clauses ignore them —
+the clause guards do the work, so no separate validity filter is needed. -/
+def StageValue (condSet orderCode history x y value : ZFSet.{u}) : Prop :=
+  ∀ e, e ∈ value ↔
+    (∃ p ∈ condSet, e = entry memWitnessTag p x y ∧
+      MemClause condSet orderCode history p x y) ∨
+    (∃ p ∈ condSet, e = entry eqTag p x y ∧ EqClause condSet orderCode history p x y)
+
+/-- **Functionality**: a history determines the stage. -/
+theorem stageValue_unique {history x y v₁ v₂ : ZFSet.{u}}
+    (h₁ : StageValue condSet orderCode history x y v₁)
+    (h₂ : StageValue condSet orderCode history x y v₂) : v₁ = v₂ :=
+  ZFSet.ext fun e ↦ (h₁ e).trans (h₂ e).symm
+
+/-- **Totality from a bound** — the Collection pressure test. Given any set containing the
+candidate entries, the stage exists: it is carved out by separation, and the clause guards
+discard whatever is not a genuine coded branch. **No assumption is made that every member of
+`x` or `y` is a coded branch**, so the witness relation is total on its whole indexing set,
+which is what Collection will require.
+
+The bound is a parameter rather than constructed here, and deliberately so: this is exactly
+the shape the internal argument takes, where a named Separation instance carves the stage
+from a constructed bound. Externally the bound could be built by replacement, but that would
+misrepresent the internal cost. -/
+theorem stageValue_exists_of_bound {history x y bound : ZFSet.{u}}
+    (hb : ∀ p ∈ condSet, entry memWitnessTag p x y ∈ bound ∧ entry eqTag p x y ∈ bound) :
+    ∃ value, StageValue condSet orderCode history x y value := by
+  classical
+  refine ⟨ZFSet.sep (fun e ↦
+    (∃ p ∈ condSet, e = entry memWitnessTag p x y ∧
+        MemClause condSet orderCode history p x y) ∨
+      (∃ p ∈ condSet, e = entry eqTag p x y ∧ EqClause condSet orderCode history p x y))
+    bound, fun e ↦ ?_⟩
+  rw [ZFSet.mem_sep]
+  refine ⟨fun h ↦ h.2, fun h ↦ ⟨?_, h⟩⟩
+  rcases h with ⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩
+  · exact (hb p hp).1
+  · exact (hb p hp).2
+
+/-- **Dependence on observable predecessors only**: histories that agree at every state
+consulted by the clauses give the same stage. The agreement needed is exactly the
+observational one from locality. -/
+theorem stageValue_congr {h₁ h₂ x y v₁ v₂ : ZFSet.{u}}
+    (hmem : ∀ p ∈ condSet, MemClause condSet orderCode h₁ p x y ↔
+      MemClause condSet orderCode h₂ p x y)
+    (heq : ∀ p ∈ condSet, EqClause condSet orderCode h₁ p x y ↔
+      EqClause condSet orderCode h₂ p x y)
+    (hv₁ : StageValue condSet orderCode h₁ x y v₁)
+    (hv₂ : StageValue condSet orderCode h₂ x y v₂) : v₁ = v₂ := by
+  refine ZFSet.ext fun e ↦ (hv₁ e).trans (Iff.trans ?_ (hv₂ e).symm)
+  constructor
+  · rintro (⟨p, hp, he, hc⟩ | ⟨p, hp, he, hc⟩)
+    · exact Or.inl ⟨p, hp, he, (hmem p hp).1 hc⟩
+    · exact Or.inr ⟨p, hp, he, (heq p hp).1 hc⟩
+  · rintro (⟨p, hp, he, hc⟩ | ⟨p, hp, he, hc⟩)
+    · exact Or.inl ⟨p, hp, he, (hmem p hp).2 hc⟩
+    · exact Or.inr ⟨p, hp, he, (heq p hp).2 hc⟩
+
+/-- **Locality for stages**: two histories coherent over *different* transitive domains
+produce the same stage at any state lying in both. This is the form the construction uses,
+and it consumes exactly what locality consumes — coherence, transitivity, and rank. No
+scheme, no name coding, and no forcing relation. -/
+theorem stageValue_congr_of_coherent {A B h₁ h₂ x y v₁ v₂ : ZFSet.{u}}
+    (hA : A.IsTransitive) (hB : B.IsTransitive)
+    (hc₁ : AtomicCoherentOn condSet orderCode A h₁)
+    (hc₂ : AtomicCoherentOn condSet orderCode B h₂)
+    (hxA : x ∈ A) (hyA : y ∈ A) (hxB : x ∈ B) (hyB : y ∈ B)
+    (hv₁ : StageValue condSet orderCode h₁ x y v₁)
+    (hv₂ : StageValue condSet orderCode h₂ x y v₂) : v₁ = v₂ := by
+  have hag := agreeAt_of_coherent hA hB hc₁ hc₂
+  refine stageValue_congr (fun p hp ↦ ?_) (fun p hp ↦ ?_) hv₁ hv₂
+  · exact memClause_congr hp fun c z hb hc ↦
+      (hag x z hxA (mem_of_pair_mem hA hyA hb) hxB (mem_of_pair_mem hB hyB hb)).2
+  · refine eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
+      (fun c z hb hc q ↦ denseMem_congr ?_)
+    · exact (hag z y (mem_of_pair_mem hA hxA hb) hyA (mem_of_pair_mem hB hxB hb) hyB).1
+    · exact (hag z x (mem_of_pair_mem hA hyA hb) hxA (mem_of_pair_mem hB hyB hb) hxB).1
+
+end Stage
 
 /-! ### Typed readings of the clauses
 
