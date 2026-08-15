@@ -72,6 +72,19 @@ need not enlarge the shared syntax API yet. -/
 private def pairMemDef (x y S : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓ memFormula (&(Fin.last n)) (liftTerm S))
 
+/-- **The density clause**, as a formula: every strengthening of `q` inside the condition set
+has a further strengthening carrying a tagged entry. The tag is an arbitrary term; realization
+specializes it. -/
+def denseMemDef (condSet orderCode tag R q x y : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm condSet) ⟹
+    (pairMemDef (&(Fin.last n)) (liftTerm q) (liftTerm orderCode) ⟹
+      ∃' (memFormula (&(Fin.last (n + 1))) (liftTerm (liftTerm condSet)) ⊓
+        (pairMemDef (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n)))
+            (liftTerm (liftTerm orderCode)) ⊓
+          entryMemDef (liftTerm (liftTerm tag)) (&(Fin.last (n + 1)))
+            (liftTerm (liftTerm x)) (liftTerm (liftTerm y)) (liftTerm (liftTerm R))))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -105,6 +118,26 @@ theorem realize_entryDef :
     have h₁M := right_mem_of_pair_mem heM
     have h₂M := right_mem_of_pair_mem h₁M
     exact ⟨⟨_, h₂M⟩, ⟨_, h₁M⟩, rfl, rfl, he⟩
+
+/-- Pair membership: the formula says the pair lies in `S`. Backward direction axiom-free —
+the pair is a member of a member. -/
+private theorem realize_pairMemDef :
+    (pairMemDef x y S).Realize v xs ↔
+      ZFSet.pair ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈
+        ((Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) := by
+  simp only [pairMemDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_pairDef, realize_liftTerm]
+  constructor
+  · rintro ⟨w, hw, hmem⟩
+    rw [← hw]
+    exact hmem
+  · intro hmem
+    have hSM : ((Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) ∈ M :=
+      (Term.realize (Sum.elim v xs) S : ↥M).2
+    exact ⟨⟨_, M.mem_trans hmem hSM⟩, rfl, hmem⟩
 
 /-- **Specialization at a numeral tag**: the formula becomes a statement about the graph
 API's `entry`. -/
@@ -142,6 +175,46 @@ theorem realize_entryMemDef_natCode {t : ℕ}
     · rw [realize_entryDef_natCode (by simpa [realize_liftTerm] using htag)]
       simp [realize_liftTerm]
     · simpa [realize_liftTerm] using hmem
+
+/-- **The density-clause law**, and its orientation test: the formula realizes to exactly the
+semantic `DenseMem`, with `r` strengthening `q` in the hypothesis and `s` strengthening `r` in
+the conclusion. Carrier transitivity bridges the quantifiers — the formula ranges over carrier
+elements, the predicate over sets — and **no transitivity hypothesis and no theory axiom are
+consumed**. -/
+theorem realize_denseMemDef {condSet orderCode q : memLang.Term (α ⊕ Fin n)}
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode memWitnessTag) :
+    (denseMemDef condSet orderCode tag R q x y).Realize v xs ↔
+      DenseMem ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) q : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+  have hcM : ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) condSet : ↥M).2
+  have hent : ∀ r s : ↥M,
+      (entryMemDef (liftTerm (liftTerm tag)) (&(Fin.last (n + 1)))
+          (liftTerm (liftTerm x)) (liftTerm (liftTerm y))
+          (liftTerm (liftTerm R))).Realize v (Fin.snoc (Fin.snoc xs r) s) ↔
+        entry memWitnessTag ((s : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+    intro r s
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using htag)]
+    simp [realize_liftTerm]
+  simp only [denseMemDef, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_pairMemDef, realize_liftTerm]
+  constructor
+  · intro h r hr hrq
+    obtain ⟨s, hs, hsr, he⟩ := h ⟨r, M.mem_trans hr hcM⟩ hr hrq
+    exact ⟨(s : ZFSet.{u}), hs, hsr, (hent _ s).1 he⟩
+  · intro h r hr hrq
+    obtain ⟨s, hs, hsr, he⟩ := h (r : ZFSet.{u}) hr hrq
+    exact ⟨⟨s, M.mem_trans hs hcM⟩, hs, hsr, (hent _ ⟨s, M.mem_trans hs hcM⟩).2 he⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
