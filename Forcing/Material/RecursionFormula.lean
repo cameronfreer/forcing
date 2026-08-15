@@ -22,6 +22,11 @@ connects it to the existing graph API, turning the formula into a statement abou
 No material constants and no subtype-valued tag definitions are introduced here: the
 realization theorems accept whatever tag value the carrier already holds, and the existence
 proof later supplies numerals through `natCode_mem`, paying the finite-closure cost there.
+Everything here is **universe-polymorphic**, matching the material presentations: the
+recursion is certified for `MaterialGround.{u}` and `P : Type u`, not only at universe zero.
+This is same-universe generality, so no `Cardinal.lift`-style residue appears (the
+cross-universe lifting declined in ADR 0002 is a different question).
+
 **This layer imports no axiom sentences**, and its realization laws consume none: every
 intermediate set a backward direction needs is a member of a member, so repeated transitivity
 supplies it.
@@ -101,33 +106,26 @@ theorem realize_entryDef :
     have h₂M := right_mem_of_pair_mem h₁M
     exact ⟨⟨_, h₂M⟩, ⟨_, h₁M⟩, rfl, rfl, he⟩
 
-end Realization
-
-section GraphAPI
-
-variable {M : MaterialCarrier.{0}} {tag p x y e R : memLang.Term (α ⊕ Fin n)}
-variable {v : α → M} {xs : Fin n → M}
-
 /-- **Specialization at a numeral tag**: the formula becomes a statement about the graph
 API's `entry`. -/
 theorem realize_entryDef_natCode {t : ℕ}
-    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{0}) = natCode t) :
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode t) :
     (entryDef tag p x y e).Realize v xs ↔
-      ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{0}) =
-        entry t ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{0})
-          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{0})
-          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{0}) := by
+      ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) =
+        entry t ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
   rw [realize_entryDef, htag, entry]
 
 /-- **Entry membership, at a numeral tag**: the formula says the coded entry lies in `R`. The
 backward direction is axiom-free — the entry is a member of a member. -/
 theorem realize_entryMemDef_natCode {t : ℕ}
-    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{0}) = natCode t) :
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode t) :
     (entryMemDef tag p x y R).Realize v xs ↔
-      entry t ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{0}) ∈
-      ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{0}) := by
+      entry t ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈
+      ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
   simp only [entryMemDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
     BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
     Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one]
@@ -138,7 +136,7 @@ theorem realize_entryMemDef_natCode {t : ℕ}
     rw [← hw]
     simpa [realize_liftTerm] using hmem
   · intro hmem
-    have hRM : ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{0}) ∈ M :=
+    have hRM : ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ∈ M :=
       (Term.realize (Sum.elim v xs) R : ↥M).2
     refine ⟨⟨_, M.mem_trans hmem hRM⟩, ?_, ?_⟩
     · rw [realize_entryDef_natCode (by simpa [realize_liftTerm] using htag)]
@@ -149,17 +147,17 @@ theorem realize_entryMemDef_natCode {t : ℕ}
 identical remaining components — so tag placement, not merely pair nesting, matches
 `entry_memWitness_ne_eq`. -/
 example
-    (h₁ : ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{0}) =
-      entry memWitnessTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{0}))
-    (h₂ : ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{0}) =
-      entry eqTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{0})
-        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{0})) : False :=
+    (h₁ : ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) =
+      entry memWitnessTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}))
+    (h₂ : ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) =
+      entry eqTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})) : False :=
   entry_memWitness_ne_eq (h₁.symm.trans h₂)
 
-end GraphAPI
+end Realization
 
 end AtomicRecursion
 

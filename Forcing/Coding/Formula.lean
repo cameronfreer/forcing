@@ -50,6 +50,8 @@ function. Item 3 begins where this file stops.
 * `Forcing.exists_formulaCode`: no junk — every well-formed code is a code.
 -/
 
+universe u
+
 namespace Forcing
 
 open FirstOrder
@@ -57,12 +59,12 @@ open FirstOrder
 /-! ### Nodes -/
 
 /-- A coded node: its constructor tag, its arities, and its payload. -/
-def node (tag k n : ℕ) (payload : ZFSet.{0}) : ZFSet.{0} :=
+def node (tag k n : ℕ) (payload : ZFSet.{u}) : ZFSet.{u} :=
   ZFSet.pair (natCode tag) (ZFSet.pair (ZFSet.pair (natCode k) (natCode n)) payload)
 
 /-- **The node law**: nodes are equal exactly when tag, arities, and payload all agree.
 Constructor disjointness, arity recovery, and payload decoding are all corollaries. -/
-@[simp] theorem node_inj {tag k n tag' k' n' : ℕ} {p p' : ZFSet.{0}} :
+@[simp] theorem node_inj {tag k n tag' k' n' : ℕ} {p p' : ZFSet.{u}} :
     node tag k n p = node tag' k' n' p' ↔ tag = tag' ∧ k = k' ∧ n = n' ∧ p = p' := by
   simp only [node, ZFSet.pair_inj, and_assoc]
   exact ⟨fun ⟨h1, h2, h3, h4⟩ ↦ ⟨natCode.injective h1, natCode.injective h2,
@@ -73,7 +75,7 @@ Constructor disjointness, arity recovery, and payload decoding are all corollari
 
 /-- The code of a term of the coded fragment. Terms are variables — free (tag `0`) or bound
 (tag `1`) — since the language is function-free; the arities travel in the node. -/
-def termCode {k n : ℕ} : memLang.Term (Fin k ⊕ Fin n) → ZFSet.{0}
+def termCode {k n : ℕ} : memLang.Term (Fin k ⊕ Fin n) → ZFSet.{u}
   | .var (Sum.inl i) => node 0 k n (natCode i)
   | .var (Sum.inr j) => node 1 k n (natCode j)
   | .func f _ => f.elim
@@ -104,7 +106,7 @@ theorem termCode_inj {k n : ℕ} {s t : memLang.Term (Fin k ⊕ Fin n)}
 /-! ### Formula codes -/
 
 /-- The code of a formula of the coded fragment: a tagged tree carrying its arities. -/
-def formulaCode : ∀ {k n : ℕ}, memLang.BoundedFormula (Fin k) n → ZFSet.{0}
+def formulaCode : ∀ {k n : ℕ}, memLang.BoundedFormula (Fin k) n → ZFSet.{u}
   | k, n, .falsum => node 2 k n ∅
   | k, n, .equal t₁ t₂ => node 3 k n (ZFSet.pair (termCode t₁) (termCode t₂))
   | k, n, .rel .mem ts => node 4 k n (ZFSet.pair (termCode (ts 0)) (termCode (ts 1)))
@@ -208,15 +210,15 @@ theorem formulaCode_inj {k n k' n' : ℕ} {φ : memLang.BoundedFormula (Fin k) n
 
 /-- **Well-formed formula codes**, described inductively in the *code* rather than through an
 external inverse: the boundary this layer owes the coded forcing relation. -/
-inductive IsFormulaCode : ℕ → ℕ → ZFSet.{0} → Prop
+inductive IsFormulaCode : ℕ → ℕ → ZFSet.{u} → Prop
   | falsum (k n : ℕ) : IsFormulaCode k n (node 2 k n ∅)
   | equal {k n : ℕ} (t₁ t₂ : memLang.Term (Fin k ⊕ Fin n)) :
       IsFormulaCode k n (node 3 k n (ZFSet.pair (termCode t₁) (termCode t₂)))
   | rel {k n : ℕ} (t₁ t₂ : memLang.Term (Fin k ⊕ Fin n)) :
       IsFormulaCode k n (node 4 k n (ZFSet.pair (termCode t₁) (termCode t₂)))
-  | imp {k n : ℕ} {x y : ZFSet.{0}} : IsFormulaCode k n x → IsFormulaCode k n y →
+  | imp {k n : ℕ} {x y : ZFSet.{u}} : IsFormulaCode k n x → IsFormulaCode k n y →
       IsFormulaCode k n (node 5 k n (ZFSet.pair x y))
-  | all {k n : ℕ} {x : ZFSet.{0}} : IsFormulaCode k (n + 1) x →
+  | all {k n : ℕ} {x : ZFSet.{u}} : IsFormulaCode k (n + 1) x →
       IsFormulaCode k n (node 6 k n x)
 
 /-- **Soundness of the parser**: every code is well-formed. -/
@@ -232,7 +234,7 @@ theorem isFormulaCode_formulaCode : ∀ {k n : ℕ} (φ : memLang.BoundedFormula
 
 /-- **No junk**: every well-formed code is the code of a formula. Together with soundness,
 this is the characterization item 3 recognizes constructor cases against. -/
-theorem exists_formulaCode {k n : ℕ} {x : ZFSet.{0}} (h : IsFormulaCode k n x) :
+theorem exists_formulaCode {k n : ℕ} {x : ZFSet.{u}} (h : IsFormulaCode k n x) :
     ∃ φ : memLang.BoundedFormula (Fin k) n, formulaCode φ = x := by
   induction h with
   | falsum _ => exact ⟨.falsum, by simp⟩

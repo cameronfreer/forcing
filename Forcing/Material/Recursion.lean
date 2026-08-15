@@ -60,6 +60,8 @@ cost: it proves externally that any two coherent candidate graphs agree, while S
 Collection remain the only costs of constructing such a graph inside the carrier.
 -/
 
+universe u
+
 namespace Forcing
 
 namespace AtomicRecursion
@@ -68,17 +70,17 @@ namespace AtomicRecursion
 
 /-- A branch code sits three Kuratowski levels above the subname code it carries, so the
 subname code has strictly smaller rank. *Rank only* — nothing about the domain. -/
-private theorem rank_lt_of_pair_mem {c z w : ZFSet.{0}} (h : ZFSet.pair c z ∈ w) :
+private theorem rank_lt_of_pair_mem {c z w : ZFSet.{u}} (h : ZFSet.pair c z ∈ w) :
     z.rank < w.rank := by
-  have h₁ : z.rank < ({c, z} : ZFSet.{0}).rank :=
+  have h₁ : z.rank < ({c, z} : ZFSet.{u}).rank :=
     ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  have h₂ : ({c, z} : ZFSet.{0}).rank < (ZFSet.pair c z).rank :=
+  have h₂ : ({c, z} : ZFSet.{u}).rank < (ZFSet.pair c z).rank :=
     ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
   exact (h₁.trans h₂).trans (ZFSet.rank_lt_of_mem h)
 
 /-- In a transitive domain, the subname code carried by a branch of a member is itself a
 member. *Domain closure only* — nothing about rank. -/
-private theorem mem_of_pair_mem {A c z w : ZFSet.{0}} (hA : A.IsTransitive) (hw : w ∈ A)
+private theorem mem_of_pair_mem {A c z w : ZFSet.{u}} (hA : A.IsTransitive) (hw : w ∈ A)
     (h : ZFSet.pair c z ∈ w) : z ∈ A :=
   hA.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
     (hA.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) (hA.mem_trans h hw))
@@ -89,7 +91,7 @@ The unordered pair of ranks under `Sym2.GameAdd (· < ·)`, reproducing exactly 
 descent shapes of the external kernel: lower the right coordinate, lower the left, and
 lower-after-swap. -/
 
-private noncomputable def rankPair (x y : ZFSet.{0}) : Sym2 Ordinal.{0} :=
+private noncomputable def rankPair (x y : ZFSet.{u}) : Sym2 Ordinal.{u} :=
   s(x.rank, y.rank)
 
 private theorem rankPair_wf : WellFounded (Sym2.GameAdd ((· < ·) : Ordinal → Ordinal → Prop)) :=
@@ -97,19 +99,19 @@ private theorem rankPair_wf : WellFounded (Sym2.GameAdd ((· < ·) : Ordinal →
 
 /-- Shape 1 — a membership witness descends to forced equality against a branch of the right
 coordinate. -/
-private theorem descent_right {c z x y : ZFSet.{0}} (h : ZFSet.pair c z ∈ y) :
+private theorem descent_right {c z x y : ZFSet.{u}} (h : ZFSet.pair c z ∈ y) :
     Sym2.GameAdd (· < ·) (rankPair x z) (rankPair x y) :=
   Sym2.GameAdd.snd (rank_lt_of_pair_mem h)
 
 /-- Shape 2 — forced equality descends to a membership witness for a branch of the left
 coordinate. -/
-private theorem descent_left {c z x y : ZFSet.{0}} (h : ZFSet.pair c z ∈ x) :
+private theorem descent_left {c z x y : ZFSet.{u}} (h : ZFSet.pair c z ∈ x) :
     Sym2.GameAdd (· < ·) (rankPair z y) (rankPair x y) :=
   Sym2.GameAdd.fst (rank_lt_of_pair_mem h)
 
 /-- Shape 3 — forced equality descends to a membership witness for a branch of the right
 coordinate, with the arguments swapped. -/
-private theorem descent_swap {c z x y : ZFSet.{0}} (h : ZFSet.pair c z ∈ y) :
+private theorem descent_swap {c z x y : ZFSet.{u}} (h : ZFSet.pair c z ∈ y) :
     Sym2.GameAdd (· < ·) (rankPair z x) (rankPair x y) :=
   Sym2.GameAdd.fst_snd (rank_lt_of_pair_mem h)
 
@@ -117,17 +119,17 @@ private theorem descent_swap {c z x y : ZFSet.{0}} (h : ZFSet.pair c z ∈ y) :
 
 section Clauses
 
-variable (condSet orderCode : ZFSet.{0})
+variable (condSet orderCode : ZFSet.{u})
 
 /-- **Density of the membership-witness slice** below a condition: every strengthening has a
 further strengthening carrying a witness. -/
-def DenseMem (R q x y : ZFSet.{0}) : Prop :=
+def DenseMem (R q x y : ZFSet.{u}) : Prop :=
   ∀ r ∈ condSet, ZFSet.pair r q ∈ orderCode →
     ∃ s ∈ condSet, ZFSet.pair s r ∈ orderCode ∧ entry memWitnessTag s x y ∈ R
 
 /-- **The membership-witness clause**: some branch of `y` is activated by `q` and its subname
 is forced equal to `x`. -/
-def MemClause (R q x y : ZFSet.{0}) : Prop :=
+def MemClause (R q x y : ZFSet.{u}) : Prop :=
   ∃ c z, ZFSet.pair c z ∈ y ∧ c ∈ condSet ∧ ZFSet.pair q c ∈ orderCode ∧
     entry eqTag q x z ∈ R
 
@@ -135,7 +137,7 @@ def MemClause (R q x y : ZFSet.{0}) : Prop :=
 activated below `p` on one side is densely a member of the other. Branch quantifiers range
 only over branches whose first coordinate is a condition code, so the clause is total on
 arbitrary domain elements. -/
-def EqClause (R p x y : ZFSet.{0}) : Prop :=
+def EqClause (R p x y : ZFSet.{u}) : Prop :=
   (∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ∀ q ∈ condSet,
       ZFSet.pair q p ∈ orderCode → ZFSet.pair q c ∈ orderCode →
       DenseMem condSet orderCode R q z y) ∧
@@ -146,7 +148,7 @@ def EqClause (R p x y : ZFSet.{0}) : Prop :=
 /-- **Coherence on a domain**: each tagged slice of the graph is *exactly* its clause, at
 valid condition codes and domain elements. Elements outside those slices are unconstrained —
 uniqueness will therefore be observational. -/
-def AtomicCoherentOn (A R : ZFSet.{0}) : Prop :=
+def AtomicCoherentOn (A R : ZFSet.{u}) : Prop :=
   (∀ q ∈ condSet, ∀ x ∈ A, ∀ y ∈ A,
       (entry memWitnessTag q x y ∈ R ↔ MemClause condSet orderCode R q x y)) ∧
     (∀ p ∈ condSet, ∀ x ∈ A, ∀ y ∈ A,
@@ -161,12 +163,12 @@ alone, with no rank and no theory axiom, so that rank descent never stands in fo
 the recursion domain. -/
 
 /-- The subname code carried by a branch of a domain element is itself in the domain. -/
-theorem branch_mem_domain {A c z y : ZFSet.{0}} (hA : A.IsTransitive) (hy : y ∈ A)
+theorem branch_mem_domain {A c z y : ZFSet.{u}} (hA : A.IsTransitive) (hy : y ∈ A)
     (h : ZFSet.pair c z ∈ y) : z ∈ A :=
   mem_of_pair_mem hA hy h
 
 /-- The recursive argument of the membership-witness clause stays in the domain. -/
-theorem memClause_domain {condSet orderCode A R q x y : ZFSet.{0}} (hA : A.IsTransitive)
+theorem memClause_domain {condSet orderCode A R q x y : ZFSet.{u}} (hA : A.IsTransitive)
     (hy : y ∈ A) (h : MemClause condSet orderCode R q x y) :
     ∃ c z, ZFSet.pair c z ∈ y ∧ z ∈ A ∧ ZFSet.pair q c ∈ orderCode ∧
       entry eqTag q x z ∈ R := by
@@ -180,49 +182,49 @@ typecheck against the raw `ZFSet` definitions, so these are the guard rails. -/
 
 section Orientation
 
-variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
+variable {M : MaterialCarrier.{u}} {P : Type u} [Preorder P]
   (Pres : InternalForcingPresentation M P)
 
 /-- The stored orientation: a coded pair lies in the order code exactly when the *first*
 condition strengthens the second (smaller is stronger). -/
 theorem pair_mem_orderCode_iff (a b : P) :
     ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr a)) (ZFSet.mk (Pres.conditionCode.repr b)) ∈
-        (Pres.orderCode : ZFSet.{0}) ↔ a ≤ b :=
+        (Pres.orderCode : ZFSet.{u}) ↔ a ≤ b :=
   Pres.order_iff b a
 
 /-- Orientation of `MemClause`: its comparison says the witness condition **strengthens the
 branch's** condition. -/
-theorem memClause_orientation {R x y z : ZFSet.{0}} {q c : P}
+theorem memClause_orientation {R x y z : ZFSet.{u}} {q c : P}
     (hb : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr c)) z ∈ y)
-    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{u}))
     (hle : q ≤ c)
     (he : entry eqTag (ZFSet.mk (Pres.conditionCode.repr q)) x z ∈ R) :
-    MemClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+    MemClause (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
       (ZFSet.mk (Pres.conditionCode.repr q)) x y :=
   ⟨_, z, hb, hc, (pair_mem_orderCode_iff Pres q c).2 hle, he⟩
 
 /-- Orientation of `DenseMem`: the hypothesis reads "`r` strengthens `q`" and the conclusion
 "`s` strengthens `r`" — density *below*, not above. -/
-theorem denseMem_orientation {R q x y : ZFSet.{0}} {r : P}
-    (h : DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R q x y)
-    (hr : ZFSet.mk (Pres.conditionCode.repr r) ∈ (Pres.conditionSet : ZFSet.{0}))
-    (hrq : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr r)) q ∈ (Pres.orderCode : ZFSet.{0})) :
-    ∃ s ∈ (Pres.conditionSet : ZFSet.{0}),
-      ZFSet.pair s (ZFSet.mk (Pres.conditionCode.repr r)) ∈ (Pres.orderCode : ZFSet.{0}) ∧
+theorem denseMem_orientation {R q x y : ZFSet.{u}} {r : P}
+    (h : DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R q x y)
+    (hr : ZFSet.mk (Pres.conditionCode.repr r) ∈ (Pres.conditionSet : ZFSet.{u}))
+    (hrq : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr r)) q ∈ (Pres.orderCode : ZFSet.{u})) :
+    ∃ s ∈ (Pres.conditionSet : ZFSet.{u}),
+      ZFSet.pair s (ZFSet.mk (Pres.conditionCode.repr r)) ∈ (Pres.orderCode : ZFSet.{u}) ∧
         entry memWitnessTag s x y ∈ R :=
   h _ hr hrq
 
 /-- Orientation of `EqClause`: its comparisons read "`q` strengthens `p`" and "`q`
 strengthens the branch's condition" — both downward. -/
-theorem eqClause_orientation {R p x y z : ZFSet.{0}} {c q : P}
-    (h : EqClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R p x y)
+theorem eqClause_orientation {R p x y z : ZFSet.{u}} {c q : P}
+    (h : EqClause (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R p x y)
     (hb : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr c)) z ∈ x)
-    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{0}))
-    (hq : ZFSet.mk (Pres.conditionCode.repr q) ∈ (Pres.conditionSet : ZFSet.{0}))
+    (hc : ZFSet.mk (Pres.conditionCode.repr c) ∈ (Pres.conditionSet : ZFSet.{u}))
+    (hq : ZFSet.mk (Pres.conditionCode.repr q) ∈ (Pres.conditionSet : ZFSet.{u}))
     (hqp : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr q)) p ∈
-      (Pres.orderCode : ZFSet.{0}))
+      (Pres.orderCode : ZFSet.{u}))
     (hqc : q ≤ c) :
-    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+    DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
       (ZFSet.mk (Pres.conditionCode.repr q)) z y :=
   h.1 _ z hb hc _ hq hqp ((pair_mem_orderCode_iff Pres q c).2 hqc)
 
@@ -241,15 +243,15 @@ supplies eligibility for the induction hypothesis. -/
 
 section Locality
 
-variable {condSet orderCode : ZFSet.{0}}
+variable {condSet orderCode : ZFSet.{u}}
 
 /-- Two candidate graphs **agree at a state**: their two tagged slices coincide there. -/
-def AgreeAt (condSet R S x y : ZFSet.{0}) : Prop :=
+def AgreeAt (condSet R S x y : ZFSet.{u}) : Prop :=
   (∀ p ∈ condSet, entry memWitnessTag p x y ∈ R ↔ entry memWitnessTag p x y ∈ S) ∧
     (∀ p ∈ condSet, entry eqTag p x y ∈ R ↔ entry eqTag p x y ∈ S)
 
 /-- Congruence for the density clause: agreement of the membership slice suffices. -/
-private theorem denseMem_congr {R S q x y : ZFSet.{0}}
+private theorem denseMem_congr {R S q x y : ZFSet.{u}}
     (h : ∀ p ∈ condSet, entry memWitnessTag p x y ∈ R ↔ entry memWitnessTag p x y ∈ S) :
     DenseMem condSet orderCode R q x y ↔ DenseMem condSet orderCode S q x y := by
   constructor
@@ -262,7 +264,7 @@ private theorem denseMem_congr {R S q x y : ZFSet.{0}}
 
 /-- Congruence for the membership clause: agreement of the equality slice at every relevant
 state suffices. -/
-private theorem memClause_congr {R S q x y : ZFSet.{0}} (hq : q ∈ condSet)
+private theorem memClause_congr {R S q x y : ZFSet.{u}} (hq : q ∈ condSet)
     (h : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet →
       ∀ p ∈ condSet, (entry eqTag p x z ∈ R ↔ entry eqTag p x z ∈ S)) :
     MemClause condSet orderCode R q x y ↔ MemClause condSet orderCode S q x y := by
@@ -273,7 +275,7 @@ private theorem memClause_congr {R S q x y : ZFSet.{0}} (hq : q ∈ condSet)
     exact ⟨c, z, hb, hc, hord, (h c z hb hc q hq).2 he⟩
 
 /-- Congruence for the equality clause: the two families of density agreements suffice. -/
-private theorem eqClause_congr {R S p x y : ZFSet.{0}}
+private theorem eqClause_congr {R S p x y : ZFSet.{u}}
     (h₁ : ∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ∀ q,
       (DenseMem condSet orderCode R q z y ↔ DenseMem condSet orderCode S q z y))
     (h₂ : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ∀ q,
@@ -290,14 +292,14 @@ private theorem eqClause_congr {R S p x y : ZFSet.{0}}
 /-- **Locality**: graphs coherent over *different* domains agree at every state lying in
 both. Consumes only exact coherence, transitivity, and ambient rank — no material
 membership, no scheme, no name coding, and no forcing relation. -/
-theorem agreeAt_of_coherent {A B R S : ZFSet.{0}} (hA : A.IsTransitive) (hB : B.IsTransitive)
+theorem agreeAt_of_coherent {A B R S : ZFSet.{u}} (hA : A.IsTransitive) (hB : B.IsTransitive)
     (hR : AtomicCoherentOn condSet orderCode A R)
     (hS : AtomicCoherentOn condSet orderCode B S) :
     ∀ x y, x ∈ A → y ∈ A → x ∈ B → y ∈ B → AgreeAt condSet R S x y := by
-  have hwf : WellFounded fun u v : ZFSet.{0} × ZFSet.{0} ↦
+  have hwf : WellFounded fun u v : ZFSet.{u} × ZFSet.{u} ↦
       Sym2.GameAdd (· < ·) (rankPair u.1 u.2) (rankPair v.1 v.2) :=
     InvImage.wf _ rankPair_wf
-  suffices H : ∀ u : ZFSet.{0} × ZFSet.{0}, u.1 ∈ A → u.2 ∈ A → u.1 ∈ B → u.2 ∈ B →
+  suffices H : ∀ u : ZFSet.{u} × ZFSet.{u}, u.1 ∈ A → u.2 ∈ A → u.1 ∈ B → u.2 ∈ B →
       AgreeAt condSet R S u.1 u.2 from fun x y hxA hyA hxB hyB ↦ H (x, y) hxA hyA hxB hyB
   intro u
   induction u using hwf.induction with
@@ -321,7 +323,7 @@ theorem agreeAt_of_coherent {A B R S : ZFSet.{0}} (hA : A.IsTransitive) (hB : B.
 state of it. This is also the junk-independence certificate — coherence never mentions
 elements outside the two tagged slices, so candidate graphs may differ arbitrarily elsewhere
 with no semantic effect, and equality of graphs is neither claimed nor true. -/
-theorem agreeAt_of_coherent_same {A R S : ZFSet.{0}} (hA : A.IsTransitive)
+theorem agreeAt_of_coherent_same {A R S : ZFSet.{u}} (hA : A.IsTransitive)
     (hR : AtomicCoherentOn condSet orderCode A R)
     (hS : AtomicCoherentOn condSet orderCode A S) :
     ∀ x y, x ∈ A → y ∈ A → AgreeAt condSet R S x y :=
@@ -340,18 +342,18 @@ axiom and no `A ∈ M`. -/
 
 section Typed
 
-variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
+variable {M : MaterialCarrier.{u}} {P : Type u} [Preorder P]
   (Pres : InternalForcingPresentation M P) (N : InternalNamePresentation M P)
 
 /-- The condition code of a typed condition. Public: it appears in the statements of the
 typed readings and the correctness projections. -/
-def condCode (p : P) : ZFSet.{0} :=
+def condCode (p : P) : ZFSet.{u} :=
   ZFSet.mk (Pres.conditionCode.repr p)
 
 /-- **Typed reading of the density clause**: density below a coded condition is density below
 the typed one. Uses condition no-junk and the order transport; no name coding needed. -/
-theorem denseMem_iff_typed {R x y : ZFSet.{0}} {q : P} :
-    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres q) x y ↔
+theorem denseMem_iff_typed {R x y : ZFSet.{u}} {q : P} :
+    DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R (condCode Pres q) x y ↔
       ∀ r : P, r ≤ q → ∃ s : P, s ≤ r ∧ entry memWitnessTag (condCode Pres s) x y ∈ R := by
   constructor
   · intro hd r hrq
@@ -366,9 +368,9 @@ theorem denseMem_iff_typed {R x y : ZFSet.{0}} {q : P} :
 
 /-- **Typed reading of the membership clause**: the raw coded branch becomes a typed index
 of the decoded name. -/
-theorem memClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j : N.Code}
+theorem memClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{u}} {i j : N.Code}
     {q : P} :
-    MemClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres q)
+    MemClause (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R (condCode Pres q)
         (N.code i) (N.code j) ↔
       ∃ (k : (N.decode j).Idx) (j' : N.Code), N.decode j' = (N.decode j).elems k ∧
         q ≤ (N.decode j).conds k ∧
@@ -385,17 +387,17 @@ theorem memClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i 
 
 /-- **Typed reading of the equality clause**: both inclusions, with branches as typed indices
 and every comparison transported. -/
-theorem eqClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j : N.Code}
+theorem eqClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{u}} {i j : N.Code}
     {p : P} :
-    EqClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres p)
+    EqClause (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R (condCode Pres p)
         (N.code i) (N.code j) ↔
       (∀ (k : (N.decode i).Idx) (i' : N.Code), N.decode i' = (N.decode i).elems k →
           ∀ q : P, q ≤ p → q ≤ (N.decode i).conds k →
-            DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+            DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
               (condCode Pres q) (N.code i') (N.code j)) ∧
         (∀ (k : (N.decode j).Idx) (j' : N.Code), N.decode j' = (N.decode j).elems k →
           ∀ q : P, q ≤ p → q ≤ (N.decode j).conds k →
-            DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+            DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
               (condCode Pres q) (N.code j') (N.code i)) := by
   constructor
   · rintro ⟨hx, hy⟩
@@ -425,9 +427,9 @@ theorem eqClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j
 
 /-- Density against a coherent graph is exactly forced membership, given agreement of the
 membership slice at the relevant state. The bridge the correctness induction reuses. -/
-theorem denseMem_iff_forcesMem_of {R x y : ZFSet.{0}} {τ σ : PName P} {q : P}
+theorem denseMem_iff_forcesMem_of {R x y : ZFSet.{u}} {τ σ : PName P} {q : P}
     (h : ∀ p : P, entry memWitnessTag (condCode Pres p) x y ∈ R ↔ MemWitness p τ σ) :
-    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+    DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
         (condCode Pres q) x y ↔ ForcesMem q τ σ := by
   rw [denseMem_iff_typed Pres]
   constructor
@@ -454,12 +456,12 @@ relations here, the internal formula compiled from them targets the right relati
 
 section Correctness
 
-variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
+variable {M : MaterialCarrier.{u}} {P : Type u} [Preorder P]
   {Pres : InternalForcingPresentation M P} {N : InternalNamePresentation M P}
-  {A R : ZFSet.{0}}
+  {A R : ZFSet.{u}}
 
 private theorem correctAt (hA : A.IsTransitive)
-    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) A R)
     (hc : InternalNameCoding Pres N) :
     ∀ u : N.Code × N.Code, N.code u.1 ∈ A → N.code u.2 ∈ A →
       ((∀ p : P, entry memWitnessTag (condCode Pres p) (N.code u.1) (N.code u.2) ∈ R ↔
@@ -529,7 +531,7 @@ private theorem correctAt (hA : A.IsTransitive)
 /-- **Correctness, membership**: the membership slice of any coherent graph is the external
 membership-witness relation. -/
 theorem memWitness_entry_iff (hA : A.IsTransitive)
-    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) A R)
     (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
     (p : P) :
     entry memWitnessTag (condCode Pres p) (N.code i) (N.code j) ∈ R ↔
@@ -539,7 +541,7 @@ theorem memWitness_entry_iff (hA : A.IsTransitive)
 /-- **Correctness, equality**: the equality slice of any coherent graph is external forced
 equality. -/
 theorem forcesEq_entry_iff (hA : A.IsTransitive)
-    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) A R)
     (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
     (p : P) :
     entry eqTag (condCode Pres p) (N.code i) (N.code j) ∈ R ↔
@@ -549,10 +551,10 @@ theorem forcesEq_entry_iff (hA : A.IsTransitive)
 /-- **Correctness, forced membership**: the derived density of the membership slice is
 external forced membership. -/
 theorem denseMem_iff_forcesMem (hA : A.IsTransitive)
-    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) A R)
     (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
     (q : P) :
-    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+    DenseMem (Pres.conditionSet : ZFSet.{u}) (Pres.orderCode : ZFSet.{u}) R
         (condCode Pres q) (N.code i) (N.code j) ↔
       ForcesMem q (N.decode i) (N.decode j) :=
   denseMem_iff_forcesMem_of Pres (memWitness_entry_iff hA hR hc hi hj)
