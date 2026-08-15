@@ -64,7 +64,7 @@ section PairRealization
 variable {M : MaterialCarrier.{u}} {α : Type v} {n : ℕ} {x y z : memLang.Term (α ⊕ Fin n)}
 variable {v : α → M} {xs : Fin n → M}
 
-private theorem realize_liftTerm (t : memLang.Term (α ⊕ Fin n)) (w : M) :
+theorem realize_liftTerm (t : memLang.Term (α ⊕ Fin n)) (w : M) :
     Language.Term.realize (Sum.elim v (Fin.snoc xs w)) (liftTerm t) =
       Language.Term.realize (Sum.elim v xs) t := by
   rw [liftTerm, Language.Term.realize_relabel]
