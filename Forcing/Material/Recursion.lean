@@ -8,6 +8,7 @@ import Mathlib.SetTheory.ZFC.Rank
 import Forcing.Material.RecursionEntry
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.NameCoding
+import Forcing.Name.Atomic
 
 /-!
 # The atomic recursion: coherence clauses and descent machinery
@@ -342,42 +343,43 @@ section Typed
 variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
   (Pres : InternalForcingPresentation M P) (N : InternalNamePresentation M P)
 
-/-- Abbreviation for the condition code of a typed condition. -/
-private def cc (p : P) : ZFSet.{0} :=
+/-- The condition code of a typed condition. Public: it appears in the statements of the
+typed readings and the correctness projections. -/
+def condCode (p : P) : ZFSet.{0} :=
   ZFSet.mk (Pres.conditionCode.repr p)
 
 /-- **Typed reading of the density clause**: density below a coded condition is density below
 the typed one. Uses condition no-junk and the order transport; no name coding needed. -/
 theorem denseMem_iff_typed {R x y : ZFSet.{0}} {q : P} :
-    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (cc Pres q) x y ↔
-      ∀ r : P, r ≤ q → ∃ s : P, s ≤ r ∧ entry memWitnessTag (cc Pres s) x y ∈ R := by
+    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres q) x y ↔
+      ∀ r : P, r ≤ q → ∃ s : P, s ≤ r ∧ entry memWitnessTag (condCode Pres s) x y ∈ R := by
   constructor
   · intro hd r hrq
-    obtain ⟨s, hs, hsr, he⟩ := hd (cc Pres r) (Pres.code_mem r)
+    obtain ⟨s, hs, hsr, he⟩ := hd (condCode Pres r) (Pres.code_mem r)
       ((pair_mem_orderCode_iff Pres r q).2 hrq)
     obtain ⟨s', rfl⟩ := Pres.code_surjective s hs
     exact ⟨s', (pair_mem_orderCode_iff Pres s' r).1 hsr, he⟩
   · intro hd r hr hrq
     obtain ⟨r', rfl⟩ := Pres.code_surjective r hr
     obtain ⟨s, hsr, he⟩ := hd r' ((pair_mem_orderCode_iff Pres r' q).1 hrq)
-    exact ⟨cc Pres s, Pres.code_mem s, (pair_mem_orderCode_iff Pres s r').2 hsr, he⟩
+    exact ⟨condCode Pres s, Pres.code_mem s, (pair_mem_orderCode_iff Pres s r').2 hsr, he⟩
 
 /-- **Typed reading of the membership clause**: the raw coded branch becomes a typed index
 of the decoded name. -/
 theorem memClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j : N.Code}
     {q : P} :
-    MemClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (cc Pres q)
+    MemClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres q)
         (N.code i) (N.code j) ↔
       ∃ (k : (N.decode j).Idx) (j' : N.Code), N.decode j' = (N.decode j).elems k ∧
         q ≤ (N.decode j).conds k ∧
-        entry eqTag (cc Pres q) (N.code i) (N.code j') ∈ R := by
+        entry eqTag (condCode Pres q) (N.code i) (N.code j') ∈ R := by
   constructor
   · rintro ⟨c, z, hb, -, hord, he⟩
     obtain ⟨k, j', hj', heq⟩ := (hc.branch_mem_code_iff j _).1 hb
     obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 heq
     exact ⟨k, j', hj', (pair_mem_orderCode_iff Pres q _).1 hord, he⟩
   · rintro ⟨k, j', hj', hle, he⟩
-    exact ⟨cc Pres ((N.decode j).conds k), N.code j',
+    exact ⟨condCode Pres ((N.decode j).conds k), N.code j',
       (hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩,
       Pres.code_mem _, (pair_mem_orderCode_iff Pres q _).2 hle, he⟩
 
@@ -385,25 +387,25 @@ theorem memClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i 
 and every comparison transported. -/
 theorem eqClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j : N.Code}
     {p : P} :
-    EqClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (cc Pres p)
+    EqClause (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R (condCode Pres p)
         (N.code i) (N.code j) ↔
       (∀ (k : (N.decode i).Idx) (i' : N.Code), N.decode i' = (N.decode i).elems k →
           ∀ q : P, q ≤ p → q ≤ (N.decode i).conds k →
             DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
-              (cc Pres q) (N.code i') (N.code j)) ∧
+              (condCode Pres q) (N.code i') (N.code j)) ∧
         (∀ (k : (N.decode j).Idx) (j' : N.Code), N.decode j' = (N.decode j).elems k →
           ∀ q : P, q ≤ p → q ≤ (N.decode j).conds k →
             DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
-              (cc Pres q) (N.code j') (N.code i)) := by
+              (condCode Pres q) (N.code j') (N.code i)) := by
   constructor
   · rintro ⟨hx, hy⟩
     refine ⟨fun k i' hi' q hqp hqc ↦ ?_, fun k j' hj' q hqp hqc ↦ ?_⟩
     · exact hx _ (N.code i') ((hc.branch_mem_code_iff i _).2 ⟨k, i', hi', rfl⟩)
-        (Pres.code_mem _) (cc Pres q) (Pres.code_mem q)
+        (Pres.code_mem _) (condCode Pres q) (Pres.code_mem q)
         ((pair_mem_orderCode_iff Pres q p).2 hqp)
         ((pair_mem_orderCode_iff Pres q _).2 hqc)
     · exact hy _ (N.code j') ((hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩)
-        (Pres.code_mem _) (cc Pres q) (Pres.code_mem q)
+        (Pres.code_mem _) (condCode Pres q) (Pres.code_mem q)
         ((pair_mem_orderCode_iff Pres q p).2 hqp)
         ((pair_mem_orderCode_iff Pres q _).2 hqc)
   · rintro ⟨hx, hy⟩
@@ -421,7 +423,141 @@ theorem eqClause_iff_typed (hc : InternalNameCoding Pres N) {R : ZFSet.{0}} {i j
       exact hy k j' hj' q' ((pair_mem_orderCode_iff Pres q' p).1 hqp)
         ((pair_mem_orderCode_iff Pres q' _).1 hqc)
 
+/-- Density against a coherent graph is exactly forced membership, given agreement of the
+membership slice at the relevant state. The bridge the correctness induction reuses. -/
+theorem denseMem_iff_forcesMem_of {R x y : ZFSet.{0}} {τ σ : PName P} {q : P}
+    (h : ∀ p : P, entry memWitnessTag (condCode Pres p) x y ∈ R ↔ MemWitness p τ σ) :
+    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+        (condCode Pres q) x y ↔ ForcesMem q τ σ := by
+  rw [denseMem_iff_typed Pres]
+  constructor
+  · intro hd r hr
+    obtain ⟨s, hsr, he⟩ := hd r (Set.mem_Iic.1 hr)
+    exact ⟨s, (h s).1 he, hsr⟩
+  · intro hd r hrq
+    obtain ⟨s, hs, hsr⟩ := hd (Set.mem_Iic.2 hrq)
+    exact ⟨s, hsr, (h s).2 hs⟩
+
 end Typed
+
+/-! ### Conditional correctness
+
+For *any* coherent candidate graph, its two tagged slices are the external atomic relations
+on genuine name codes. Proved by the same rank-pair induction as locality, but with the
+measure taken on `N.Code × N.Code`, so the indices and decoded names stay in the motive
+instead of being reconstructed from raw code equalities.
+
+Hypotheses are only transitivity of the domain, coherence, membership of the two codes in the
+domain, and the name coding: **no `A ∈ M` and no theory axiom**. This pressure-tests the
+semantic clauses before the scheme-driven existence proof — if the slices are the right
+relations here, the internal formula compiled from them targets the right relation too. -/
+
+section Correctness
+
+variable {M : MaterialCarrier.{0}} {P : Type} [Preorder P]
+  {Pres : InternalForcingPresentation M P} {N : InternalNamePresentation M P}
+  {A R : ZFSet.{0}}
+
+private theorem correctAt (hA : A.IsTransitive)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hc : InternalNameCoding Pres N) :
+    ∀ u : N.Code × N.Code, N.code u.1 ∈ A → N.code u.2 ∈ A →
+      ((∀ p : P, entry memWitnessTag (condCode Pres p) (N.code u.1) (N.code u.2) ∈ R ↔
+          MemWitness p (N.decode u.1) (N.decode u.2)) ∧
+        (∀ p : P, entry eqTag (condCode Pres p) (N.code u.1) (N.code u.2) ∈ R ↔
+          ForcesEq p (N.decode u.1) (N.decode u.2))) := by
+  have hwf : WellFounded fun u v : N.Code × N.Code ↦
+      Sym2.GameAdd (· < ·) (rankPair (N.code u.1) (N.code u.2))
+        (rankPair (N.code v.1) (N.code v.2)) :=
+    InvImage.wf _ rankPair_wf
+  intro u
+  induction u using hwf.induction with
+  | _ u ih =>
+    obtain ⟨i, j⟩ := u
+    intro hi hj
+    constructor
+    · intro p
+      rw [hR.1 (condCode Pres p) (Pres.code_mem p) _ hi _ hj, memClause_iff_typed Pres N hc]
+      constructor
+      · rintro ⟨k, j', hj', hle, he⟩
+        have hb : ZFSet.pair (condCode Pres ((N.decode j).conds k)) (N.code j') ∈ N.code j :=
+          (hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩
+        have hstep := (ih (i, j') (descent_right hb) hi (branch_mem_domain hA hj hb)).2 p
+        rw [hj'] at hstep
+        exact mem_memWitness_iff.2 ⟨k, hle, hstep.1 he⟩
+      · intro hmw
+        obtain ⟨k, hle, heq⟩ := mem_memWitness_iff.1 hmw
+        obtain ⟨j', hj'⟩ := N.subname_closed j k
+        have hb : ZFSet.pair (condCode Pres ((N.decode j).conds k)) (N.code j') ∈ N.code j :=
+          (hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩
+        have hstep := (ih (i, j') (descent_right hb) hi (branch_mem_domain hA hj hb)).2 p
+        rw [hj'] at hstep
+        exact ⟨k, j', hj', hle, hstep.2 heq⟩
+    · intro p
+      rw [hR.2 (condCode Pres p) (Pres.code_mem p) _ hi _ hj, eqClause_iff_typed Pres N hc,
+        forcesEq_iff]
+      constructor
+      · rintro ⟨h₁, h₂⟩
+        refine ⟨fun k q hqp hqc ↦ ?_, fun k q hqp hqc ↦ ?_⟩
+        · obtain ⟨i', hi'⟩ := N.subname_closed i k
+          have hb : ZFSet.pair (condCode Pres ((N.decode i).conds k)) (N.code i') ∈ N.code i :=
+            (hc.branch_mem_code_iff i _).2 ⟨k, i', hi', rfl⟩
+          have hstep := (ih (i', j) (descent_left hb) (branch_mem_domain hA hi hb) hj).1
+          have := (denseMem_iff_forcesMem_of Pres hstep (q := q)).1 (h₁ k i' hi' q hqp hqc)
+          rwa [hi'] at this
+        · obtain ⟨j', hj'⟩ := N.subname_closed j k
+          have hb : ZFSet.pair (condCode Pres ((N.decode j).conds k)) (N.code j') ∈ N.code j :=
+            (hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩
+          have hstep := (ih (j', i) (descent_swap hb) (branch_mem_domain hA hj hb) hi).1
+          have := (denseMem_iff_forcesMem_of Pres hstep (q := q)).1 (h₂ k j' hj' q hqp hqc)
+          rwa [hj'] at this
+      · rintro ⟨h₁, h₂⟩
+        refine ⟨fun k i' hi' q hqp hqc ↦ ?_, fun k j' hj' q hqp hqc ↦ ?_⟩
+        · have hb : ZFSet.pair (condCode Pres ((N.decode i).conds k)) (N.code i') ∈ N.code i :=
+            (hc.branch_mem_code_iff i _).2 ⟨k, i', hi', rfl⟩
+          have hstep := (ih (i', j) (descent_left hb) (branch_mem_domain hA hi hb) hj).1
+          refine (denseMem_iff_forcesMem_of Pres hstep (q := q)).2 ?_
+          rw [hi']
+          exact h₁ k q hqp hqc
+        · have hb : ZFSet.pair (condCode Pres ((N.decode j).conds k)) (N.code j') ∈ N.code j :=
+            (hc.branch_mem_code_iff j _).2 ⟨k, j', hj', rfl⟩
+          have hstep := (ih (j', i) (descent_swap hb) (branch_mem_domain hA hj hb) hi).1
+          refine (denseMem_iff_forcesMem_of Pres hstep (q := q)).2 ?_
+          rw [hj']
+          exact h₂ k q hqp hqc
+
+/-- **Correctness, membership**: the membership slice of any coherent graph is the external
+membership-witness relation. -/
+theorem memWitness_entry_iff (hA : A.IsTransitive)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
+    (p : P) :
+    entry memWitnessTag (condCode Pres p) (N.code i) (N.code j) ∈ R ↔
+      MemWitness p (N.decode i) (N.decode j) :=
+  (correctAt hA hR hc (i, j) hi hj).1 p
+
+/-- **Correctness, equality**: the equality slice of any coherent graph is external forced
+equality. -/
+theorem forcesEq_entry_iff (hA : A.IsTransitive)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
+    (p : P) :
+    entry eqTag (condCode Pres p) (N.code i) (N.code j) ∈ R ↔
+      ForcesEq p (N.decode i) (N.decode j) :=
+  (correctAt hA hR hc (i, j) hi hj).2 p
+
+/-- **Correctness, forced membership**: the derived density of the membership slice is
+external forced membership. -/
+theorem denseMem_iff_forcesMem (hA : A.IsTransitive)
+    (hR : AtomicCoherentOn (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) A R)
+    (hc : InternalNameCoding Pres N) {i j : N.Code} (hi : N.code i ∈ A) (hj : N.code j ∈ A)
+    (q : P) :
+    DenseMem (Pres.conditionSet : ZFSet.{0}) (Pres.orderCode : ZFSet.{0}) R
+        (condCode Pres q) (N.code i) (N.code j) ↔
+      ForcesMem q (N.decode i) (N.decode j) :=
+  denseMem_iff_forcesMem_of Pres (memWitness_entry_iff hA hR hc hi hj)
+
+end Correctness
 
 end AtomicRecursion
 
