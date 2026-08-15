@@ -85,6 +85,19 @@ def denseMemDef (condSet orderCode tag R q x y : memLang.Term (α ⊕ Fin n)) :
           entryMemDef (liftTerm (liftTerm tag)) (&(Fin.last (n + 1)))
             (liftTerm (liftTerm x)) (liftTerm (liftTerm y)) (liftTerm (liftTerm R))))))
 
+/-- **The membership-witness clause**, as a formula: some branch of `y` is activated by `q`
+and its subname is forced equal to `x`. **Tag wiring**: this clause queries the *equality*
+slice, so its tag term is specialized to `eqTag`. -/
+def memClauseDef (condSet orderCode tag R q x y : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+        (liftTerm (liftTerm y)) ⊓
+      (memFormula (&(Fin.castSucc (Fin.last n))) (liftTerm (liftTerm condSet)) ⊓
+      (pairMemDef (liftTerm (liftTerm q)) (&(Fin.castSucc (Fin.last n)))
+          (liftTerm (liftTerm orderCode)) ⊓
+        entryMemDef (liftTerm (liftTerm tag)) (liftTerm (liftTerm q))
+          (liftTerm (liftTerm x)) (&(Fin.last (n + 1))) (liftTerm (liftTerm R)))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -215,6 +228,47 @@ theorem realize_denseMemDef {condSet orderCode q : memLang.Term (α ⊕ Fin n)}
   · intro h r hr hrq
     obtain ⟨s, hs, hsr, he⟩ := h (r : ZFSet.{u}) hr hrq
     exact ⟨⟨s, M.mem_trans hs hcM⟩, hs, hsr, (hent _ ⟨s, M.mem_trans hs hcM⟩).2 he⟩
+
+/-- **The membership-clause law**, and its orientation test: the formula realizes to exactly
+the semantic `MemClause`, with `q` strengthening the branch's condition. The reverse
+direction shows the dependency boundary plainly — the branch condition code is in the carrier
+because it belongs to the condition set, the subname code because the coded branch belongs to
+`y`, and the encoded equality entry because it belongs to `R`. All three are **intrinsic
+transitivity** consequences, so no axiom sentence enters. -/
+theorem realize_memClauseDef {condSet orderCode q : memLang.Term (α ⊕ Fin n)}
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (memClauseDef condSet orderCode tag R q x y).Realize v xs ↔
+      MemClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) q : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+  have hcM : ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) condSet : ↥M).2
+  have hyM : ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) y : ↥M).2
+  have hent : ∀ c z : ↥M,
+      (entryMemDef (liftTerm (liftTerm tag)) (liftTerm (liftTerm q))
+          (liftTerm (liftTerm x)) (&(Fin.last (n + 1)))
+          (liftTerm (liftTerm R))).Realize v (Fin.snoc (Fin.snoc xs c) z) ↔
+        entry eqTag ((Term.realize (Sum.elim v xs) q : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) ((z : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+    intro c z
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using htag)]
+    simp [realize_liftTerm]
+  simp only [memClauseDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_pairMemDef, realize_liftTerm]
+  constructor
+  · rintro ⟨c, z, hb, hc, hord, he⟩
+    exact ⟨(c : ZFSet.{u}), (z : ZFSet.{u}), hb, hc, hord, (hent c z).1 he⟩
+  · rintro ⟨c, z, hb, hc, hord, he⟩
+    have hcM' : c ∈ M := M.mem_trans hc hcM
+    have hzM : z ∈ M := right_mem_of_pair_mem (M.mem_trans hb hyM)
+    exact ⟨⟨c, hcM'⟩, ⟨z, hzM⟩, hb, hc, hord, (hent ⟨c, hcM'⟩ ⟨z, hzM⟩).2 he⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
