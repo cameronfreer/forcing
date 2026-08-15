@@ -1,12 +1,17 @@
 # Roadmap
 
-Milestones are outcome-based: each has explicit exit criteria and each later
-milestone consumes only the public API of earlier ones. Design constraints that
-apply across all milestones are recorded in
+Milestones are outcome-based: each has explicit exit criteria, and each consumes
+only the public API of the milestones it actually depends on. **The numbering
+records deliverables, not a total dependency order** — the real structure is a
+DAG, and some later-numbered work is unblocked today (see the summit section
+below). Design constraints that apply across all milestones are recorded in
 [docs/architecture.md](docs/architecture.md).
 
 Status is tracked here, one line per milestone, and in the milestone tracking
-issues; the README does not duplicate it.
+issues; the README does not duplicate it. For the current theorem-level
+boundary — including the hypotheses behind completed milestones — see the
+standing project-status issue
+[#161](https://github.com/cameronfreer/forcing/issues/161).
 
 ## M1 — Forcing-oriented order kernel
 
@@ -118,6 +123,35 @@ The regular/Boolean completion of the already-existing separative quotient
 (complete regular algebra via `Heyting.Regular` on lower sets), `B`-names, and
 carefully scoped comparison theorems — distinguishing external completeness
 from completeness internal to `M`.
+
+## The vertical-slice summit
+
+The founding target of the project, from the original design: **"Cohen forcing
+adds one real", proved both from the poset and from its Boolean completion,
+with a formal equivalence between the two.** Its three legs are statused
+separately, because they are independent deliverables rather than a sequence.
+
+| Leg | Status |
+|---|---|
+| Poset route | **Certified, parametrically** — `Forcing.Cohen.addsNewReal` |
+| Boolean-completion route | **Not started** (M9 layers 1–2 and 4) |
+| Comparison / equivalence | **Not started** (M9 layer 3, plus the material layer) |
+
+The completed poset leg remains **conditional on the material presentations
+listed in `addsNewReal`**: a `CohenMaterialPresentation`, an internal name
+presentation with canonical names and a Cohen-real representative, and external
+countability of the carrier. No concrete carrier satisfying them has been
+constructed, and no `MaterialGround` occurs in its signature. M7 is what turns
+those hypotheses into a statement about a model of set theory.
+
+**Dependency note.** The Boolean leg is not gated on M7 or M8. Its *external
+algebra* — the regular-open completion of the separative quotient and the
+completeness of regular elements — depends only on the M1 kernel, and the
+`P`-name/`B`-name comparison needs both valuation APIs but not preservation
+theory. What is **not** automatically unblocked is the *material* Boolean layer:
+a coded Boolean algebra with internal completeness, and the Boolean new-real
+theorem, both of which need the material coding infrastructure. The M9 tracker
+records that split.
 
 ## Later endpoint work
 
