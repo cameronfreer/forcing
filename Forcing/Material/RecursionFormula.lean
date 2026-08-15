@@ -168,8 +168,11 @@ slice (`tagEq`), and `tagEq` names the equality entry while its clause queries d
 (`tagMem`).
 
 The formula states no validity condition on `x` and `y` beyond what the clauses themselves
-impose — malformed arguments simply fail the guards and contribute no entries. That is what
-makes the stage relation total, which is what Collection will need. -/
+impose: the branch quantifiers admit only members whose first coordinate is a condition code,
+so the guards filter for **branch shape**, member by member. They do not test whether `x` and
+`y` are name codes, and an arbitrary set may well contain branch-shaped members that pass —
+what is guaranteed is that anything not branch-shaped contributes no entry. That is enough to
+make the stage relation total on arbitrary arguments, which is what Collection will need. -/
 def stageEntryDef (tagMem tagEq condSet orderCode history x y e :
     memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   (∃' (memFormula (&(Fin.last n)) (liftTerm condSet) ⊓
@@ -604,9 +607,14 @@ theorem realize_stageEntryDef
 
 Beyond the two tag equations, the only hypothesis is that the candidate entries lie in the
 carrier — needed because the predicate quantifies over all sets while the formula quantifies
-over carrier elements, so the backward direction must place a named entry in range. That
-membership is supplied later by `MaterialGround.entry_mem`, at the finite-closure axioms
-already on the ledger; **no scheme is consumed here**. -/
+over carrier elements, so the backward direction must place a named entry in range.
+**No scheme is consumed here.**
+
+That hypothesis has two routes, and the cheaper one is not the obvious one.
+`MaterialGround.entry_mem` builds the entries outright, at the finite-closure axioms already
+on the ledger. But a consumer holding a *bound* in the carrier gets it for free: the entries
+are members of the bound, hence carrier elements by transitivity, with nothing charged. That
+is how `MaterialGround.exists_stageValue_of_bound` discharges it. -/
 theorem realize_stageValueDef
     {tagMem tagEq condSet orderCode history value : memLang.Term (α ⊕ Fin n)}
     (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
