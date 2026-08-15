@@ -98,6 +98,34 @@ def memClauseDef (condSet orderCode tag R q x y : memLang.Term (α ⊕ Fin n)) :
         entryMemDef (liftTerm (liftTerm tag)) (liftTerm (liftTerm q))
           (liftTerm (liftTerm x)) (&(Fin.last (n + 1))) (liftTerm (liftTerm R)))))
 
+/-- One side of the equality clause: every valid branch of `source`, at every common
+strengthening, is densely a member of `target`. Private, and factored so that the second side
+of `eqClauseDef` is obtained **solely** by swapping `source` and `target` — never by
+rewriting argument order inside the body, which is what would make a partial swap possible.
+Both order comparisons read downward: `q ≤ p` and `q ≤ c`. -/
+private def eqSideDef (condSet orderCode tag R p source target : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' ∀' ∀' (memFormula (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+        (liftTerm (liftTerm (liftTerm condSet))) ⟹
+    (pairMemDef (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) (&(Fin.castSucc (Fin.last (n + 1))))
+        (liftTerm (liftTerm (liftTerm source))) ⟹
+    (memFormula (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm condSet))) ⟹
+    (pairMemDef (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm p)))
+        (liftTerm (liftTerm (liftTerm orderCode))) ⟹
+    (pairMemDef (&(Fin.last (n + 2))) (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+        (liftTerm (liftTerm (liftTerm orderCode))) ⟹
+      denseMemDef (liftTerm (liftTerm (liftTerm condSet)))
+        (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tag)))
+        (liftTerm (liftTerm (liftTerm R))) (&(Fin.last (n + 2)))
+        (&(Fin.castSucc (Fin.last (n + 1)))) (liftTerm (liftTerm (liftTerm target))))))))
+
+/-- **The forced-equality clause**, as a formula: the two inclusions. The second is the first
+with `source` and `target` exchanged, nothing more. **Tag wiring**: it queries `denseMemDef`,
+hence the `memWitnessTag` slice. -/
+def eqClauseDef (condSet orderCode tag R p x y : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  eqSideDef condSet orderCode tag R p x y ⊓ eqSideDef condSet orderCode tag R p y x
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -269,6 +297,70 @@ theorem realize_memClauseDef {condSet orderCode q : memLang.Term (α ⊕ Fin n)}
     have hcM' : c ∈ M := M.mem_trans hc hcM
     have hzM : z ∈ M := right_mem_of_pair_mem (M.mem_trans hb hyM)
     exact ⟨⟨c, hcM'⟩, ⟨z, hzM⟩, hb, hc, hord, (hent ⟨c, hcM'⟩ ⟨z, hzM⟩).2 he⟩
+
+/-- Realization of one side. The reverse direction performs the same carrier conversions as
+`memClauseDef` — `c` from the condition set, `z` from the branch pair in `source`, `q` from
+the condition set — with the inner density theorem instantiated explicitly at the lifted tag
+equation. Private, like the side itself. -/
+private theorem realize_eqSideDef {condSet orderCode p source target : memLang.Term (α ⊕ Fin n)}
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode memWitnessTag) :
+    (eqSideDef condSet orderCode tag R p source target).Realize v xs ↔
+      ∀ c z, ZFSet.pair c z ∈ ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) →
+        c ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) →
+        ∀ q ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
+          ZFSet.pair q ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u}) ∈
+            ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u}) →
+          ZFSet.pair q c ∈ ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u}) →
+          DenseMem ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) q z
+            ((Term.realize (Sum.elim v xs) target : ↥M) : ZFSet.{u}) := by
+  have hcM : ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) condSet : ↥M).2
+  have hsM : ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) source : ↥M).2
+  have hden : ∀ c z q : ↥M,
+      (denseMemDef (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tag)))
+          (liftTerm (liftTerm (liftTerm R))) (&(Fin.last (n + 2)))
+          (&(Fin.castSucc (Fin.last (n + 1))))
+          (liftTerm (liftTerm (liftTerm target)))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs c) z) q) ↔
+        DenseMem ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u})
+          ((q : ↥M) : ZFSet.{u}) ((z : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) target : ↥M) : ZFSet.{u}) := by
+    intro c z q
+    rw [realize_denseMemDef (by simpa [realize_liftTerm] using htag)]
+    simp [realize_liftTerm]
+  simp only [eqSideDef, BoundedFormula.realize_all, BoundedFormula.realize_imp, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_pairMemDef, realize_liftTerm]
+  constructor
+  · intro h c z hb hc q hq hqp hqc
+    exact (hden ⟨c, M.mem_trans hc hcM⟩ ⟨z, right_mem_of_pair_mem (M.mem_trans hb hsM)⟩
+      ⟨q, M.mem_trans hq hcM⟩).1
+      (h ⟨c, M.mem_trans hc hcM⟩ ⟨z, right_mem_of_pair_mem (M.mem_trans hb hsM)⟩
+        ⟨q, M.mem_trans hq hcM⟩ hc hb hq hqp hqc)
+  · intro h c z q hc hb hq hqp hqc
+    exact (hden c z q).2 (h _ _ hb hc _ hq hqp hqc)
+
+/-- **The equality-clause law**: the formula realizes to exactly the semantic `EqClause`, both
+inclusions. This is the orientation check for the pair of sides — a partial swap would fail
+here — and for both downward comparisons inside each side. -/
+theorem realize_eqClauseDef {condSet orderCode p : memLang.Term (α ⊕ Fin n)}
+    (htag : ((Term.realize (Sum.elim v xs) tag : ↥M) : ZFSet.{u}) = natCode memWitnessTag) :
+    (eqClauseDef condSet orderCode tag R p x y).Realize v xs ↔
+      EqClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+  rw [eqClauseDef, BoundedFormula.realize_inf, realize_eqSideDef htag, realize_eqSideDef htag]
+  exact Iff.rfl
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
