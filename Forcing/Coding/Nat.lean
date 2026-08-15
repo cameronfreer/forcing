@@ -13,9 +13,10 @@ proves the injectivity. Neutral set-coding infrastructure: nothing here mentions
 conditions, names, or any carrier.
 
 Universe-polymorphic, so the material layers that consume it are too; the Cohen carrier
-simply infers `u = 0`. Factored out when its second consumer arrived (formula coding, after the Cohen condition
-code). The pinned mathlib has `PSet.ofNat` but no injectivity theorem for it; `rank_ofNat` is
-the short proof and remains a plausible upstream contribution.
+simply infers `u = 0`. Factored out when its second consumer arrived (formula coding,
+after the Cohen condition code). The pinned mathlib has `PSet.ofNat` but no injectivity
+theorem for it; `rank_ofNat` is the short proof and remains a plausible upstream
+contribution.
 
 `natCode_succ` exposes the recursion the material-membership arguments run on: the successor
 code is an `insert`, which is what prices those arguments at binary union.
