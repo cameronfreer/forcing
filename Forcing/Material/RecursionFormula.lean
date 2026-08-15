@@ -126,6 +126,39 @@ def eqClauseDef (condSet orderCode tag R p x y : memLang.Term (α ⊕ Fin n)) :
     memLang.BoundedFormula α n :=
   eqSideDef condSet orderCode tag R p x y ⊓ eqSideDef condSet orderCode tag R p y x
 
+/-- **Coherence**, as a formula: at every valid condition code and every pair of domain
+elements, each tagged slice is exactly its clause. Both tag terms are exposed independently,
+and the **four-way routing** is the content — `tagMem` on the left of the membership equation
+with `memClauseDef` (which queries the equality slice, hence `tagEq`) on its right; `tagEq` on
+the left of the equality equation with `eqClauseDef` (which queries density, hence `tagMem`)
+on its right. Tag *inequality* is deliberately not stated inside the formula: the realization
+hypotheses identify the two terms with distinct injective numerals, which already guarantees
+the distinction. -/
+def atomicCoherentOnDef (tagMem tagEq condSet orderCode A R : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  (∀' ∀' ∀' (memFormula (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+        (liftTerm (liftTerm (liftTerm condSet))) ⟹
+    (memFormula (&(Fin.castSucc (Fin.last (n + 1)))) (liftTerm (liftTerm (liftTerm A))) ⟹
+    (memFormula (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm A))) ⟹
+      (entryMemDef (liftTerm (liftTerm (liftTerm tagMem)))
+          (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) (&(Fin.castSucc (Fin.last (n + 1))))
+          (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm R))) ⇔
+        memClauseDef (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tagEq)))
+          (liftTerm (liftTerm (liftTerm R))) (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+          (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2))))))))
+  ⊓ (∀' ∀' ∀' (memFormula (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+        (liftTerm (liftTerm (liftTerm condSet))) ⟹
+    (memFormula (&(Fin.castSucc (Fin.last (n + 1)))) (liftTerm (liftTerm (liftTerm A))) ⟹
+    (memFormula (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm A))) ⟹
+      (entryMemDef (liftTerm (liftTerm (liftTerm tagEq)))
+          (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) (&(Fin.castSucc (Fin.last (n + 1))))
+          (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm R))) ⇔
+        eqClauseDef (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tagMem)))
+          (liftTerm (liftTerm (liftTerm R))) (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+          (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2))))))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -361,6 +394,96 @@ theorem realize_eqClauseDef {condSet orderCode p : memLang.Term (α ⊕ Fin n)}
         ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
   rw [eqClauseDef, BoundedFormula.realize_inf, realize_eqSideDef htag, realize_eqSideDef htag]
   exact Iff.rfl
+
+/-- **The coherence law** — the decisive check that both tags and both sides survived every
+binder lift in their intended positions. Its only hypotheses are the two tag-value equations:
+**no domain transitivity, no `A ∈ M`, and no theory membership**. Transitivity is used while
+realizing nested encoded witnesses, but it is the carrier structure's *intrinsic*
+transitivity, not a ground-theory charge. -/
+theorem realize_atomicCoherentOnDef
+    {tagMem tagEq condSet orderCode A R : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (he : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (atomicCoherentOnDef tagMem tagEq condSet orderCode A R).Realize v xs ↔
+      AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+  have hcM : ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) condSet : ↥M).2
+  have hAM : ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) A : ↥M).2
+  have hentM : ∀ p x y : ↥M,
+      (entryMemDef (liftTerm (liftTerm (liftTerm tagMem)))
+          (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) (&(Fin.castSucc (Fin.last (n + 1))))
+          (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm R)))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs p) x) y) ↔
+        entry memWitnessTag ((p : ↥M) : ZFSet.{u}) ((x : ↥M) : ZFSet.{u})
+            ((y : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+    intro p x y
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using hm)]
+    simp [realize_liftTerm]
+  have hentE : ∀ p x y : ↥M,
+      (entryMemDef (liftTerm (liftTerm (liftTerm tagEq)))
+          (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) (&(Fin.castSucc (Fin.last (n + 1))))
+          (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm R)))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs p) x) y) ↔
+        entry eqTag ((p : ↥M) : ZFSet.{u}) ((x : ↥M) : ZFSet.{u}) ((y : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+    intro p x y
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using he)]
+    simp [realize_liftTerm]
+  have hmemC : ∀ p x y : ↥M,
+      (memClauseDef (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tagEq)))
+          (liftTerm (liftTerm (liftTerm R))) (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+          (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs p) x) y) ↔
+        MemClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ((p : ↥M) : ZFSet.{u})
+          ((x : ↥M) : ZFSet.{u}) ((y : ↥M) : ZFSet.{u}) := by
+    intro p x y
+    rw [realize_memClauseDef (by simpa [realize_liftTerm] using he)]
+    simp [realize_liftTerm]
+  have heqC : ∀ p x y : ↥M,
+      (eqClauseDef (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm tagMem)))
+          (liftTerm (liftTerm (liftTerm R))) (&(Fin.castSucc (Fin.castSucc (Fin.last n))))
+          (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs p) x) y) ↔
+        EqClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ((p : ↥M) : ZFSet.{u})
+          ((x : ↥M) : ZFSet.{u}) ((y : ↥M) : ZFSet.{u}) := by
+    intro p x y
+    rw [realize_eqClauseDef (by simpa [realize_liftTerm] using hm)]
+    simp [realize_liftTerm]
+  simp only [atomicCoherentOnDef, BoundedFormula.realize_inf, BoundedFormula.realize_all,
+    BoundedFormula.realize_imp, BoundedFormula.realize_iff, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm]
+  constructor
+  · rintro ⟨h₁, h₂⟩
+    refine ⟨fun p hp x hx y hy ↦ ?_, fun p hp x hx y hy ↦ ?_⟩
+    · have hpM := M.mem_trans hp hcM
+      have hxM := M.mem_trans hx hAM
+      have hyM := M.mem_trans hy hAM
+      exact ((hentM ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩).symm.trans
+        ((h₁ ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩ hp hx hy).trans
+          (hmemC ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩)))
+    · have hpM := M.mem_trans hp hcM
+      have hxM := M.mem_trans hx hAM
+      have hyM := M.mem_trans hy hAM
+      exact ((hentE ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩).symm.trans
+        ((h₂ ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩ hp hx hy).trans
+          (heqC ⟨p, hpM⟩ ⟨x, hxM⟩ ⟨y, hyM⟩)))
+  · rintro ⟨h₁, h₂⟩
+    refine ⟨fun p x y hp hx hy ↦ ?_, fun p x y hp hx hy ↦ ?_⟩
+    · exact (hentM p x y).trans ((h₁ _ hp _ hx _ hy).trans (hmemC p x y).symm)
+    · exact (hentE p x y).trans ((h₂ _ hp _ hx _ hy).trans (heqC p x y).symm)
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
