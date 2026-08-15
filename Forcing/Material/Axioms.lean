@@ -20,7 +20,16 @@ The two axioms introduced here are the ones the assignment coding actually needs
 
 * `emptySetSentence` — some set has no members;
 * `pairingSentence` — any two sets have an unordered pair;
-* `binaryUnionSentence` — any two sets have a union.
+* `binaryUnionSentence` — any two sets have a union;
+* `unionSentence` — every family has a union.
+
+**On the last two.** General Union subsumes binary union: given pairing, `a ∪ b = ⋃₀ {a, b}`,
+and `union_mem_of_sUnion` proves exactly that. They are both kept because the ledger records
+what each theorem *actually* costs, and most of the coding layer costs only the binary
+fragment. General Union is charged where a genuine family must be flattened — the atomic
+recursion's rows, where Collection yields a set whose members are stage *sets* and the graph
+needs their entries. That step is not reachable from the binary fragment: no bound on the
+members-of-members of an arbitrary collected family is available without it.
 
 Empty set and pairing close a ground under `∅`, singletons, unordered pairs, and hence
 Kuratowski pairs (`pair_mem`). Binary union is what `insert` costs — and therefore what the
@@ -38,13 +47,16 @@ sets.
 
 ## Main definitions
 
-* `Forcing.emptySetSentence`, `Forcing.pairingSentence`: the named axioms.
+* `Forcing.emptySetSentence`, `Forcing.pairingSentence`, `Forcing.binaryUnionSentence`,
+  `Forcing.unionSentence`: the named axioms.
 
 ## Main results
 
 * `Forcing.MaterialGround.empty_mem`, `Forcing.MaterialGround.insert_pair_mem`,
   `Forcing.MaterialGround.singleton_mem`, `Forcing.MaterialGround.pair_mem`: the closure
   consequences, each priced by the sentences it cites.
+* `Forcing.MaterialGround.sUnion_mem`: closure under general union, the flattening step.
+* `Forcing.MaterialGround.union_mem_of_sUnion`: general Union subsumes the binary fragment.
 -/
 
 universe u
@@ -64,6 +76,11 @@ def pairingSentence : memLang.Sentence :=
 /-- **The binary-union axiom**: any two sets have a union. -/
 def binaryUnionSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
+
+/-- **General Union**: every family has a union — the members of the members of `a` form a
+set. Charged only where a genuine family is flattened; see the module docstring. -/
+def unionSentence : memLang.Sentence :=
+  ∀' ∃' ∀' (memFormula &2 &1 ⇔ ∃' (memFormula &3 &0 ⊓ memFormula &2 &3))
 
 namespace MaterialGround
 
@@ -126,6 +143,46 @@ theorem union_mem (h : binaryUnionSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ 
       · exact (hc ⟨z, mem_trans h1 hx⟩).2 (Or.inl h1)
       · exact (hc ⟨z, mem_trans h1 hy⟩).2 (Or.inr h1)
   exact hce ▸ c.2
+
+/-- **Closure under general union**: the members of the members of `x` form a member of the
+ground. This is the flattening step of the atomic recursion's row construction, where
+Collection yields a set whose members are stage *sets* and the graph needs their entries. -/
+theorem sUnion_mem (h : unionSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M) :
+    ZFSet.sUnion x ∈ M := by
+  have hr := M.realize_of_mem h
+  have key : ∀ a : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
+      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔
+        ∃ w : ↥M.toMaterialCarrier, (w : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧
+          (z : ZFSet.{u}) ∈ (w : ZFSet.{u})) := by
+    simpa [unionSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
+      using hr
+  obtain ⟨c, hc⟩ := key ⟨x, hx⟩
+  have hce : (c : ZFSet.{u}) = ZFSet.sUnion x := by
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · obtain ⟨w, hwx, hzw⟩ := (hc ⟨z, mem_trans hz c.2⟩).1 hz
+      exact ZFSet.mem_sUnion.2 ⟨(w : ZFSet.{u}), hwx, hzw⟩
+    · obtain ⟨w, hwx, hzw⟩ := ZFSet.mem_sUnion.1 hz
+      exact (hc ⟨z, mem_trans hzw (mem_trans hwx hx)⟩).2
+        ⟨⟨w, mem_trans hwx hx⟩, hwx, hzw⟩
+  exact hce ▸ c.2
+
+/-- **General Union subsumes the binary fragment**, given pairing: `a ∪ b = ⋃₀ {a, b}`. The
+ledger keeps both sentences anyway, so that each theorem records the strength it actually
+uses rather than the strongest available. -/
+theorem union_mem_of_sUnion (hu : unionSentence ∈ T) (hp : pairingSentence ∈ T)
+    {x y : ZFSet.{u}} (hx : x ∈ M) (hy : y ∈ M) : x ∪ y ∈ M := by
+  have hxy : ZFSet.sUnion ({x, y} : ZFSet.{u}) = x ∪ y :=
+    ZFSet.ext fun z ↦ by
+      simp only [ZFSet.mem_sUnion, ZFSet.mem_union, ZFSet.mem_insert_iff,
+        ZFSet.mem_singleton]
+      constructor
+      · rintro ⟨w, rfl | rfl, hz⟩
+        · exact Or.inl hz
+        · exact Or.inr hz
+      · rintro (hz | hz)
+        · exact ⟨x, Or.inl rfl, hz⟩
+        · exact ⟨y, Or.inr rfl, hz⟩
+  exact hxy ▸ M.sUnion_mem hu (M.insert_pair_mem hp hx hy)
 
 /-- **Closure under `insert`**: a singleton unioned on, priced at pairing and union. -/
 theorem insert_mem (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
