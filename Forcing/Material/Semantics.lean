@@ -52,6 +52,99 @@ elements. -/
     Language.Structure.RelMap (L := memLang) memRel.mem x ↔ (x 0 : ZFSet.{u}) ∈ (x 1 : ZFSet.{u}) :=
   Iff.rfl
 
+/-! ### Realization of the pair formulas
+
+The pair builders of the language layer, realized in a material carrier. **No theory axiom is
+consumed**: every intermediate set the backward directions need is already a member of a
+member of the carrier, so **transitivity** supplies it. Pairing becomes a construction cost
+only when an existence proof must build genuinely new sets. -/
+
+section PairRealization
+
+variable {M : MaterialCarrier.{u}} {α : Type v} {n : ℕ} {x y z : memLang.Term (α ⊕ Fin n)}
+variable {v : α → M} {xs : Fin n → M}
+
+private theorem realize_liftTerm (t : memLang.Term (α ⊕ Fin n)) (w : M) :
+    Language.Term.realize (Sum.elim v (Fin.snoc xs w)) (liftTerm t) =
+      Language.Term.realize (Sum.elim v xs) t := by
+  rw [liftTerm, Language.Term.realize_relabel]
+  congr 1
+  funext i
+  cases i with
+  | inl a => rfl
+  | inr i => simp
+
+/-- **The unordered-pair law**: the formula holds exactly when the third term names the
+unordered pair of the first two. -/
+theorem realize_unorderedPairDef :
+    (unorderedPairDef x y z).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) z : ↥M) : ZFSet.{u}) =
+        {((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}),
+          ((Language.Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})} := by
+  simp only [unorderedPairDef, Language.BoundedFormula.realize_all,
+    Language.BoundedFormula.realize_iff, Language.BoundedFormula.realize_sup,
+    Language.BoundedFormula.realize_bdEqual, memFormula,
+    Language.BoundedFormula.realize_rel₂, relMap_mem, Language.Term.realize_var,
+    Sum.elim_inr, Fin.snoc_last, realize_liftTerm, Function.comp_apply,
+    Matrix.cons_val_zero, Matrix.cons_val_one]
+  constructor
+  · intro h
+    refine ZFSet.ext fun w ↦ ⟨fun hw ↦ ?_, fun hw ↦ ?_⟩
+    · have hwM : w ∈ M :=
+        M.mem_trans hw (Language.Term.realize (Sum.elim v xs) z).2
+      rcases (h ⟨w, hwM⟩).1 hw with h1 | h1
+      · exact ZFSet.mem_pair.2 (Or.inl (congrArg Subtype.val h1))
+      · exact ZFSet.mem_pair.2 (Or.inr (congrArg Subtype.val h1))
+    · rcases ZFSet.mem_pair.1 hw with rfl | rfl
+      · exact (h _).2 (Or.inl rfl)
+      · exact (h _).2 (Or.inr rfl)
+  · intro h w
+    rw [h]
+    constructor
+    · intro hw
+      rcases ZFSet.mem_pair.1 hw with h1 | h1
+      · exact Or.inl (Subtype.ext h1)
+      · exact Or.inr (Subtype.ext h1)
+    · rintro (rfl | rfl)
+      · exact ZFSet.mem_pair.2 (Or.inl rfl)
+      · exact ZFSet.mem_pair.2 (Or.inr rfl)
+
+/-- **The Kuratowski-pair law**: the formula holds exactly when the third term names the
+ordered pair of the first two. The backward direction needs the two intermediate sets in the
+carrier, and **transitivity supplies them** — they are members of a member. -/
+theorem realize_pairDef :
+    (pairDef x y z).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) z : ↥M) : ZFSet.{u}) =
+        ZFSet.pair ((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Language.Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+  have hself : ∀ a : ZFSet.{u}, ({a, a} : ZFSet.{u}) = {a} :=
+    fun a ↦ ZFSet.ext fun w ↦ by simp
+  simp only [pairDef, Language.BoundedFormula.realize_ex,
+    Language.BoundedFormula.realize_inf, realize_unorderedPairDef, realize_liftTerm,
+    Language.Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    Fin.snoc_castSucc]
+  constructor
+  · rintro ⟨u, w, hu, hw, hz⟩
+    rw [hz, hu, hw, hself]
+    rfl
+  · intro hz
+    have hzM : ((Language.Term.realize (Sum.elim v xs) z : ↥M) : ZFSet.{u}) ∈ M :=
+      (Language.Term.realize (Sum.elim v xs) z : ↥M).2
+    have h1 : ({((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})} : ZFSet.{u}) ∈
+        ((Language.Term.realize (Sum.elim v xs) z : ↥M) : ZFSet.{u}) := by
+      rw [hz, ZFSet.pair]
+      exact ZFSet.mem_pair.2 (Or.inl rfl)
+    have h2 : ({((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}),
+          ((Language.Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})} : ZFSet.{u}) ∈
+        ((Language.Term.realize (Sum.elim v xs) z : ↥M) : ZFSet.{u}) := by
+      rw [hz, ZFSet.pair]
+      exact ZFSet.mem_pair.2 (Or.inr rfl)
+    refine ⟨⟨_, M.mem_trans h1 hzM⟩, ⟨_, M.mem_trans h2 hzM⟩, ?_, rfl, ?_⟩
+    · exact (hself _).symm
+    · exact hz
+
+end PairRealization
+
 namespace InternalNamePresentation
 
 variable {M : MaterialCarrier.{u}} {P : Type u} {N : InternalNamePresentation M P}
