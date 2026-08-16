@@ -56,16 +56,25 @@ membership condition of `StageValue`, which is why `exists_stageValue_of_bound` 
 internal counterpart of the external `stageValue_exists_of_bound` and is proved by the same
 two-line argument with `ZFSet.sep` replaced by the instance.
 
-## What this instance costs, and what it does not
+## What this module costs
 
-`exists_stageValue_of_bound` charges **exactly one Separation sentence**. It charges no
-Collection, no Foundation, no Infinity, and no Power Set, and it needs no finite-closure
-axioms either: the bound is a carrier element, so the entries it contains are already in the
-carrier by transitivity, and the separately priced `entry_mem` is not invoked. The bound
-itself is a hypothesis, exactly as in the external version — constructing bounds is a later,
-separately charged step.
+The full ledger for the constructions here, so that the per-theorem prices below are read
+against a stated whole:
 
+* the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
+  — for entries and for the two-tag bound;
+* `unionSentence`, general Union, at each of the two flattening steps;
+* the six scheme instances named above.
+
+Absent, and load-bearing as negative findings: **no Foundation, no Infinity, no Power Set**.
 Nothing here mentions `InternalNameCoding` or the external forcing relation.
+
+The individual theorems are cheaper than the module, and are priced separately.
+`exists_stageValue_of_bound` in particular charges **exactly one Separation sentence** — no
+Collection, and no finite-closure axioms either: the bound is a carrier element, so the
+entries it contains are already in the carrier by transitivity, and the separately priced
+`entry_mem` is not invoked. Its bound is a hypothesis, exactly as in the external version;
+constructing bounds is `exists_stageBound`'s job and is charged there.
 
 ## Main definitions
 
@@ -480,7 +489,8 @@ theorem exists_graphValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparat
       hm hq hentM).1 ((hB' ⟨w, hwM⟩).1 hw).2
 
 /-- **Aggregation and the bridge, combined.** The graph exists inside the ground, and is
-coherent *exactly when* it observes the same slices as the history did. The remaining
+coherent **whenever** it observes the same slices as the history did — an implication, not an
+equivalence. The remaining
 obligation is stated, not discharged: producing that agreement is the fixed-point problem,
 and it belongs to the `rankPair` recursion rather than to any set construction. -/
 theorem exists_graphValue_coherent_of_agree
