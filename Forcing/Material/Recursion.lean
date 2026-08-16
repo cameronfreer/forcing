@@ -64,8 +64,9 @@ Collection remain the only costs of constructing such a graph inside the carrier
 `CorrectOn D R` is the form the fixed-point recursion is built in: the clauses are evaluated
 against `R` itself, and `R` has no members beyond the entries those clauses admit at states in
 `D`. Controlling **support**, not merely the clauses, is what makes approximations safe to
-union — see `correctOn_unique`. Domains are descent-closed *sets of states*, not squares,
-because a square domain would force the transitive closure of a pair and so charge Infinity.
+union — see `correctOn_unique`. Domains are descent-closed *sets of states* rather than
+squares: the only square that costs nothing is `A × A` itself, which collapses the local
+invariant to the final global problem, and any pair-local square charges Infinity.
 
 ## Stages
 
@@ -602,9 +603,10 @@ permits junk outside the observed slices, which is harmless in isolation but cor
 neighbouring approximation once its domain grows to observe that junk. Approximations that
 will be unioned must therefore control support.
 
-**Domains are sets of states, not squares.** A square domain `B × B` would force `B` to be a
-transitive set containing both coordinates and closed under the descent — the transitive
-closure of a pair, which costs Infinity. `DescentClosed` instead requires only that each
+**Domains are sets of states, not squares.** Taking `B = A` gives a square domain but
+collapses the local invariant to the final global problem. A useful pair-local square requires
+a smaller transitive `B` containing the coordinates; constructing such a `B` is the
+transitive-closure step that charges Infinity. `DescentClosed` instead requires only that each
 member of `D` decodes to a state over `A` and that all three direct predecessor shapes stay
 in `D`. That is exactly what the induction consumes, and it is reachable without Infinity.
 
