@@ -84,6 +84,11 @@ obligation:
   general Union axiom, is charged**. It is a named sentence with `MaterialGround.sUnion_mem`
   as its consequence, not an ambient `ZFSet` construction.
 
+This is a dependency finding for the compiled row-wise construction, not an impossibility
+theorem for every alternative construction. The ledger records the cost of the construction
+actually being formalized; if a later proof avoids Union, the theorem is weakened and this
+record amended.
+
 General Union subsumes binary union given pairing (`union_mem_of_sUnion`), so this is one new
 axiom of genuine strength, not two. Both sentences stay on the ledger so that each theorem
 records the strength it actually uses.

@@ -16,7 +16,7 @@ the theory as an explicit hypothesis — never a field on `MaterialGround`, and 
 implied background theory. A theorem's price is exactly the sentences it cites through
 `MaterialGround.realize_of_mem`.
 
-The two axioms introduced here are the ones the assignment coding actually needs:
+The named axioms introduced here are the ones the coding layers actually need:
 
 * `emptySetSentence` — some set has no members;
 * `pairingSentence` — any two sets have an unordered pair;
@@ -28,8 +28,10 @@ and `union_mem_of_sUnion` proves exactly that. They are both kept because the le
 what each theorem *actually* costs, and most of the coding layer costs only the binary
 fragment. General Union is charged where a genuine family must be flattened — the atomic
 recursion's rows, where Collection yields a set whose members are stage *sets* and the graph
-needs their entries. That step is not reachable from the binary fragment: no bound on the
-members-of-members of an arbitrary collected family is available without it.
+needs their entries. For that construction the binary fragment does not suffice: the
+prototype found no bound on the members-of-members of the collected family reachable from it.
+That is a dependency finding about the construction being formalized, not a claim that no
+alternative construction could avoid Union.
 
 Empty set and pairing close a ground under `∅`, singletons, unordered pairs, and hence
 Kuratowski pairs (`pair_mem`). Binary union is what `insert` costs — and therefore what the
@@ -126,7 +128,7 @@ theorem singleton_mem (h : pairingSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M)
     ZFSet.ext fun z ↦ by simp
   rwa [hxx] at hpair
 
-/-- **Closure under binary unions**, priced at the union axiom. -/
+/-- **Closure under binary unions**, priced at the binary-union axiom. -/
 theorem union_mem (h : binaryUnionSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M)
     (hy : y ∈ M) : x ∪ y ∈ M := by
   have hr := M.realize_of_mem h
