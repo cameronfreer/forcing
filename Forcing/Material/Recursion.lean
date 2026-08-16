@@ -358,14 +358,18 @@ section Stage
 
 variable {condSet orderCode : ZFSet.{u}}
 
-/-- The stage at a state: the set holding both tagged slices, computed against `history`.
-Malformed members of `x` and `y` are ignored exactly as the coherence clauses ignore them —
-the clause guards do the work, so no separate validity filter is needed. -/
+/-- A **stage entry** at a state: one of the two tagged entries whose clause succeeds against
+`history`. Members of `x` and `y` that are not branch-shaped are ignored exactly as the
+coherence clauses ignore them — the clause guards do the work, so no separate validity filter
+is needed. -/
+def StageEntry (condSet orderCode history x y e : ZFSet.{u}) : Prop :=
+  (∃ p ∈ condSet, e = entry memWitnessTag p x y ∧
+    MemClause condSet orderCode history p x y) ∨
+  (∃ p ∈ condSet, e = entry eqTag p x y ∧ EqClause condSet orderCode history p x y)
+
+/-- The stage at a state: the set holding both tagged slices, computed against `history`. -/
 def StageValue (condSet orderCode history x y value : ZFSet.{u}) : Prop :=
-  ∀ e, e ∈ value ↔
-    (∃ p ∈ condSet, e = entry memWitnessTag p x y ∧
-      MemClause condSet orderCode history p x y) ∨
-    (∃ p ∈ condSet, e = entry eqTag p x y ∧ EqClause condSet orderCode history p x y)
+  ∀ e, e ∈ value ↔ StageEntry condSet orderCode history x y e
 
 /-- **Functionality**: a history determines the stage. -/
 theorem stageValue_unique {history x y v₁ v₂ : ZFSet.{u}}
@@ -387,11 +391,7 @@ theorem stageValue_exists_of_bound {history x y bound : ZFSet.{u}}
     (hb : ∀ p ∈ condSet, entry memWitnessTag p x y ∈ bound ∧ entry eqTag p x y ∈ bound) :
     ∃ value, StageValue condSet orderCode history x y value := by
   classical
-  refine ⟨ZFSet.sep (fun e ↦
-    (∃ p ∈ condSet, e = entry memWitnessTag p x y ∧
-        MemClause condSet orderCode history p x y) ∨
-      (∃ p ∈ condSet, e = entry eqTag p x y ∧ EqClause condSet orderCode history p x y))
-    bound, fun e ↦ ?_⟩
+  refine ⟨ZFSet.sep (StageEntry condSet orderCode history x y) bound, fun e ↦ ?_⟩
   rw [ZFSet.mem_sep]
   refine ⟨fun h ↦ h.2, fun h ↦ ⟨?_, h⟩⟩
   rcases h with ⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩
@@ -409,6 +409,7 @@ theorem stageValue_congr {h₁ h₂ x y v₁ v₂ : ZFSet.{u}}
     (hv₁ : StageValue condSet orderCode h₁ x y v₁)
     (hv₂ : StageValue condSet orderCode h₂ x y v₂) : v₁ = v₂ := by
   refine ZFSet.ext fun e ↦ (hv₁ e).trans (Iff.trans ?_ (hv₂ e).symm)
+  unfold StageEntry
   constructor
   · rintro (⟨p, hp, he, hc⟩ | ⟨p, hp, he, hc⟩)
     · exact Or.inl ⟨p, hp, he, (hmem p hp).1 hc⟩
@@ -438,6 +439,51 @@ theorem stageValue_congr_of_coherent {A B h₁ h₂ x y v₁ v₂ : ZFSet.{u}}
     · exact (hag z x (mem_of_pair_mem hA hyA hb) hxA (mem_of_pair_mem hB hyB hb) hxB).1
 
 end Stage
+
+/-! ### Rows
+
+Aggregation, not recursion. A **row** collects the stage entries at every state sharing a
+first coordinate. `rankPair` remains the recursion order throughout; rows exist only because
+a set of entries has to be assembled *inside* the carrier, and Collection's outputs are sets
+of stages rather than sets of entries.
+
+`RowValue` is stated as an **exact membership characterization**, so a theorem producing a row
+says precisely which entries it has. That is what keeps the eventual coherence result an
+extensional consequence rather than a witness-containment argument. -/
+
+section Row
+
+variable {condSet orderCode : ZFSet.{u}}
+
+/-- The row at `x` over the domain `A`: exactly the stage entries at `(x, y)` for `y ∈ A`. -/
+def RowValue (condSet orderCode history A x row : ZFSet.{u}) : Prop :=
+  ∀ e, e ∈ row ↔ ∃ y ∈ A, StageEntry condSet orderCode history x y e
+
+/-- **Functionality**: the domain, the history, and the first coordinate determine the row. -/
+theorem rowValue_unique {history A x r₁ r₂ : ZFSet.{u}}
+    (h₁ : RowValue condSet orderCode history A x r₁)
+    (h₂ : RowValue condSet orderCode history A x r₂) : r₁ = r₂ :=
+  ZFSet.ext fun e ↦ (h₁ e).trans (h₂ e).symm
+
+/-- A row is assembled from the stages along it: if every `y ∈ A` has a stage present in the
+family and every member of the family is a stage along the row, the union of the family is
+the row. This is the external form of the filter-then-flatten discipline — the second
+hypothesis is the filter, and without it the union could contain arbitrary junk. -/
+theorem rowValue_of_sUnion {history A x family : ZFSet.{u}}
+    (hpresent : ∀ y ∈ A, ∃ v ∈ family, StageValue condSet orderCode history x y v)
+    (hfiltered : ∀ v ∈ family, ∃ y ∈ A, StageValue condSet orderCode history x y v) :
+    RowValue condSet orderCode history A x (ZFSet.sUnion family) := by
+  intro e
+  constructor
+  · intro hmem
+    obtain ⟨v, hv, hev⟩ := ZFSet.mem_sUnion.1 hmem
+    obtain ⟨y, hy, hsv⟩ := hfiltered v hv
+    exact ⟨y, hy, (hsv e).1 hev⟩
+  · rintro ⟨y, hy, hse⟩
+    obtain ⟨v, hv, hsv⟩ := hpresent y hy
+    exact ZFSet.mem_sUnion.2 ⟨v, hv, (hsv e).2 hse⟩
+
+end Row
 
 /-! ### Typed readings of the clauses
 

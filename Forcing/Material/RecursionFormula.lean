@@ -193,6 +193,23 @@ def stageValueDef (tagMem tagEq condSet orderCode history x y value :
     stageEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
       (liftTerm history) (liftTerm x) (liftTerm y) (&(Fin.last n)))
 
+/-- **A row entry**, as a formula: `e` is a stage entry at `(x, y)` for some `y` in the
+domain `A`. -/
+def rowEntryDef (tagMem tagEq condSet orderCode history A x e :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (memFormula (&(Fin.last n)) (liftTerm A) ⊓
+    stageEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
+      (liftTerm history) (liftTerm x) (&(Fin.last n)) (liftTerm e))
+
+/-- **The row relation**, as a formula: the members of `row` are exactly the row entries at
+`x`. Same shape as `stageValueDef` one level up — the factoring is what lets the Collection
+instance at the graph level quantify over rows. -/
+def rowValueDef (tagMem tagEq condSet orderCode history A x row :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm row) ⇔
+    rowEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
+      (liftTerm history) (liftTerm A) (liftTerm x) (&(Fin.last n)))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -527,24 +544,13 @@ theorem realize_stageEntryDef
     (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
     (he : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
     (stageEntryDef tagMem tagEq condSet orderCode history x y e).Realize v xs ↔
-      (∃ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
-          ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) =
-            entry memWitnessTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∧
-          MemClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u}) p
-            ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})) ∨
-        (∃ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
-          ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) =
-            entry eqTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∧
-          EqClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u}) p
-            ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-            ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})) := by
+      StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) := by
+  rw [StageEntry]
   have hcM : ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∈ M :=
     (Term.realize (Sum.elim v xs) condSet : ↥M).2
   have hentD : ∀ p : ↥M,
@@ -637,24 +643,11 @@ theorem realize_stageValueDef
       (stageEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
           (liftTerm orderCode) (liftTerm history) (liftTerm x) (liftTerm y)
           (&(Fin.last n))).Realize v (Fin.snoc xs e) ↔
-        (∃ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
-            ((e : ↥M) : ZFSet.{u}) =
-              entry memWitnessTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-                ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∧
-            MemClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u}) p
-              ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})) ∨
-          (∃ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
-            ((e : ↥M) : ZFSet.{u}) =
-              entry eqTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-                ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∧
-            EqClause ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u}) p
-              ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-              ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})) := by
+        StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ((e : ↥M) : ZFSet.{u}) := by
     intro e
     rw [realize_stageEntryDef (by simpa [realize_liftTerm] using hm)
       (by simpa [realize_liftTerm] using he)]
@@ -675,6 +668,101 @@ theorem realize_stageValueDef
           (Or.inr ⟨p, hp, rfl, hc⟩))
   · intro h e
     exact ((h (e : ZFSet.{u})).trans (hbody e).symm)
+
+/-- **The row-entry law**. Like the stage-entry law it charges nothing: the entry is named,
+not asserted to lie anywhere. -/
+theorem realize_rowEntryDef
+    {tagMem tagEq condSet orderCode history A : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (rowEntryDef tagMem tagEq condSet orderCode history A x e).Realize v xs ↔
+      ∃ y ∈ ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}),
+        StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y
+          ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) := by
+  have hAM : ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) A : ↥M).2
+  have hse : ∀ w : ↥M,
+      (stageEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+          (liftTerm orderCode) (liftTerm history) (liftTerm x) (&(Fin.last n))
+          (liftTerm e)).Realize v (Fin.snoc xs w) ↔
+        StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) ((w : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) := by
+    intro w
+    rw [realize_stageEntryDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  simp only [rowEntryDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm]
+  constructor
+  · rintro ⟨w, hw, hs⟩
+    exact ⟨(w : ZFSet.{u}), hw, (hse w).1 hs⟩
+  · rintro ⟨w, hw, hs⟩
+    exact ⟨⟨w, M.mem_trans hw hAM⟩, hw, (hse ⟨w, _⟩).2 hs⟩
+
+/-- **The row law**: the formula realizes to exactly the semantic `RowValue`. As with the
+stage law, the extra hypothesis places the candidate entries in the carrier; here it is
+needed across the whole domain, and finite closure supplies it. -/
+theorem realize_rowValueDef
+    {tagMem tagEq condSet orderCode history A row : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag)
+    (hentM : ∀ y ∈ ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}),
+      ∀ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
+        entry memWitnessTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y ∈ M ∧
+          entry eqTag p ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y ∈ M) :
+    (rowValueDef tagMem tagEq condSet orderCode history A x row).Realize v xs ↔
+      RowValue ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) row : ↥M) : ZFSet.{u}) := by
+  have hrM : ((Term.realize (Sum.elim v xs) row : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) row : ↥M).2
+  have hbody : ∀ w : ↥M,
+      (rowEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
+          (liftTerm history) (liftTerm A) (liftTerm x) (&(Fin.last n))).Realize v
+        (Fin.snoc xs w) ↔
+        ∃ y ∈ ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}),
+          StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y ((w : ↥M) : ZFSet.{u}) := by
+    intro w
+    rw [realize_rowEntryDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  -- Any row entry is a member of the carrier, by finite closure across the domain.
+  have hinM : ∀ y ∈ ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}), ∀ c : ZFSet.{u},
+      StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) history : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y c → c ∈ M := by
+    rintro y hy c (⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩)
+    · exact (hentM y hy p hp).1
+    · exact (hentM y hy p hp).2
+  simp only [rowValueDef, BoundedFormula.realize_all, BoundedFormula.realize_iff, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm]
+  constructor
+  · intro h c
+    constructor
+    · intro hc
+      exact (hbody ⟨c, M.mem_trans hc hrM⟩).1 ((h ⟨c, M.mem_trans hc hrM⟩).1 hc)
+    · rintro ⟨y, hy, hs⟩
+      have hcM := hinM y hy c hs
+      exact (h ⟨c, hcM⟩).2 ((hbody ⟨c, hcM⟩).2 ⟨y, hy, hs⟩)
+  · intro h w
+    exact ((h (w : ZFSet.{u})).trans (hbody w).symm)
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches

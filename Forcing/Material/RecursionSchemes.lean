@@ -14,7 +14,27 @@ construction uses is **named here, by its mathematical job**, together with the 
 theorem it buys — so the ledger records the actual finite family of formulas rather than a
 wholesale appeal to "Separation" or "Collection".
 
-This module owns the first instance:
+The instances, each named by its job:
+
+| Instance | Scheme | Job |
+| --- | --- | --- |
+| `entryBoundFormula` | Collection | the tagged entries at one state, as a bound |
+| `stageFormula` | Separation | carve a stage out of that bound |
+| `stageGatherFormula` | Collection | gather the stages along a row |
+| `stageFilterFormula` | Separation | discard Collection's junk, *before* flattening |
+
+The count is **discovery-driven**: it is read off the construction that compiled, not chosen
+in advance. `entryBoundFormula` takes the tag as a parameter, so one sentence serves both
+tags rather than two.
+
+## Filter before flatten
+
+Collection is not functional, so its output may carry members that are not stages at all.
+Those must be removed **before** `sUnion`: after flattening, a junk member's provenance is
+gone and cannot be recovered. `exists_rowValue` therefore runs gather → filter → flatten, in
+that order, and concludes with an **exact membership characterization** (`RowValue`) rather
+than a containment. That is what keeps the eventual coherence theorem an extensional
+consequence instead of a witness-containment argument.
 
 **The stage instance** — *carving a stage's valid tagged entries out of a bound.* Its formula
 is literally `stageEntryDef`, the same formula the stage relation quantifies over, applied at
@@ -36,13 +56,17 @@ Nothing here mentions `InternalNameCoding` or the external forcing relation.
 
 ## Main definitions
 
-* `Forcing.AtomicRecursion.stageFormula`: the stage instance's formula, at its seven
-  parameters.
-* `Forcing.AtomicRecursion.stageSeparationSentence`: the named Separation instance.
+* `Forcing.AtomicRecursion.stageFormula`, `Forcing.AtomicRecursion.entryBoundFormula`,
+  `Forcing.AtomicRecursion.stageGatherFormula`, `Forcing.AtomicRecursion.stageFilterFormula`:
+  the instance formulas.
+* the corresponding `…Sentence` definitions: the named instances.
 
 ## Main results
 
 * `Forcing.MaterialGround.exists_stageValue_of_bound`: the stage exists inside the ground.
+* `Forcing.MaterialGround.exists_stageValue`: the same with the bound constructed.
+* `Forcing.MaterialGround.exists_rowValue`: the row exists, with an exact membership
+  characterization.
 -/
 
 universe u
@@ -71,6 +95,44 @@ def stageSeparationSentence : memLang.Sentence :=
 theorem stageSeparationSentence_mem_scheme :
     stageSeparationSentence ∈ separationScheme :=
   separationSentence_mem_scheme stageFormula
+
+/-- **The entry-bound instance**: the Collection sentence producing a set that contains the
+tagged entries at a state. The tag is a **parameter**, so this single sentence serves *both*
+tags — used once at `memWitnessTag` and once at `eqTag`. Its witnesses are individual
+entries, not sets of entries, so nothing needs flattening. -/
+def entryBoundFormula : memLang.BoundedFormula (Fin 3) 2 :=
+  entryDef (var (Sum.inl 0)) (&0) (var (Sum.inl 1)) (var (Sum.inl 2)) (&1)
+
+/-- **The stage-gathering instance**: the Collection sentence gathering the stage values
+along a row, indexed by the second coordinate. -/
+def stageGatherFormula : memLang.BoundedFormula (Fin 6) 2 :=
+  stageValueDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+    (var (Sum.inl 4)) (var (Sum.inl 5)) (&0) (&1)
+
+/-- **The stage-filter instance**: the Separation sentence keeping exactly the genuine stage
+values of a row. Collection is not functional, so its output may carry junk; this filter runs
+**before** the union, because after flattening the provenance of a junk member is gone and
+cannot be recovered. -/
+def stageFilterFormula : memLang.BoundedFormula (Fin 7) 1 :=
+  ∃' (memFormula (&(Fin.last 1)) (liftTerm (var (Sum.inl 6))) ⊓
+    stageValueDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+      (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3))) (liftTerm (var (Sum.inl 4)))
+      (liftTerm (var (Sum.inl 5))) (&(Fin.last 1)) (liftTerm (&0)))
+
+def entryBoundSentence : memLang.Sentence := collectionSentence entryBoundFormula
+
+def stageGatherSentence : memLang.Sentence := collectionSentence stageGatherFormula
+
+def stageFilterSentence : memLang.Sentence := separationSentence stageFilterFormula
+
+theorem entryBoundSentence_mem_scheme : entryBoundSentence ∈ collectionScheme :=
+  collectionSentence_mem_scheme entryBoundFormula
+
+theorem stageGatherSentence_mem_scheme : stageGatherSentence ∈ collectionScheme :=
+  collectionSentence_mem_scheme stageGatherFormula
+
+theorem stageFilterSentence_mem_scheme : stageFilterSentence ∈ separationScheme :=
+  separationSentence_mem_scheme stageFilterFormula
 
 end AtomicRecursion
 
@@ -103,14 +165,8 @@ theorem exists_stageValue_of_bound (hsep : stageSeparationSentence ∈ T)
   -- The separated condition is exactly the stage-entry condition.
   have hbody : ∀ e : ↥M.toMaterialCarrier,
       stageFormula.Realize ![tagMem, tagEq, condSet, orderCode, history, x, y] ![e] ↔
-        (∃ p ∈ (condSet : ZFSet.{u}), (e : ZFSet.{u}) =
-            entry memWitnessTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∧
-            MemClause (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u}) p
-              (x : ZFSet.{u}) (y : ZFSet.{u})) ∨
-          (∃ p ∈ (condSet : ZFSet.{u}), (e : ZFSet.{u}) =
-            entry eqTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∧
-            EqClause (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u}) p
-              (x : ZFSet.{u}) (y : ZFSet.{u})) := by
+        StageEntry (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+          (x : ZFSet.{u}) (y : ZFSet.{u}) (e : ZFSet.{u}) := by
     intro e
     rw [stageFormula, realize_stageEntryDef (by simpa using hm) (by simpa using he)]
     simp
@@ -121,11 +177,166 @@ theorem exists_stageValue_of_bound (hsep : stageSeparationSentence ∈ T)
     exact (hbody ⟨e, heM⟩).1 ((hbdef ⟨e, heM⟩).1 he').2
   · -- The candidate entry lies in the bound, hence in the carrier.
     have heB : e ∈ (bound : ZFSet.{u}) := by
-      rcases hd with ⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩
+      rcases (hd : StageEntry _ _ _ _ _ _) with ⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩
       · exact (hb p hp).1
       · exact (hb p hp).2
     have heM : e ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans heB hboundM
     exact (hbdef ⟨e, heM⟩).2 ⟨heB, (hbody ⟨e, heM⟩).2 hd⟩
+
+/-! ### The row construction
+
+Collection, then **filter**, then flatten. The filter is not optional bookkeeping: Collection
+is not functional, so its output may carry junk, and after `sUnion` a junk member's
+provenance is gone. Filtering first is what makes the final statement an exact membership
+characterization rather than a containment. -/
+
+/-- The per-state entry bound at one tag, from the entry-bound instance. **No general
+Union**: the witnesses are individual entries. -/
+theorem exists_entryBound (hcol : entryBoundSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tag : ℕ) (tagCode condSet x y : ↥M.toMaterialCarrier)
+    (htag : (tagCode : ZFSet.{u}) = natCode tag) :
+    ∃ E : ↥M.toMaterialCarrier, ∀ p ∈ (condSet : ZFSet.{u}),
+      entry tag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∈ (E : ZFSet.{u}) := by
+  have hbody : ∀ p e : ↥M.toMaterialCarrier,
+      entryBoundFormula.Realize ![tagCode, x, y] ![p, e] ↔
+        (e : ZFSet.{u}) = entry tag (p : ZFSet.{u}) (x : ZFSet.{u}) (y : ZFSet.{u}) := by
+    intro p e
+    rw [entryBoundFormula, realize_entryDef_natCode (by simpa using htag)]
+    simp
+  obtain ⟨E, hE⟩ := M.exists_collection (φ := entryBoundFormula) hcol ![tagCode, x, y] condSet
+    (fun p hp' ↦ ⟨⟨_, M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' condSet.2)
+      x.2 y.2⟩, (hbody p _).2 rfl⟩)
+  refine ⟨E, fun p hp' ↦ ?_⟩
+  obtain ⟨e, heE, hval⟩ := hE ⟨p, M.toMaterialCarrier.mem_trans hp' condSet.2⟩ hp'
+  rw [(hbody _ e).1 hval] at heE
+  exact heE
+
+/-- The per-state bound at both tags — the same instance twice, combined by **binary** union.
+This is what discharges the bound hypothesis of `exists_stageValue_of_bound`. -/
+theorem exists_stageBound (hcol : entryBoundSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet x y : ↥M.toMaterialCarrier)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
+    ∃ bound : ↥M.toMaterialCarrier, ∀ p ∈ (condSet : ZFSet.{u}),
+      entry memWitnessTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∈ (bound : ZFSet.{u}) ∧
+        entry eqTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∈ (bound : ZFSet.{u}) := by
+  obtain ⟨E₁, hE₁⟩ := M.exists_entryBound hcol he hp hu memWitnessTag tagMem condSet x y hm
+  obtain ⟨E₂, hE₂⟩ := M.exists_entryBound hcol he hp hu eqTag tagEq condSet x y hq
+  exact ⟨⟨(E₁ : ZFSet.{u}) ∪ (E₂ : ZFSet.{u}), M.union_mem hu E₁.2 E₂.2⟩, fun p hp' ↦
+    ⟨ZFSet.mem_union.2 (Or.inl (hE₁ p hp')), ZFSet.mem_union.2 (Or.inr (hE₂ p hp'))⟩⟩
+
+/-- **The stage exists outright**, with the bound now constructed rather than assumed. -/
+theorem exists_stageValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode history x y : ↥M.toMaterialCarrier)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
+    ∃ value : ↥M.toMaterialCarrier,
+      StageValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+        (x : ZFSet.{u}) (y : ZFSet.{u}) (value : ZFSet.{u}) := by
+  obtain ⟨bound, hbd⟩ := M.exists_stageBound hbnd he hp hu tagMem tagEq condSet x y hm hq
+  exact M.exists_stageValue_of_bound hsep tagMem tagEq condSet orderCode history x y bound
+    hm hq hbd
+
+/-- The stage-filter instance reads as "some `y` in the domain has this stage". -/
+theorem realize_stageFilterFormula
+    (tagMem tagEq condSet orderCode history x A value : ↥M.toMaterialCarrier)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
+    (hentM : ∀ y ∈ (A : ZFSet.{u}), ∀ p ∈ (condSet : ZFSet.{u}),
+      entry memWitnessTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier ∧
+        entry eqTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier) :
+    stageFilterFormula.Realize ![tagMem, tagEq, condSet, orderCode, history, x, A] ![value] ↔
+      ∃ y ∈ (A : ZFSet.{u}),
+        StageValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+          (x : ZFSet.{u}) y (value : ZFSet.{u}) := by
+  have hsv : ∀ w : ↥M.toMaterialCarrier, (w : ZFSet.{u}) ∈ (A : ZFSet.{u}) →
+      ((stageValueDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+          (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3)))
+          (liftTerm (var (Sum.inl 4))) (liftTerm (var (Sum.inl 5))) (&(Fin.last 1))
+          (liftTerm (&0))).Realize
+        ![tagMem, tagEq, condSet, orderCode, history, x, A] (Fin.snoc ![value] w) ↔
+        StageValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+          (x : ZFSet.{u}) (w : ZFSet.{u}) (value : ZFSet.{u})) := by
+    intro w hw
+    rw [realize_stageValueDef (by simpa [liftTerm, Term.realize_relabel] using hm)
+      (by simpa [liftTerm, Term.realize_relabel] using hq)
+      (by simpa [liftTerm, Term.realize_relabel] using hentM (w : ZFSet.{u}) hw)]
+    simp [liftTerm]
+  have hAM : (A : ZFSet.{u}) ∈ M.toMaterialCarrier := A.2
+  simp only [stageFilterFormula, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm]
+  constructor
+  · rintro ⟨w, hw, hs⟩
+    exact ⟨(w : ZFSet.{u}), hw, (hsv w hw).1 hs⟩
+  · rintro ⟨w, hw, hs⟩
+    exact ⟨⟨w, M.toMaterialCarrier.mem_trans hw hAM⟩, hw, (hsv ⟨w, _⟩ hw).2 hs⟩
+
+/-- **The row exists inside the ground, with an exact membership characterization.**
+
+Collection gathers the stages along the row, the filter instance discards junk **before** any
+flattening, and general Union assembles the entries. The conclusion says precisely which
+entries the row has — not merely that it contains a stage for every `y`. -/
+theorem exists_rowValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
+    (hgat : stageGatherSentence ∈ T) (hfil : stageFilterSentence ∈ T)
+    (huni : unionSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode history A x : ↥M.toMaterialCarrier)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
+    ∃ row : ↥M.toMaterialCarrier,
+      RowValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+        (A : ZFSet.{u}) (x : ZFSet.{u}) (row : ZFSet.{u}) := by
+  have hAM : (A : ZFSet.{u}) ∈ M.toMaterialCarrier := A.2
+  have hcM : (condSet : ZFSet.{u}) ∈ M.toMaterialCarrier := condSet.2
+  -- Entries along the row are carrier elements, by finite closure.
+  have hentM : ∀ y ∈ (A : ZFSet.{u}), ∀ p ∈ (condSet : ZFSet.{u}),
+      entry memWitnessTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier ∧
+        entry eqTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier := by
+    intro y hy p hp'
+    exact ⟨M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' hcM) x.2
+        (M.toMaterialCarrier.mem_trans hy hAM),
+      M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' hcM) x.2
+        (M.toMaterialCarrier.mem_trans hy hAM)⟩
+  -- Step 1: gather the stages along the row.
+  have hstageR : ∀ y value : ↥M.toMaterialCarrier,
+      (y : ZFSet.{u}) ∈ (A : ZFSet.{u}) →
+      (stageGatherFormula.Realize ![tagMem, tagEq, condSet, orderCode, history, x]
+          ![y, value] ↔
+        StageValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
+          (x : ZFSet.{u}) (y : ZFSet.{u}) (value : ZFSet.{u})) := by
+    intro y value hy
+    rw [stageGatherFormula, realize_stageValueDef (by simpa using hm) (by simpa using hq)
+      (by simpa using hentM (y : ZFSet.{u}) hy)]
+    simp
+  obtain ⟨B, hB⟩ := M.exists_collection (φ := stageGatherFormula) hgat
+    ![tagMem, tagEq, condSet, orderCode, history, x] A
+    (fun y hy ↦ by
+      obtain ⟨value, hv⟩ := M.exists_stageValue hbnd hsep he hp hu tagMem tagEq condSet
+        orderCode history x y hm hq
+      exact ⟨value, (hstageR y value hy).2 hv⟩)
+  -- Step 2: filter, BEFORE flattening.
+  obtain ⟨B', hB'⟩ := M.exists_separation (φ := stageFilterFormula) hfil
+    ![tagMem, tagEq, condSet, orderCode, history, x, A] B
+  -- Step 3: flatten.
+  refine ⟨⟨ZFSet.sUnion (B' : ZFSet.{u}), M.sUnion_mem huni B'.2⟩,
+    rowValue_of_sUnion ?_ ?_⟩
+  · -- every `y ∈ A` has its stage present in the filtered family
+    intro y hy
+    obtain ⟨value, hvB, hval⟩ := hB ⟨y, M.toMaterialCarrier.mem_trans hy hAM⟩ hy
+    have hsv := (hstageR ⟨y, _⟩ value hy).1 hval
+    refine ⟨(value : ZFSet.{u}), (hB' value).2 ⟨hvB, ?_⟩, hsv⟩
+    exact (M.realize_stageFilterFormula tagMem tagEq condSet orderCode history x A value
+      hm hq hentM).2 ⟨y, hy, hsv⟩
+  · -- every member of the filtered family is a stage along the row
+    intro w hw
+    have hwM : w ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans hw B'.2
+    exact (M.realize_stageFilterFormula tagMem tagEq condSet orderCode history x A ⟨w, hwM⟩
+      hm hq hentM).1 ((hB' ⟨w, hwM⟩).1 hw).2
 
 end MaterialGround
 
