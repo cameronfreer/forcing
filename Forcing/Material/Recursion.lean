@@ -617,6 +617,51 @@ section DescentClosed
 
 variable {condSet orderCode : ZFSet.{u}}
 
+/-- The states the clauses at `(x, y)` consult — the three direct predecessor shapes, as a
+predicate. Indexed by *branch components*, which is what makes the descent relation set-like
+without any transitive closure. -/
+def PredSpec (condSet x y s : ZFSet.{u}) : Prop :=
+  (∃ c z, ZFSet.pair c z ∈ y ∧ c ∈ condSet ∧ s = ZFSet.pair x z) ∨
+    (∃ c z, ZFSet.pair c z ∈ x ∧ c ∈ condSet ∧ s = ZFSet.pair z y) ∨
+    (∃ c z, ZFSet.pair c z ∈ y ∧ c ∈ condSet ∧ s = ZFSet.pair z x)
+
+/-- `P` holds exactly the states consulted at `(x, y)` — an exact membership
+characterization, as everywhere in this layer. -/
+def PredValue (condSet x y P : ZFSet.{u}) : Prop :=
+  ∀ s, s ∈ P ↔ PredSpec condSet x y s
+
+/-- **Functionality**: the state determines its predecessor set. -/
+theorem predValue_unique {x y P₁ P₂ : ZFSet.{u}} (h₁ : PredValue condSet x y P₁)
+    (h₂ : PredValue condSet x y P₂) : P₁ = P₂ :=
+  ZFSet.ext fun s ↦ (h₁ s).trans (h₂ s).symm
+
+/-- **Rank decrease**: every consulted state is `rankPair`-smaller. This is the theorem that
+licenses the recursion, and the only place rank appears in this layer. -/
+theorem rankPair_lt_of_predSpec {x y s : ZFSet.{u}} (h : PredSpec condSet x y s) :
+    ∃ u v, s = ZFSet.pair u v ∧ Sym2.GameAdd (· < ·) (rankPair u v) (rankPair x y) := by
+  rcases h with ⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩
+  · exact ⟨x, z, rfl, descent_right hb⟩
+  · exact ⟨z, y, rfl, descent_left hb⟩
+  · exact ⟨z, x, rfl, descent_swap hb⟩
+
+/-- Consulted states stay over the domain, by transitivity. -/
+theorem predSpec_mem_domain {A x y s : ZFSet.{u}} (hA : A.IsTransitive) (hx : x ∈ A)
+    (hy : y ∈ A) (h : PredSpec condSet x y s) : ∃ u ∈ A, ∃ v ∈ A, s = ZFSet.pair u v := by
+  rcases h with ⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩
+  · exact ⟨x, hx, z, branch_mem_domain hA hy hb, rfl⟩
+  · exact ⟨z, branch_mem_domain hA hx hb, y, hy, rfl⟩
+  · exact ⟨z, branch_mem_domain hA hy hb, x, hx, rfl⟩
+
+/-- Existence from a bound, in the shape the internal argument takes: a named Separation
+instance carving the predecessor set out of a constructed bound. -/
+theorem predValue_exists_of_bound {x y bound : ZFSet.{u}}
+    (hb : ∀ s, PredSpec condSet x y s → s ∈ bound) :
+    ∃ P, PredValue condSet x y P := by
+  classical
+  refine ⟨ZFSet.sep (PredSpec condSet x y) bound, fun s ↦ ?_⟩
+  rw [ZFSet.mem_sep]
+  exact ⟨fun h ↦ h.2, fun h ↦ ⟨hb s h, h⟩⟩
+
 /-- `D` is a set of states over `A`, closed under the three direct predecessor shapes: the
 membership clause's `(x, z)`, and the equality clause's `(z, y)` and `(z, x)`. -/
 def DescentClosed (condSet A D : ZFSet.{u}) : Prop :=
@@ -625,6 +670,23 @@ def DescentClosed (condSet A D : ZFSet.{u}) : Prop :=
       (∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ZFSet.pair x z ∈ D) ∧
         (∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ZFSet.pair z y ∈ D) ∧
         (∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ZFSet.pair z x ∈ D)
+
+/-- **Descent-closure is exactly closure under `Pred`.** The two halves of the invariant are
+the same condition stated two ways; this is the bridge between them, so a consumer may use
+whichever is convenient without re-deriving the shapes. -/
+theorem descentClosed_iff_predSpec {A D : ZFSet.{u}} :
+    DescentClosed condSet A D ↔
+      (∀ s ∈ D, ∃ x ∈ A, ∃ y ∈ A, s = ZFSet.pair x y) ∧
+        ∀ x y, ZFSet.pair x y ∈ D → ∀ s, PredSpec condSet x y s → s ∈ D := by
+  refine ⟨fun ⟨hstates, hclosed⟩ ↦ ⟨hstates, fun x y hxy s hs ↦ ?_⟩,
+    fun ⟨hstates, hclosed⟩ ↦ ⟨hstates, fun x y hxy ↦ ⟨?_, ?_, ?_⟩⟩⟩
+  · rcases hs with ⟨c, z, hbr, hc, rfl⟩ | ⟨c, z, hbr, hc, rfl⟩ | ⟨c, z, hbr, hc, rfl⟩
+    · exact (hclosed x y hxy).1 c z hbr hc
+    · exact (hclosed x y hxy).2.1 c z hbr hc
+    · exact (hclosed x y hxy).2.2 c z hbr hc
+  · exact fun c z hbr hc ↦ hclosed x y hxy _ (Or.inl ⟨c, z, hbr, hc, rfl⟩)
+  · exact fun c z hbr hc ↦ hclosed x y hxy _ (Or.inr (Or.inl ⟨c, z, hbr, hc, rfl⟩))
+  · exact fun c z hbr hc ↦ hclosed x y hxy _ (Or.inr (Or.inr ⟨c, z, hbr, hc, rfl⟩))
 
 /-- **Correctness on a descent-closed domain**: `R` holds exactly the entries its own clauses
 admit at the states of `D`. Support and clause correctness in one statement — `R` occurs on
@@ -722,6 +784,98 @@ theorem correctOn_unique {A D R S : ZFSet.{u}} (hD : DescentClosed condSet A D)
   refine ZFSet.ext fun e ↦ ((hR e).trans (Iff.trans ?_ (hS e).symm))
   exact ⟨fun ⟨x, y, hs, hse⟩ ↦ ⟨x, y, hs, (stageEntry_congr_of_agree hD hs hag e).1 hse⟩,
     fun ⟨x, y, hs, hse⟩ ↦ ⟨x, y, hs, (stageEntry_congr_of_agree hD hs hag e).2 hse⟩⟩
+
+/-! #### Merging approximations
+
+The inductive step gathers many approximations and unions them. Each is carried as a **single
+`⟨D, R⟩` package**: collecting domains and graphs independently would lose which graph belongs
+to which domain, and the merge argument below depends on that pairing at every step. -/
+
+/-- An approximation, as one coded package. -/
+def Approximation (condSet orderCode A a : ZFSet.{u}) : Prop :=
+  ∃ D R, a = ZFSet.pair D R ∧ DescentClosed condSet A D ∧ CorrectOn condSet orderCode D R
+
+/-- **Exact support, read backwards**: an entry in `R` pins the state it belongs to into `D`.
+This is the direction `AtomicCoherentOn` cannot supply, and the merge below turns on it. -/
+private theorem state_mem_of_memWitness {D R p x y : ZFSet.{u}}
+    (hR : CorrectOn condSet orderCode D R) (h : entry memWitnessTag p x y ∈ R) :
+    ZFSet.pair x y ∈ D := by
+  obtain ⟨u, v, hs, hse⟩ := (hR _).1 h
+  rcases hse with ⟨q, -, hq, -⟩ | ⟨q, -, hq, -⟩
+  · obtain ⟨-, -, rfl, rfl⟩ := entry_inj.1 hq
+    exact hs
+  · exact absurd hq entry_memWitness_ne_eq
+
+private theorem state_mem_of_eq {D R p x y : ZFSet.{u}}
+    (hR : CorrectOn condSet orderCode D R) (h : entry eqTag p x y ∈ R) :
+    ZFSet.pair x y ∈ D := by
+  obtain ⟨u, v, hs, hse⟩ := (hR _).1 h
+  rcases hse with ⟨q, -, hq, -⟩ | ⟨q, -, hq, -⟩
+  · exact absurd hq.symm entry_memWitness_ne_eq
+  · obtain ⟨-, -, rfl, rfl⟩ := entry_inj.1 hq
+    exact hs
+
+/-- Each member's graph agrees with the union at every state of that member's domain. The
+reverse inclusion is the delicate one: an entry of the union comes from *some* member, and
+exact support puts its state in that member's domain, where generalized locality applies. -/
+private theorem agreeAt_union {A F R : ZFSet.{u}}
+    (hF : ∀ a ∈ F, Approximation condSet orderCode A a)
+    (hRc : ∀ e, e ∈ R ↔ ∃ D' R', ZFSet.pair D' R' ∈ F ∧ e ∈ R')
+    {D₀ R₀ : ZFSet.{u}} (hmem : ZFSet.pair D₀ R₀ ∈ F) :
+    ∀ x y, ZFSet.pair x y ∈ D₀ → AgreeAt condSet R₀ R x y := by
+  obtain ⟨D', R', hpair, hDC₀, hCO₀⟩ := hF _ hmem
+  obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hpair
+  intro x y hxy
+  constructor
+  · refine fun p hp ↦ ⟨fun h ↦ (hRc _).2 ⟨_, _, hmem, h⟩, fun h ↦ ?_⟩
+    obtain ⟨E, S, hES, hS⟩ := (hRc _).1 h
+    obtain ⟨E', S', hp', hDC, hCO⟩ := hF _ hES
+    obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hp'
+    exact (agreeAt_of_correctOn hDC hDC₀ hCO hCO₀ x y (state_mem_of_memWitness hCO hS)
+      hxy).1 p hp |>.1 hS
+  · refine fun p hp ↦ ⟨fun h ↦ (hRc _).2 ⟨_, _, hmem, h⟩, fun h ↦ ?_⟩
+    obtain ⟨E, S, hES, hS⟩ := (hRc _).1 h
+    obtain ⟨E', S', hp', hDC, hCO⟩ := hF _ hES
+    obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hp'
+    exact (agreeAt_of_correctOn hDC hDC₀ hCO hCO₀ x y (state_mem_of_eq hCO hS) hxy).2 p hp
+      |>.1 hS
+
+/-- **The merge**: the union of a family of approximations is an approximation.
+
+Both the domain and the graph are given by exact membership characterizations, which is how
+they are built inside a carrier — filter the packages, then flatten each projection. The
+proof consumes exact support essentially: without it, an entry of the union could come from a
+member whose domain does not contain that entry's state, and the union's support would exceed
+what its own clauses admit. -/
+theorem approximation_union {A F D R : ZFSet.{u}}
+    (hF : ∀ a ∈ F, Approximation condSet orderCode A a)
+    (hDc : ∀ s, s ∈ D ↔ ∃ D' R', ZFSet.pair D' R' ∈ F ∧ s ∈ D')
+    (hRc : ∀ e, e ∈ R ↔ ∃ D' R', ZFSet.pair D' R' ∈ F ∧ e ∈ R') :
+    DescentClosed condSet A D ∧ CorrectOn condSet orderCode D R := by
+  have hstate : ∀ D₀ R₀, ZFSet.pair D₀ R₀ ∈ F →
+      DescentClosed condSet A D₀ ∧ CorrectOn condSet orderCode D₀ R₀ := by
+    intro D₀ R₀ hmem
+    obtain ⟨D', R', hpair, hDC, hCO⟩ := hF _ hmem
+    obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hpair
+    exact ⟨hDC, hCO⟩
+  have hDC : DescentClosed condSet A D := by
+    refine descentClosed_iff_predSpec.2 ⟨fun s hs ↦ ?_, fun x y hxy s hs ↦ ?_⟩
+    · obtain ⟨D₀, R₀, hmem, hsD⟩ := (hDc s).1 hs
+      exact (hstate D₀ R₀ hmem).1.1 s hsD
+    · obtain ⟨D₀, R₀, hmem, hsD⟩ := (hDc _).1 hxy
+      exact (hDc s).2 ⟨D₀, R₀, hmem,
+        (descentClosed_iff_predSpec.1 (hstate D₀ R₀ hmem).1).2 x y hsD s hs⟩
+  refine ⟨hDC, fun e ↦ ⟨fun h ↦ ?_, ?_⟩⟩
+  · obtain ⟨D₀, R₀, hmem, heR⟩ := (hRc e).1 h
+    obtain ⟨hDC₀, hCO₀⟩ := hstate D₀ R₀ hmem
+    obtain ⟨x, y, hxy, hse⟩ := (hCO₀ e).1 heR
+    refine ⟨x, y, (hDc _).2 ⟨D₀, R₀, hmem, hxy⟩, ?_⟩
+    exact (stageEntry_congr_of_agree hDC₀ hxy (agreeAt_union hF hRc hmem) e).1 hse
+  · rintro ⟨x, y, hxy, hse⟩
+    obtain ⟨D₀, R₀, hmem, hxyD⟩ := (hDc _).1 hxy
+    obtain ⟨hDC₀, hCO₀⟩ := hstate D₀ R₀ hmem
+    refine (hRc e).2 ⟨D₀, R₀, hmem, (hCO₀ e).2 ⟨x, y, hxyD, ?_⟩⟩
+    exact (stageEntry_congr_of_agree hDC₀ hxyD (agreeAt_union hF hRc hmem) e).2 hse
 
 /-- **The endpoint shape**: an approximation correct on a domain covering every state over `A`
 is coherent on `A`. No agreement hypothesis, no transitivity, and no rank — the fixed-point
