@@ -748,18 +748,23 @@ theorem agreeAt_of_correctOn {A B D E R S : ZFSet.{u}}
       · exact (ih (z, x) (descent_swap hb) ((hD.2 x y hxyD).2.2 c z hb hc)
           ((hE.2 x y hxyE).2.2 c z hb hc)).1
 
-/-- Clause values agree wherever the two approximations do. -/
-private theorem stageEntry_congr_of_agree {A D R S x y : ZFSet.{u}}
-    (hD : DescentClosed condSet A D) (hs : ZFSet.pair x y ∈ D)
-    (hag : ∀ u v, ZFSet.pair u v ∈ D → AgreeAt condSet R S u v) (e : ZFSet.{u}) :
+/-- **Clause congruence, on the three predecessor shapes directly.** Stated against
+`PredSpec` rather than against a domain, because the extension step needs it at a state that
+is *not* in the domain agreement holds on — the new state observes only its predecessors, and
+agreement there is all the clauses can see. -/
+private theorem stageEntry_congr_of_agreePred {R S x y : ZFSet.{u}}
+    (hright : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → AgreeAt condSet R S x z)
+    (hleft : ∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → AgreeAt condSet R S z y)
+    (hswap : ∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → AgreeAt condSet R S z x)
+    (e : ZFSet.{u}) :
     StageEntry condSet orderCode R x y e ↔ StageEntry condSet orderCode S x y e := by
   have hmem : ∀ q ∈ condSet, MemClause condSet orderCode R q x y ↔
       MemClause condSet orderCode S q x y := fun q hq ↦
-    memClause_congr hq fun c z hb hc ↦ (hag x z ((hD.2 x y hs).1 c z hb hc)).2
+    memClause_congr hq fun c z hb hc ↦ (hright c z hb hc).2
   have heq : ∀ q, EqClause condSet orderCode R q x y ↔ EqClause condSet orderCode S q x y :=
     fun _ ↦ eqClause_congr
-      (fun c z hb hc q ↦ denseMem_congr (hag z y ((hD.2 x y hs).2.1 c z hb hc)).1)
-      (fun c z hb hc q ↦ denseMem_congr (hag z x ((hD.2 x y hs).2.2 c z hb hc)).1)
+      (fun c z hb hc q ↦ denseMem_congr (hleft c z hb hc).1)
+      (fun c z hb hc q ↦ denseMem_congr (hswap c z hb hc).1)
   unfold StageEntry
   constructor
   · rintro (⟨p, hp, hv, hc⟩ | ⟨p, hp, hv, hc⟩)
@@ -768,6 +773,16 @@ private theorem stageEntry_congr_of_agree {A D R S x y : ZFSet.{u}}
   · rintro (⟨p, hp, hv, hc⟩ | ⟨p, hp, hv, hc⟩)
     · exact Or.inl ⟨p, hp, hv, (hmem p hp).2 hc⟩
     · exact Or.inr ⟨p, hp, hv, (heq p).2 hc⟩
+
+/-- Clause values agree wherever the two approximations do across a descent-closed domain. -/
+private theorem stageEntry_congr_of_agree {A D R S x y : ZFSet.{u}}
+    (hD : DescentClosed condSet A D) (hs : ZFSet.pair x y ∈ D)
+    (hag : ∀ u v, ZFSet.pair u v ∈ D → AgreeAt condSet R S u v) (e : ZFSet.{u}) :
+    StageEntry condSet orderCode R x y e ↔ StageEntry condSet orderCode S x y e :=
+  stageEntry_congr_of_agreePred
+    (fun c z hb hc ↦ hag x z ((hD.2 x y hs).1 c z hb hc))
+    (fun c z hb hc ↦ hag z y ((hD.2 x y hs).2.1 c z hb hc))
+    (fun c z hb hc ↦ hag z x ((hD.2 x y hs).2.2 c z hb hc)) e
 
 /-- **Exact support upgrades agreement to equality.** Two approximations correct on the *same*
 descent-closed domain are the same set — not merely observationally indistinguishable.
@@ -876,6 +891,125 @@ theorem approximation_union {A F D R : ZFSet.{u}}
     obtain ⟨hDC₀, hCO₀⟩ := hstate D₀ R₀ hmem
     refine (hRc e).2 ⟨D₀, R₀, hmem, (hCO₀ e).2 ⟨x, y, hxyD, ?_⟩⟩
     exact (stageEntry_congr_of_agree hDC₀ hxyD (agreeAt_union hF hRc hmem) e).2 hse
+
+/-! #### Extending by one state
+
+The second branch of the inductive step. The governing invariant is
+
+```text
+pair x y ∉ D₀   and   PredSpec condSet u v ⊆ D₀  for every state of D₀ ∪ {(x,y)}
+```
+
+and each of its three consequences is used exactly once below: old clauses cannot observe the
+new entries, the new stage cannot observe itself, and `entry_inj` keeps the new entries
+separate from those at predecessor states. Note that freshness is a **hypothesis**, supplied
+by the case split — it does not follow from rank, since `Approximation` bounds neither the
+rank nor the generation of a domain.
+
+The stage is computed against `R₀`, not against the extension, which is what makes it
+constructible; the congruence lemma then shows the two agree. -/
+
+/-- Members of a stage are entries at that state. -/
+private theorem entry_shape_of_mem_stage {R₀ stage x y e : ZFSet.{u}}
+    (hstage : StageValue condSet orderCode R₀ x y stage) (h : e ∈ stage) :
+    (∃ p, e = entry memWitnessTag p x y) ∨ ∃ p, e = entry eqTag p x y := by
+  rcases (hstage e).1 h with ⟨p, -, hv, -⟩ | ⟨p, -, hv, -⟩
+  · exact Or.inl ⟨p, hv⟩
+  · exact Or.inr ⟨p, hv⟩
+
+/-- **Agreement across the old domain.** Adding the stage at a fresh state changes nothing
+observable at any state of `D₀`: a new entry lives at `(x, y)`, and `entry_inj` forces any
+state observing it to *be* `(x, y)`, which freshness excludes. -/
+private theorem agreeAt_extend {D₀ R₀ stage R₁ x y : ZFSet.{u}}
+    (hstage : StageValue condSet orderCode R₀ x y stage)
+    (hfresh : ZFSet.pair x y ∉ D₀)
+    (hR₁ : ∀ e, e ∈ R₁ ↔ e ∈ R₀ ∨ e ∈ stage) :
+    ∀ u v, ZFSet.pair u v ∈ D₀ → AgreeAt condSet R₀ R₁ u v := by
+  intro u v huv
+  have key : ∀ tag : ℕ, ∀ p, entry tag p u v ∈ R₁ → entry tag p u v ∈ R₀ := by
+    intro tag p h
+    rcases (hR₁ _).1 h with h₀ | hs
+    · exact h₀
+    · rcases entry_shape_of_mem_stage hstage hs with ⟨q, hq⟩ | ⟨q, hq⟩
+      · obtain ⟨-, -, rfl, rfl⟩ := entry_inj.1 hq
+        exact absurd huv hfresh
+      · obtain ⟨-, -, rfl, rfl⟩ := entry_inj.1 hq
+        exact absurd huv hfresh
+  exact ⟨fun p _ ↦ ⟨fun h ↦ (hR₁ _).2 (Or.inl h), key memWitnessTag p⟩,
+    fun p _ ↦ ⟨fun h ↦ (hR₁ _).2 (Or.inl h), key eqTag p⟩⟩
+
+/-- **The extension**: a fresh state joined to an approximation, with its stage. Both the new
+domain and the new graph are given by exact membership characterizations, as they will be
+built internally.
+
+Congruence is applied twice, and uniformly — once at the new state, whose clauses see only
+`PredSpec condSet x y ⊆ D₀`, and once at each old state, whose clauses see only
+`PredSpec condSet u v ⊆ D₀` by descent-closure. In both cases agreement across `D₀` is
+exactly what the clauses can observe. -/
+theorem approximation_extend {A D₀ R₀ stage D₁ R₁ x y : ZFSet.{u}}
+    (hDC₀ : DescentClosed condSet A D₀) (hCO₀ : CorrectOn condSet orderCode D₀ R₀)
+    (hxA : x ∈ A) (hyA : y ∈ A)
+    (hpred : ∀ s, PredSpec condSet x y s → s ∈ D₀)
+    (hfresh : ZFSet.pair x y ∉ D₀)
+    (hstage : StageValue condSet orderCode R₀ x y stage)
+    (hD₁ : ∀ t, t ∈ D₁ ↔ t ∈ D₀ ∨ t = ZFSet.pair x y)
+    (hR₁ : ∀ e, e ∈ R₁ ↔ e ∈ R₀ ∨ e ∈ stage) :
+    DescentClosed condSet A D₁ ∧ CorrectOn condSet orderCode D₁ R₁ := by
+  have hag := agreeAt_extend hstage hfresh hR₁
+  have hpred₀ := (descentClosed_iff_predSpec.1 hDC₀).2
+  -- Congruence at the new state: its clauses see only `PredSpec`, all inside `D₀`.
+  have hcongrNew : ∀ e, StageEntry condSet orderCode R₀ x y e ↔
+      StageEntry condSet orderCode R₁ x y e :=
+    stageEntry_congr_of_agreePred
+      (fun c z hb hc ↦ hag x z (hpred _ (Or.inl ⟨c, z, hb, hc, rfl⟩)))
+      (fun c z hb hc ↦ hag z y (hpred _ (Or.inr (Or.inl ⟨c, z, hb, hc, rfl⟩))))
+      (fun c z hb hc ↦ hag z x (hpred _ (Or.inr (Or.inr ⟨c, z, hb, hc, rfl⟩))))
+  -- Congruence at old states: likewise, by descent-closure of `D₀`.
+  have hcongrOld : ∀ u v, ZFSet.pair u v ∈ D₀ → ∀ e,
+      StageEntry condSet orderCode R₀ u v e ↔ StageEntry condSet orderCode R₁ u v e :=
+    fun u v huv ↦ stageEntry_congr_of_agree hDC₀ huv hag
+  have hDC₁ : DescentClosed condSet A D₁ := by
+    refine descentClosed_iff_predSpec.2 ⟨fun s hs ↦ ?_, fun u v huv s hs ↦ ?_⟩
+    · rcases (hD₁ s).1 hs with h | rfl
+      · exact (hDC₀.1) s h
+      · exact ⟨x, hxA, y, hyA, rfl⟩
+    · rcases (hD₁ _).1 huv with h | hxy
+      · exact (hD₁ s).2 (Or.inl (hpred₀ u v h s hs))
+      · obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hxy
+        exact (hD₁ s).2 (Or.inl (hpred s hs))
+  refine ⟨hDC₁, fun e ↦ ⟨fun h ↦ ?_, ?_⟩⟩
+  · rcases (hR₁ e).1 h with h₀ | hs
+    · obtain ⟨u, v, huv, hse⟩ := (hCO₀ e).1 h₀
+      exact ⟨u, v, (hD₁ _).2 (Or.inl huv), (hcongrOld u v huv e).1 hse⟩
+    · exact ⟨x, y, (hD₁ _).2 (Or.inr rfl), (hcongrNew e).1 ((hstage e).1 hs)⟩
+  · rintro ⟨u, v, huv, hse⟩
+    rcases (hD₁ _).1 huv with h | hxy
+    · exact (hR₁ e).2 (Or.inl ((hCO₀ e).2 ⟨u, v, h, (hcongrOld u v h e).2 hse⟩))
+    · obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hxy
+      exact (hR₁ e).2 (Or.inr ((hstage e).2 ((hcongrNew e).2 hse)))
+
+/-- **One inductive step**, with the case split explicit.
+
+Freshness is not derivable: `Approximation` constrains neither the rank nor the generation of
+a domain, so a merged predecessor approximation may already contain the state. That is not a
+defect — it is simply the first branch, where nothing needs building. -/
+theorem exists_approximation_step {A D₀ R₀ x y : ZFSet.{u}}
+    (hDC₀ : DescentClosed condSet A D₀) (hCO₀ : CorrectOn condSet orderCode D₀ R₀)
+    (hxA : x ∈ A) (hyA : y ∈ A)
+    (hpred : ∀ s, PredSpec condSet x y s → s ∈ D₀)
+    (hstage : ∃ stage, StageValue condSet orderCode R₀ x y stage) :
+    ∃ D₁ R₁, ZFSet.pair x y ∈ D₁ ∧ DescentClosed condSet A D₁ ∧
+      CorrectOn condSet orderCode D₁ R₁ := by
+  by_cases hmem : ZFSet.pair x y ∈ D₀
+  · -- The merged approximation already covers the state.
+    exact ⟨D₀, R₀, hmem, hDC₀, hCO₀⟩
+  · -- Fresh: build the stage and extend.
+    obtain ⟨stage, hst⟩ := hstage
+    obtain ⟨h₁, h₂⟩ := approximation_extend (D₁ := insert (ZFSet.pair x y) D₀)
+      (R₁ := R₀ ∪ stage) hDC₀ hCO₀ hxA hyA hpred hmem hst
+      (fun t ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm)
+      (fun e ↦ ZFSet.mem_union)
+    exact ⟨_, _, ZFSet.mem_insert_iff.2 (Or.inl rfl), h₁, h₂⟩
 
 /-- **The endpoint shape**: an approximation correct on a domain covering every state over `A`
 is coherent on `A`. No agreement hypothesis, no transitivity, and no rank — the fixed-point
