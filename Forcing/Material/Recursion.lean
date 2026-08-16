@@ -59,6 +59,14 @@ for domain closure. Using ambient rank does **not** reintroduce Foundation as a 
 cost: it proves externally that any two coherent candidate graphs agree, while Separation and
 Collection remain the only costs of constructing such a graph inside the carrier.
 
+## Descent-closed correctness
+
+`CorrectOn D R` is the form the fixed-point recursion is built in: the clauses are evaluated
+against `R` itself, and `R` has no members beyond the entries those clauses admit at states in
+`D`. Controlling **support**, not merely the clauses, is what makes approximations safe to
+union — see `correctOn_unique`. Domains are descent-closed *sets of states*, not squares,
+because a square domain would force the transitive closure of a pair and so charge Infinity.
+
 ## Stages
 
 `StageValue` names the value the construction assigns at one state, computed against an
@@ -579,6 +587,151 @@ theorem atomicCoherentOn_of_graphValue {history A R : ZFSet.{u}} (hA : A.IsTrans
     · exact (hagree z (mem_of_pair_mem hA hy hb) x hx).1
 
 end Bridge
+
+/-! ### Descent-closed correctness
+
+The form the fixed-point recursion is built in. Two changes from the aggregation layer, both
+essential.
+
+**Correctness is self-referential.** `CorrectOn D R` evaluates the clauses against `R` itself,
+not against a separate history, so no agreement hypothesis is needed and no fixed point is
+left implicit. It is a single statement combining *exact support* — `R` has no members beyond
+the entries its own clauses admit at states in `D` — with clause correctness at every state of
+`D`. Exact support is what `AtomicCoherentOn` deliberately does **not** control: coherence
+permits junk outside the observed slices, which is harmless in isolation but corrupts a
+neighbouring approximation once its domain grows to observe that junk. Approximations that
+will be unioned must therefore control support.
+
+**Domains are sets of states, not squares.** A square domain `B × B` would force `B` to be a
+transitive set containing both coordinates and closed under the descent — the transitive
+closure of a pair, which costs Infinity. `DescentClosed` instead requires only that each
+member of `D` decodes to a state over `A` and that all three direct predecessor shapes stay
+in `D`. That is exactly what the induction consumes, and it is reachable without Infinity.
+
+Generalized locality below is the old proof verbatim with domain-membership routing changed
+from `x ∈ A ∧ y ∈ A` to `pair x y ∈ D`. -/
+
+section DescentClosed
+
+variable {condSet orderCode : ZFSet.{u}}
+
+/-- `D` is a set of states over `A`, closed under the three direct predecessor shapes: the
+membership clause's `(x, z)`, and the equality clause's `(z, y)` and `(z, x)`. -/
+def DescentClosed (condSet A D : ZFSet.{u}) : Prop :=
+  (∀ s ∈ D, ∃ x ∈ A, ∃ y ∈ A, s = ZFSet.pair x y) ∧
+    ∀ x y, ZFSet.pair x y ∈ D →
+      (∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ZFSet.pair x z ∈ D) ∧
+        (∀ c z, ZFSet.pair c z ∈ x → c ∈ condSet → ZFSet.pair z y ∈ D) ∧
+        (∀ c z, ZFSet.pair c z ∈ y → c ∈ condSet → ZFSet.pair z x ∈ D)
+
+/-- **Correctness on a descent-closed domain**: `R` holds exactly the entries its own clauses
+admit at the states of `D`. Support and clause correctness in one statement — `R` occurs on
+both sides, so this *is* the fixed-point equation, restricted to `D`. -/
+def CorrectOn (condSet orderCode D R : ZFSet.{u}) : Prop :=
+  ∀ e, e ∈ R ↔ ∃ x y, ZFSet.pair x y ∈ D ∧ StageEntry condSet orderCode R x y e
+
+/-- Slice reading at the membership tag. The tag law kills the wrong disjunct. -/
+private theorem correctOn_memWitness {D R q x y : ZFSet.{u}}
+    (hR : CorrectOn condSet orderCode D R) (hq : q ∈ condSet)
+    (hs : ZFSet.pair x y ∈ D) :
+    entry memWitnessTag q x y ∈ R ↔ MemClause condSet orderCode R q x y := by
+  refine (hR _).trans ⟨?_, fun hc ↦ ⟨x, y, hs, Or.inl ⟨q, hq, rfl, hc⟩⟩⟩
+  rintro ⟨x', y', -, ⟨p, -, hp, hc⟩ | ⟨p, -, hp, -⟩⟩
+  · obtain ⟨-, rfl, rfl, rfl⟩ := entry_inj.1 hp
+    exact hc
+  · exact absurd hp entry_memWitness_ne_eq
+
+/-- Slice reading at the equality tag. -/
+private theorem correctOn_eq {D R p x y : ZFSet.{u}}
+    (hR : CorrectOn condSet orderCode D R) (hp : p ∈ condSet)
+    (hs : ZFSet.pair x y ∈ D) :
+    entry eqTag p x y ∈ R ↔ EqClause condSet orderCode R p x y := by
+  refine (hR _).trans ⟨?_, fun hc ↦ ⟨x, y, hs, Or.inr ⟨p, hp, rfl, hc⟩⟩⟩
+  rintro ⟨x', y', -, ⟨r, -, hr, -⟩ | ⟨r, -, hr, hc⟩⟩
+  · exact absurd hr.symm entry_memWitness_ne_eq
+  · obtain ⟨-, rfl, rfl, rfl⟩ := entry_inj.1 hr
+    exact hc
+
+/-- **Generalized locality**: approximations correct on *different* descent-closed domains
+agree at every state lying in both. The old locality proof with domain routing changed; the
+descent shapes already land exactly where `DescentClosed` guarantees membership. Consumes
+only correctness, descent-closure, and ambient rank. -/
+theorem agreeAt_of_correctOn {A B D E R S : ZFSet.{u}}
+    (hD : DescentClosed condSet A D) (hE : DescentClosed condSet B E)
+    (hR : CorrectOn condSet orderCode D R) (hS : CorrectOn condSet orderCode E S) :
+    ∀ x y, ZFSet.pair x y ∈ D → ZFSet.pair x y ∈ E → AgreeAt condSet R S x y := by
+  have hwf : WellFounded fun u v : ZFSet.{u} × ZFSet.{u} ↦
+      Sym2.GameAdd (· < ·) (rankPair u.1 u.2) (rankPair v.1 v.2) :=
+    InvImage.wf _ rankPair_wf
+  suffices H : ∀ u : ZFSet.{u} × ZFSet.{u}, ZFSet.pair u.1 u.2 ∈ D →
+      ZFSet.pair u.1 u.2 ∈ E → AgreeAt condSet R S u.1 u.2 from
+    fun x y hxD hxE ↦ H (x, y) hxD hxE
+  intro u
+  induction u using hwf.induction with
+  | _ u ih =>
+    obtain ⟨x, y⟩ := u
+    intro hxyD hxyE
+    refine ⟨fun p hp ↦ ?_, fun p hp ↦ ?_⟩
+    · rw [correctOn_memWitness hR hp hxyD, correctOn_memWitness hS hp hxyE]
+      exact memClause_congr hp fun c z hb hc ↦
+        (ih (x, z) (descent_right hb) ((hD.2 x y hxyD).1 c z hb hc)
+          ((hE.2 x y hxyE).1 c z hb hc)).2
+    · rw [correctOn_eq hR hp hxyD, correctOn_eq hS hp hxyE]
+      refine eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
+        (fun c z hb hc q ↦ denseMem_congr ?_)
+      · exact (ih (z, y) (descent_left hb) ((hD.2 x y hxyD).2.1 c z hb hc)
+          ((hE.2 x y hxyE).2.1 c z hb hc)).1
+      · exact (ih (z, x) (descent_swap hb) ((hD.2 x y hxyD).2.2 c z hb hc)
+          ((hE.2 x y hxyE).2.2 c z hb hc)).1
+
+/-- Clause values agree wherever the two approximations do. -/
+private theorem stageEntry_congr_of_agree {A D R S x y : ZFSet.{u}}
+    (hD : DescentClosed condSet A D) (hs : ZFSet.pair x y ∈ D)
+    (hag : ∀ u v, ZFSet.pair u v ∈ D → AgreeAt condSet R S u v) (e : ZFSet.{u}) :
+    StageEntry condSet orderCode R x y e ↔ StageEntry condSet orderCode S x y e := by
+  have hmem : ∀ q ∈ condSet, MemClause condSet orderCode R q x y ↔
+      MemClause condSet orderCode S q x y := fun q hq ↦
+    memClause_congr hq fun c z hb hc ↦ (hag x z ((hD.2 x y hs).1 c z hb hc)).2
+  have heq : ∀ q, EqClause condSet orderCode R q x y ↔ EqClause condSet orderCode S q x y :=
+    fun _ ↦ eqClause_congr
+      (fun c z hb hc q ↦ denseMem_congr (hag z y ((hD.2 x y hs).2.1 c z hb hc)).1)
+      (fun c z hb hc q ↦ denseMem_congr (hag z x ((hD.2 x y hs).2.2 c z hb hc)).1)
+  unfold StageEntry
+  constructor
+  · rintro (⟨p, hp, hv, hc⟩ | ⟨p, hp, hv, hc⟩)
+    · exact Or.inl ⟨p, hp, hv, (hmem p hp).1 hc⟩
+    · exact Or.inr ⟨p, hp, hv, (heq p).1 hc⟩
+  · rintro (⟨p, hp, hv, hc⟩ | ⟨p, hp, hv, hc⟩)
+    · exact Or.inl ⟨p, hp, hv, (hmem p hp).2 hc⟩
+    · exact Or.inr ⟨p, hp, hv, (heq p).2 hc⟩
+
+/-- **Exact support upgrades agreement to equality.** Two approximations correct on the *same*
+descent-closed domain are the same set — not merely observationally indistinguishable.
+
+This is the payoff of controlling support. `AtomicCoherentOn` gives only `AgreeAt`, because it
+permits arbitrary junk outside the observed slices; that junk is invisible in isolation but
+becomes visible, and wrong, once a neighbouring approximation's domain grows to observe it.
+`CorrectOn` rules it out, which is what makes unioning approximations safe. -/
+theorem correctOn_unique {A D R S : ZFSet.{u}} (hD : DescentClosed condSet A D)
+    (hR : CorrectOn condSet orderCode D R) (hS : CorrectOn condSet orderCode D S) :
+    R = S := by
+  have hag : ∀ u v, ZFSet.pair u v ∈ D → AgreeAt condSet R S u v :=
+    fun u v h ↦ agreeAt_of_correctOn hD hD hR hS u v h h
+  refine ZFSet.ext fun e ↦ ((hR e).trans (Iff.trans ?_ (hS e).symm))
+  exact ⟨fun ⟨x, y, hs, hse⟩ ↦ ⟨x, y, hs, (stageEntry_congr_of_agree hD hs hag e).1 hse⟩,
+    fun ⟨x, y, hs, hse⟩ ↦ ⟨x, y, hs, (stageEntry_congr_of_agree hD hs hag e).2 hse⟩⟩
+
+/-- **The endpoint shape**: an approximation correct on a domain covering every state over `A`
+is coherent on `A`. No agreement hypothesis, no transitivity, and no rank — the fixed-point
+equation was already discharged by `CorrectOn`. -/
+theorem atomicCoherentOn_of_correctOn {A D R : ZFSet.{u}}
+    (hcov : ∀ x ∈ A, ∀ y ∈ A, ZFSet.pair x y ∈ D)
+    (hR : CorrectOn condSet orderCode D R) :
+    AtomicCoherentOn condSet orderCode A R :=
+  ⟨fun _ hq x hx y hy ↦ correctOn_memWitness hR hq (hcov x hx y hy),
+    fun _ hp x hx y hy ↦ correctOn_eq hR hp (hcov x hx y hy)⟩
+
+end DescentClosed
 
 /-! ### Typed readings of the clauses
 
