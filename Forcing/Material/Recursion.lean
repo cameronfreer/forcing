@@ -483,7 +483,102 @@ theorem rowValue_of_sUnion {history A x family : ZFSet.{u}}
     obtain ⟨v, hv, hsv⟩ := hpresent y hy
     exact ZFSet.mem_sUnion.2 ⟨v, hv, (hsv e).2 hse⟩
 
+/-- The graph over `A` relative to `history`: exactly the stage entries at states with both
+coordinates in `A`. Still aggregation — the clauses are evaluated against `history`, **not**
+against the graph being built. -/
+def GraphValue (condSet orderCode history A graph : ZFSet.{u}) : Prop :=
+  ∀ e, e ∈ graph ↔ ∃ x ∈ A, ∃ y ∈ A, StageEntry condSet orderCode history x y e
+
+/-- **Functionality**: the domain and the history determine the graph. -/
+theorem graphValue_unique {history A g₁ g₂ : ZFSet.{u}}
+    (h₁ : GraphValue condSet orderCode history A g₁)
+    (h₂ : GraphValue condSet orderCode history A g₂) : g₁ = g₂ :=
+  ZFSet.ext fun e ↦ (h₁ e).trans (h₂ e).symm
+
+/-- The graph is assembled from its rows, under the same filter-then-flatten discipline: the
+second hypothesis is the filter. -/
+theorem graphValue_of_sUnion {history A family : ZFSet.{u}}
+    (hpresent : ∀ x ∈ A, ∃ r ∈ family, RowValue condSet orderCode history A x r)
+    (hfiltered : ∀ r ∈ family, ∃ x ∈ A, RowValue condSet orderCode history A x r) :
+    GraphValue condSet orderCode history A (ZFSet.sUnion family) := by
+  intro e
+  constructor
+  · intro hmem
+    obtain ⟨r, hr, her⟩ := ZFSet.mem_sUnion.1 hmem
+    obtain ⟨x, hx, hrv⟩ := hfiltered r hr
+    obtain ⟨y, hy, hse⟩ := (hrv e).1 her
+    exact ⟨x, hx, y, hy, hse⟩
+  · rintro ⟨x, hx, y, hy, hse⟩
+    obtain ⟨r, hr, hrv⟩ := hpresent x hx
+    exact ZFSet.mem_sUnion.2 ⟨r, hr, (hrv e).2 ⟨y, hy, hse⟩⟩
+
 end Row
+
+/-! ### From aggregation to coherence
+
+**Exact aggregation is not coherence.** A graph built relative to `history` satisfies
+
+```text
+e ∈ R ↔ StageEntry history x y e
+```
+
+whereas `AtomicCoherentOn A R` requires each clause evaluated against **`R` itself**. The two
+differ by exactly one thing: whether the graph observes the same slices the history does.
+
+The bridge below isolates that difference. It is **observer-free** — no forcing relation, no
+material carrier, and no rank. Given exact aggregation and agreement between `history` and `R`
+at every state of the domain, coherence follows extensionally. Constructing that agreement is
+the fixed-point problem, and *that* is where `rankPair` re-enters: at the recursion, not at
+the set construction. -/
+
+section Bridge
+
+variable {condSet orderCode : ZFSet.{u}}
+
+/-- **Slice reading**: an exactly aggregated graph has, at each tag, precisely the entries its
+clause admits against `history`. The tag law is what separates the two slices. -/
+private theorem mem_of_graphValue_memWitness {history A R q x y : ZFSet.{u}}
+    (hG : GraphValue condSet orderCode history A R) (hq : q ∈ condSet) (hx : x ∈ A)
+    (hy : y ∈ A) :
+    entry memWitnessTag q x y ∈ R ↔ MemClause condSet orderCode history q x y := by
+  refine (hG _).trans ⟨?_, fun hc ↦ ⟨x, hx, y, hy, Or.inl ⟨q, hq, rfl, hc⟩⟩⟩
+  rintro ⟨x', -, y', -, ⟨p, -, hp, hc⟩ | ⟨p, -, hp, -⟩⟩
+  · obtain ⟨-, rfl, rfl, rfl⟩ := entry_inj.1 hp
+    exact hc
+  · exact absurd hp entry_memWitness_ne_eq
+
+private theorem mem_of_graphValue_eq {history A R p x y : ZFSet.{u}}
+    (hG : GraphValue condSet orderCode history A R) (hp : p ∈ condSet) (hx : x ∈ A)
+    (hy : y ∈ A) :
+    entry eqTag p x y ∈ R ↔ EqClause condSet orderCode history p x y := by
+  refine (hG _).trans ⟨?_, fun hc ↦ ⟨x, hx, y, hy, Or.inr ⟨p, hp, rfl, hc⟩⟩⟩
+  rintro ⟨x', -, y', -, ⟨r, -, hr, -⟩ | ⟨r, -, hr, hc⟩⟩
+  · exact absurd hr.symm entry_memWitness_ne_eq
+  · obtain ⟨-, rfl, rfl, rfl⟩ := entry_inj.1 hr
+    exact hc
+
+/-- **The bridge**: exact aggregation plus observational agreement gives coherence.
+
+Aggregation fixes *which* entries the graph has, relative to `history`; the agreement
+hypothesis says the graph and the history are indistinguishable to the clauses across the
+domain, so the clauses may be re-read against `R`. Transitivity of `A` is what puts the
+branch components consulted by the clauses back inside the domain.
+
+Consumes no rank, no forcing relation, and no material membership. -/
+theorem atomicCoherentOn_of_graphValue {history A R : ZFSet.{u}} (hA : A.IsTransitive)
+    (hG : GraphValue condSet orderCode history A R)
+    (hagree : ∀ x ∈ A, ∀ y ∈ A, AgreeAt condSet history R x y) :
+    AtomicCoherentOn condSet orderCode A R := by
+  refine ⟨fun q hq x hx y hy ↦ ?_, fun p hp x hx y hy ↦ ?_⟩
+  · refine (mem_of_graphValue_memWitness hG hq hx hy).trans (memClause_congr hq ?_)
+    exact fun c z hb hc ↦ (hagree x hx z (mem_of_pair_mem hA hy hb)).2
+  · refine (mem_of_graphValue_eq hG hp hx hy).trans
+      (eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
+        (fun c z hb hc q ↦ denseMem_congr ?_))
+    · exact (hagree z (mem_of_pair_mem hA hx hb) y hy).1
+    · exact (hagree z (mem_of_pair_mem hA hy hb) x hx).1
+
+end Bridge
 
 /-! ### Typed readings of the clauses
 
