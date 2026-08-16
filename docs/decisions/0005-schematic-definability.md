@@ -62,6 +62,47 @@ computation covering this pair of name codes":
   transitive set, not by a power set. Recorded as a negative finding — if an implementation
   reaches for Power Set, that is a signal the construction has drifted.
 
+### Amendment: general Union is charged (row-wise prototype)
+
+The original findings did not mention Union, and that was an omission. Implementation chose
+the **row-wise** indexing for the recursion — for a fixed first coordinate, gather stage
+values over the second — rather than indexing by coded pairs from `A × A`. Building `A × A`
+inside the carrier would be material bookkeeping rather than mathematical content, and the
+entries already retain both coordinates, so row aggregation loses no information.
+
+A prototype carried that route through to its flattening step and isolated exactly one
+obligation:
+
+* **Per-state entry bounds are Union-free.** One Collection instance, used at *both* tags by
+  varying its parameters, produces a bound at each tag; `binaryUnionSentence` combines them.
+  The witnesses are individual entries, so nothing is flattened.
+* **The row family is Union-free.** One Collection instance over the domain gathers the stage
+  values.
+* **The flattening is not.** Collection over the domain yields a set whose members are stage
+  *sets*; the graph needs their entries. No bound on the members-of-members of an arbitrary
+  collected family is available from the binary fragment, so **`unionSentence`, a genuine
+  general Union axiom, is charged**. It is a named sentence with `MaterialGround.sUnion_mem`
+  as its consequence, not an ambient `ZFSet` construction.
+
+This is a dependency finding for the compiled row-wise construction, not an impossibility
+theorem for every alternative construction. The ledger records the cost of the construction
+actually being formalized; if a later proof avoids Union, the theorem is weakened and this
+record amended.
+
+General Union subsumes binary union given pairing (`union_mem_of_sUnion`), so this is one new
+axiom of genuine strength, not two. Both sentences stay on the ledger so that each theorem
+records the strength it actually uses.
+
+**Still absent, and still load-bearing as negative findings**: no Power Set, and no Infinity
+outside the final uniform-in-the-pair theorem.
+
+**Constraints the row design must meet**, and against which the eventual construction is to be
+checked: rows are an internal aggregation device only, with `rankPair` remaining the recursion
+order; junk from nonfunctional Collection is filtered before it can enter the graph; and the
+final object satisfies exact `AtomicCoherentOn`, not merely "contains a witness stage for
+every pair". The instance count is to be read off the compiled construction — the working
+estimate of four is not a target.
+
 **The compiler is cheap (3c)**, as expected, with two findings:
 
 * **Assignment lookup is finite.** Because the compiler runs per formula, the arity `n` and
