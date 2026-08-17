@@ -644,6 +644,38 @@ theorem rankPair_lt_of_predSpec {x y s : ZFSet.{u}} (h : PredSpec condSet x y s)
   · exact ⟨z, y, rfl, descent_left hb⟩
   · exact ⟨z, x, rfl, descent_swap hb⟩
 
+/-! #### The induction principle
+
+Pure, and parameterized by its step. `rankPair` licenses recursive access at `PredSpec`
+predecessors and does nothing else here — no domain is built, no family is gathered, no union
+is taken.
+
+That separation is deliberate. The predecessor merge *cannot* be performed at this level: it
+needs the Collection and Separation instances that build the package family inside a carrier.
+Keeping the principle abstract means the material construction has to be supplied as the step,
+where it is priced, rather than appearing as an ambient `ZFSet` construction that quietly
+bypasses the theory ledger. -/
+
+/-- **Well-founded induction along the clause predecessors.** The only consumer of
+`rankPair_lt_of_predSpec`, and the only rank induction in this layer — generalized locality
+and the approximation construction both route through it, so the descent shapes are never
+touched directly below this point. -/
+theorem predSpec_induction {motive : ZFSet.{u} → ZFSet.{u} → Prop}
+    (step : ∀ x y, (∀ u v, PredSpec condSet x y (ZFSet.pair u v) → motive u v) → motive x y) :
+    ∀ x y, motive x y := by
+  have hwf : WellFounded fun a b : ZFSet.{u} × ZFSet.{u} ↦
+      Sym2.GameAdd (· < ·) (rankPair a.1 a.2) (rankPair b.1 b.2) :=
+    InvImage.wf _ rankPair_wf
+  suffices H : ∀ a : ZFSet.{u} × ZFSet.{u}, motive a.1 a.2 from fun x y ↦ H (x, y)
+  intro a
+  induction a using hwf.induction with
+  | _ a ih =>
+    obtain ⟨x, y⟩ := a
+    refine step x y fun u v hp ↦ ih (u, v) ?_
+    obtain ⟨u', v', hs, hlt⟩ := rankPair_lt_of_predSpec hp
+    obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 hs
+    exact hlt
+
 /-- Consulted states stay over the domain, by transitivity. -/
 theorem predSpec_mem_domain {A x y s : ZFSet.{u}} (hA : A.IsTransitive) (hx : x ∈ A)
     (hy : y ∈ A) (h : PredSpec condSet x y s) : ∃ u ∈ A, ∃ v ∈ A, s = ZFSet.pair u v := by
@@ -724,29 +756,20 @@ theorem agreeAt_of_correctOn {A B D E R S : ZFSet.{u}}
     (hD : DescentClosed condSet A D) (hE : DescentClosed condSet B E)
     (hR : CorrectOn condSet orderCode D R) (hS : CorrectOn condSet orderCode E S) :
     ∀ x y, ZFSet.pair x y ∈ D → ZFSet.pair x y ∈ E → AgreeAt condSet R S x y := by
-  have hwf : WellFounded fun u v : ZFSet.{u} × ZFSet.{u} ↦
-      Sym2.GameAdd (· < ·) (rankPair u.1 u.2) (rankPair v.1 v.2) :=
-    InvImage.wf _ rankPair_wf
-  suffices H : ∀ u : ZFSet.{u} × ZFSet.{u}, ZFSet.pair u.1 u.2 ∈ D →
-      ZFSet.pair u.1 u.2 ∈ E → AgreeAt condSet R S u.1 u.2 from
-    fun x y hxD hxE ↦ H (x, y) hxD hxE
-  intro u
-  induction u using hwf.induction with
-  | _ u ih =>
-    obtain ⟨x, y⟩ := u
-    intro hxyD hxyE
-    refine ⟨fun p hp ↦ ?_, fun p hp ↦ ?_⟩
-    · rw [correctOn_memWitness hR hp hxyD, correctOn_memWitness hS hp hxyE]
-      exact memClause_congr hp fun c z hb hc ↦
-        (ih (x, z) (descent_right hb) ((hD.2 x y hxyD).1 c z hb hc)
-          ((hE.2 x y hxyE).1 c z hb hc)).2
-    · rw [correctOn_eq hR hp hxyD, correctOn_eq hS hp hxyE]
-      refine eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
-        (fun c z hb hc q ↦ denseMem_congr ?_)
-      · exact (ih (z, y) (descent_left hb) ((hD.2 x y hxyD).2.1 c z hb hc)
-          ((hE.2 x y hxyE).2.1 c z hb hc)).1
-      · exact (ih (z, x) (descent_swap hb) ((hD.2 x y hxyD).2.2 c z hb hc)
-          ((hE.2 x y hxyE).2.2 c z hb hc)).1
+  refine predSpec_induction (condSet := condSet)
+    (motive := fun x y ↦ ZFSet.pair x y ∈ D → ZFSet.pair x y ∈ E → AgreeAt condSet R S x y)
+    fun x y ih hxyD hxyE ↦ ⟨fun p hp ↦ ?_, fun p hp ↦ ?_⟩
+  · rw [correctOn_memWitness hR hp hxyD, correctOn_memWitness hS hp hxyE]
+    exact memClause_congr hp fun c z hb hc ↦
+      (ih x z (Or.inl ⟨c, z, hb, hc, rfl⟩) ((hD.2 x y hxyD).1 c z hb hc)
+        ((hE.2 x y hxyE).1 c z hb hc)).2
+  · rw [correctOn_eq hR hp hxyD, correctOn_eq hS hp hxyE]
+    refine eqClause_congr (fun c z hb hc q ↦ denseMem_congr ?_)
+      (fun c z hb hc q ↦ denseMem_congr ?_)
+    · exact (ih z y (Or.inr (Or.inl ⟨c, z, hb, hc, rfl⟩)) ((hD.2 x y hxyD).2.1 c z hb hc)
+        ((hE.2 x y hxyE).2.1 c z hb hc)).1
+    · exact (ih z x (Or.inr (Or.inr ⟨c, z, hb, hc, rfl⟩)) ((hD.2 x y hxyD).2.2 c z hb hc)
+        ((hE.2 x y hxyE).2.2 c z hb hc)).1
 
 /-- **Clause congruence, on the three predecessor shapes directly.** Stated against
 `PredSpec` rather than against a domain, because the extension step needs it at a state that
@@ -1010,6 +1033,30 @@ theorem exists_approximation_step {A D₀ R₀ x y : ZFSet.{u}}
       (fun t ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm)
       (fun e ↦ ZFSet.mem_union)
     exact ⟨_, _, ZFSet.mem_insert_iff.2 (Or.inl rfl), h₁, h₂⟩
+
+/-! #### Instantiating the principle -/
+
+/-- **The approximation form of the principle.** Supply a step that produces an approximation
+at a state from approximations at its clause predecessors, and every state over `A` has one.
+
+The step is exactly the material obligation: gather the predecessors' packages, filter, flatten
+(`approximation_union`), then apply the case split (`exists_approximation_step`). None of that
+happens here. -/
+theorem exists_approximation_of_step {A : ZFSet.{u}}
+    (step : ∀ x y, x ∈ A → y ∈ A →
+      (∀ u v, PredSpec condSet x y (ZFSet.pair u v) → u ∈ A → v ∈ A →
+        ∃ D R, ZFSet.pair u v ∈ D ∧ DescentClosed condSet A D ∧
+          CorrectOn condSet orderCode D R) →
+      ∃ D R, ZFSet.pair x y ∈ D ∧ DescentClosed condSet A D ∧
+        CorrectOn condSet orderCode D R) :
+    ∀ x y, x ∈ A → y ∈ A →
+      ∃ D R, ZFSet.pair x y ∈ D ∧ DescentClosed condSet A D ∧
+        CorrectOn condSet orderCode D R :=
+  predSpec_induction
+    (motive := fun x y ↦ x ∈ A → y ∈ A →
+      ∃ D R, ZFSet.pair x y ∈ D ∧ DescentClosed condSet A D ∧
+        CorrectOn condSet orderCode D R)
+    fun x y ih hx hy ↦ step x y hx hy fun u v hp hu hv ↦ ih u v hp hu hv
 
 /-- **The endpoint shape**: an approximation correct on a domain covering every state over `A`
 is coherent on `A`. No agreement hypothesis, no transitivity, and no rank — the fixed-point
