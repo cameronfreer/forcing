@@ -210,6 +210,21 @@ def rowValueDef (tagMem tagEq condSet orderCode history A x row :
     rowEntryDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
       (liftTerm history) (liftTerm A) (liftTerm x) (&(Fin.last n)))
 
+/-- **The fixed-point predicate**, as a formula: the members of `R` are exactly the stage
+entries its own clauses admit at states of `D`. The history slot of `stageEntryDef` is filled
+with `R` itself — that is the whole point, and it is why this formula, unlike the aggregation
+ones, has no separate history parameter. -/
+def correctOnDef (tagMem tagEq condSet orderCode D R : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm R) ⇔
+    ∃' ∃' (pairMemDef (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
+        (liftTerm (liftTerm (liftTerm D))) ⊓
+      stageEntryDef (liftTerm (liftTerm (liftTerm tagMem)))
+        (liftTerm (liftTerm (liftTerm tagEq))) (liftTerm (liftTerm (liftTerm condSet)))
+        (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm R)))
+        (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
+        (&(Fin.castSucc (Fin.castSucc (Fin.last n))))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -763,6 +778,83 @@ theorem realize_rowValueDef
       exact (h ⟨c, hcM⟩).2 ((hbody ⟨c, hcM⟩).2 ⟨y, hy, hs⟩)
   · intro h w
     exact ((h (w : ZFSet.{u})).trans (hbody w).symm)
+
+/-- **The fixed-point law**: the formula realizes to exactly the semantic `CorrectOn`.
+
+Two hypotheses beyond the tags. The candidate entries must lie in the carrier, as for every
+statement in this layer that quantifies over all sets while the formula quantifies over
+carrier elements. And the states of `D` must decode to carrier elements — supplied by
+`DescentClosed`'s first clause together with transitivity, wherever this is used. -/
+theorem realize_correctOnDef
+    {tagMem tagEq condSet orderCode D R : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag)
+    (hstates : ∀ a b : ZFSet.{u},
+      ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) → a ∈ M ∧ b ∈ M)
+    (hentM : ∀ a b : ZFSet.{u},
+      ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) →
+      ∀ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
+        entry memWitnessTag p a b ∈ M ∧ entry eqTag p a b ∈ M) :
+    (correctOnDef tagMem tagEq condSet orderCode D R).Realize v xs ↔
+      CorrectOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
+  have hRM : ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) R : ↥M).2
+  have hbody : ∀ e a b : ↥M,
+      (pairMemDef (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
+          (liftTerm (liftTerm (liftTerm D)))).Realize v (Fin.snoc (Fin.snoc (Fin.snoc xs e) a) b) ↔
+        ZFSet.pair ((a : ↥M) : ZFSet.{u}) ((b : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) := by
+    intro e a b
+    rw [realize_pairMemDef]
+    simp [realize_liftTerm]
+  have hstage : ∀ e a b : ↥M,
+      (stageEntryDef (liftTerm (liftTerm (liftTerm tagMem)))
+          (liftTerm (liftTerm (liftTerm tagEq))) (liftTerm (liftTerm (liftTerm condSet)))
+          (liftTerm (liftTerm (liftTerm orderCode))) (liftTerm (liftTerm (liftTerm R)))
+          (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
+          (&(Fin.castSucc (Fin.castSucc (Fin.last n))))).Realize v
+        (Fin.snoc (Fin.snoc (Fin.snoc xs e) a) b) ↔
+        StageEntry ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ((a : ↥M) : ZFSet.{u})
+          ((b : ↥M) : ZFSet.{u}) ((e : ↥M) : ZFSet.{u}) := by
+    intro e a b
+    rw [realize_stageEntryDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  simp only [correctOnDef, BoundedFormula.realize_all, BoundedFormula.realize_iff,
+    BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm]
+  constructor
+  · intro h e
+    constructor
+    · intro he
+      obtain ⟨a, b, hab, hse⟩ := (h ⟨e, M.mem_trans he hRM⟩).1 he
+      exact ⟨(a : ZFSet.{u}), (b : ZFSet.{u}), (hbody ⟨e, _⟩ a b).1 hab,
+        (hstage ⟨e, _⟩ a b).1 hse⟩
+    · rintro ⟨a, b, hab, hse⟩
+      obtain ⟨haM, hbM⟩ := hstates a b hab
+      have heM : e ∈ M := by
+        rcases hse with ⟨p, hp, rfl, -⟩ | ⟨p, hp, rfl, -⟩
+        · exact (hentM a b hab p hp).1
+        · exact (hentM a b hab p hp).2
+      refine (h ⟨e, heM⟩).2 ⟨⟨a, haM⟩, ⟨b, hbM⟩, (hbody ⟨e, heM⟩ ⟨a, haM⟩ ⟨b, hbM⟩).2 hab, ?_⟩
+      exact (hstage ⟨e, heM⟩ ⟨a, haM⟩ ⟨b, hbM⟩).2 hse
+  · intro h e
+    constructor
+    · intro he
+      obtain ⟨a, b, hab, hse⟩ := (h (e : ZFSet.{u})).1 he
+      obtain ⟨haM, hbM⟩ := hstates a b hab
+      exact ⟨⟨a, haM⟩, ⟨b, hbM⟩, (hbody e ⟨a, haM⟩ ⟨b, hbM⟩).2 hab,
+        (hstage e ⟨a, haM⟩ ⟨b, hbM⟩).2 hse⟩
+    · rintro ⟨a, b, hab, hse⟩
+      exact (h (e : ZFSet.{u})).2 ⟨(a : ZFSet.{u}), (b : ZFSet.{u}),
+        (hbody e a b).1 hab, (hstage e a b).1 hse⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
