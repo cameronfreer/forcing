@@ -762,8 +762,8 @@ theorem packageAt_mem (hp : pairingSentence ∈ T) {condSet orderCode A s : ZFSe
 
 /-- **The interface**: the material induction hypothesis is exactly what
 `exists_packageFamily` needs. Decoding a member of the exact predecessor set back into a
-state is `rankPair_lt_of_predSpec`'s other job, and pairing turns the internal `D`, `R` into
-the internal package. -/
+coded state is `exists_pair_of_predSpec`, a structural fact — **no rank enters the material
+package construction** — and pairing turns the internal `D`, `R` into the internal package. -/
 theorem exists_packageCoverage (hp : pairingSentence ∈ T)
     {condSet orderCode A P : ↥M.toMaterialCarrier} {x y : ZFSet.{u}}
     (hP : PredValue (condSet : ZFSet.{u}) x y (P : ZFSet.{u}))
@@ -778,7 +778,7 @@ theorem exists_packageCoverage (hp : pairingSentence ∈ T)
           (s : ZFSet.{u}) (a : ZFSet.{u}) := by
   intro s hs
   have hpred : PredSpec (condSet : ZFSet.{u}) x y (s : ZFSet.{u}) := (hP _).1 hs
-  obtain ⟨u, v, hsuv, -⟩ := rankPair_lt_of_predSpec hpred
+  obtain ⟨u, v, hsuv⟩ := exists_pair_of_predSpec hpred
   obtain ⟨D, R, hsD, hdc, hco⟩ := ih u v (by rw [← hsuv]; exact hpred)
   refine M.packageAt_mem hp ?_ hdc hco
   rw [hsuv]; exact hsD
