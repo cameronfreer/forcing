@@ -225,6 +225,52 @@ def correctOnDef (tagMem tagEq condSet orderCode D R : memLang.Term (α ⊕ Fin 
         (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
         (&(Fin.castSucc (Fin.castSucc (Fin.last n))))))
 
+/-- One predecessor shape, right-oriented: every valid branch `z` of `source` yields the state
+`(fixed, z)` in `D`. Private, and split by orientation so that the three shapes of
+`DescentClosed` are obtained by *choosing arguments*, never by rewriting coordinate order
+inside a body — the discipline the equality clause already uses. -/
+private def predRightDef (condSet D source fixed : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' ∀' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm source)) ⟹
+    (memFormula (&(Fin.castSucc (Fin.last n))) (liftTerm (liftTerm condSet)) ⟹
+      pairMemDef (liftTerm (liftTerm fixed)) (&(Fin.last (n + 1))) (liftTerm (liftTerm D))))
+
+/-- The left-oriented shape: the branch supplies the *first* coordinate. -/
+private def predLeftDef (condSet D source fixed : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' ∀' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm source)) ⟹
+    (memFormula (&(Fin.castSucc (Fin.last n))) (liftTerm (liftTerm condSet)) ⟹
+      pairMemDef (&(Fin.last (n + 1))) (liftTerm (liftTerm fixed)) (liftTerm (liftTerm D))))
+
+/-- **Descent-closure**, as a formula: every member of `D` decodes to a state over `A`, and
+all three direct predecessor shapes stay in `D`. Transitivity of `A` is **not** stated — the
+semantic predicate does not require it, and neither does this. -/
+def descentClosedDef (condSet A D : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  (∀' (memFormula (&(Fin.last n)) (liftTerm D) ⟹
+    ∃' ∃' (memFormula (&(Fin.castSucc (Fin.last (n + 1))))
+          (liftTerm (liftTerm (liftTerm A))) ⊓
+        (memFormula (&(Fin.last (n + 2))) (liftTerm (liftTerm (liftTerm A))) ⊓
+          pairDef (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
+            (&(Fin.castSucc (Fin.castSucc (Fin.last n))))))))
+  ⊓ (∀' ∀' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+        (liftTerm (liftTerm D)) ⟹
+      (predRightDef (liftTerm (liftTerm condSet)) (liftTerm (liftTerm D))
+          (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n))) ⊓
+        (predLeftDef (liftTerm (liftTerm condSet)) (liftTerm (liftTerm D))
+            (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1))) ⊓
+          predLeftDef (liftTerm (liftTerm condSet)) (liftTerm (liftTerm D))
+            (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n)))))))
+
+/-- **The approximation conditions**, as one formula: descent-closure of the domain and
+correctness of the graph on it. This is the predicate the package filter certifies, and it
+factors exactly — the descent-closure side is pure bookkeeping, and the whole
+finite-construction obligation sits on the correctness side. -/
+def approximationDef (tagMem tagEq condSet orderCode A D R : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  descentClosedDef condSet A D ⊓ correctOnDef tagMem tagEq condSet orderCode D R
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -872,6 +918,109 @@ theorem realize_correctOnDef
     · rintro ⟨a, b, hab, hse⟩
       exact (h (e : ZFSet.{u})).2 ⟨(a : ZFSet.{u}), (b : ZFSet.{u}),
         (hbody e a b).1 hab, (hstage e a b).1 hse⟩
+
+/-- Branch components of a carrier element are carrier elements — the structural bridge the
+descent-closure quantifiers need. No axiom, no transitivity hypothesis. -/
+private theorem branch_components_mem {S c z : ZFSet.{u}} (hS : S ∈ M)
+    (h : ZFSet.pair c z ∈ S) : c ∈ M ∧ z ∈ M :=
+  ⟨left_mem_of_pair_mem (M.mem_trans h hS), right_mem_of_pair_mem (M.mem_trans h hS)⟩
+
+private theorem realize_predRightDef {condSet D source fixed : memLang.Term (α ⊕ Fin n)} :
+    (predRightDef condSet D source fixed).Realize v xs ↔
+      ∀ c z, ZFSet.pair c z ∈ ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) →
+        c ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) →
+        ZFSet.pair ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) z ∈
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) := by
+  have hsM : ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) source : ↥M).2
+  simp only [predRightDef, BoundedFormula.realize_all, BoundedFormula.realize_imp, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, realize_pairMemDef]
+  exact ⟨fun h c z hb hc ↦ h ⟨c, (branch_components_mem hsM hb).1⟩
+      ⟨z, (branch_components_mem hsM hb).2⟩ hb hc,
+    fun h c z ↦ h (c : ZFSet.{u}) (z : ZFSet.{u})⟩
+
+private theorem realize_predLeftDef {condSet D source fixed : memLang.Term (α ⊕ Fin n)} :
+    (predLeftDef condSet D source fixed).Realize v xs ↔
+      ∀ c z, ZFSet.pair c z ∈ ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) →
+        c ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) →
+        ZFSet.pair z ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) ∈
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) := by
+  have hsM : ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) source : ↥M).2
+  simp only [predLeftDef, BoundedFormula.realize_all, BoundedFormula.realize_imp, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, realize_pairMemDef]
+  exact ⟨fun h c z hb hc ↦ h ⟨c, (branch_components_mem hsM hb).1⟩
+      ⟨z, (branch_components_mem hsM hb).2⟩ hb hc,
+    fun h c z ↦ h (c : ZFSet.{u}) (z : ZFSet.{u})⟩
+
+/-- **The descent-closure law**: the formula realizes to exactly the semantic `DescentClosed`.
+
+**No auxiliary hypotheses and no theory axioms.** Every quantifier bridge is structural: a
+member of `D` is a carrier element by transitivity, a coded state in `D` has both coordinates
+in the carrier by descending the Kuratowski pair, and a branch of a carrier element likewise.
+Nothing is constructed, so nothing is charged — the finite-entry obligation lives entirely on
+the `correctOnDef` side of the eventual conjunction. -/
+theorem realize_descentClosedDef {condSet A D : memLang.Term (α ⊕ Fin n)} :
+    (descentClosedDef condSet A D).Realize v xs ↔
+      DescentClosed ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) := by
+  have hDM : ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) D : ↥M).2
+  have hAM : ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) A : ↥M).2
+  rw [descentClosedDef, DescentClosed]
+  simp only [BoundedFormula.realize_inf]
+  refine and_congr ?_ ?_
+  · -- every member of `D` decodes to a state over `A`
+    simp only [BoundedFormula.realize_all, BoundedFormula.realize_imp,
+      BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
+      BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+      Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+      Matrix.cons_val_one, realize_liftTerm, realize_pairDef]
+    constructor
+    · intro h s hs
+      obtain ⟨a, b, haA, hbA, hp⟩ := h ⟨s, M.mem_trans hs hDM⟩ hs
+      exact ⟨(a : ZFSet.{u}), haA, (b : ZFSet.{u}), hbA, hp⟩
+    · intro h s hs
+      obtain ⟨a, haA, b, hbA, hp⟩ := h (s : ZFSet.{u}) hs
+      exact ⟨⟨a, M.mem_trans haA hAM⟩, ⟨b, M.mem_trans hbA hAM⟩, haA, hbA, hp⟩
+  · -- all three predecessor shapes stay in `D`
+    simp only [BoundedFormula.realize_all, BoundedFormula.realize_imp,
+      BoundedFormula.realize_inf, realize_pairMemDef, Term.realize_var, Sum.elim_inr,
+      Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, realize_liftTerm,
+      realize_predRightDef, realize_predLeftDef]
+    exact ⟨fun h x y hxy ↦ h ⟨x, left_mem_of_pair_mem (M.mem_trans hxy hDM)⟩
+        ⟨y, right_mem_of_pair_mem (M.mem_trans hxy hDM)⟩ hxy,
+      fun h x y ↦ h (x : ZFSet.{u}) (y : ZFSet.{u})⟩
+
+/-- **The approximation law**, and the point of the factoring: its hypotheses are exactly
+those of `realize_correctOnDef`. The descent-closure conjunct contributes none — it needs no
+auxiliary hypothesis and charges no theory axiom — so the two sides may be proved in either
+order and the ledger reads off the correctness side alone. -/
+theorem realize_approximationDef
+    {tagMem tagEq condSet orderCode A D R : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag)
+    (hentM : ∀ a b : ZFSet.{u},
+      ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) →
+      ∀ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
+        entry memWitnessTag p a b ∈ M ∧ entry eqTag p a b ∈ M) :
+    (approximationDef tagMem tagEq condSet orderCode A D R).Realize v xs ↔
+      (DescentClosed ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) ∧
+        CorrectOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u})) := by
+  rw [approximationDef]
+  simp only [BoundedFormula.realize_inf]
+  exact and_congr realize_descentClosedDef (realize_correctOnDef hm hq hentM)
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
