@@ -635,6 +635,16 @@ theorem predValue_unique {x y P₁ P₂ : ZFSet.{u}} (h₁ : PredValue condSet x
     (h₂ : PredValue condSet x y P₂) : P₁ = P₂ :=
   ZFSet.ext fun s ↦ (h₁ s).trans (h₂ s).symm
 
+/-- Consulted states are coded pairs. **Structural** — it follows from the shape of
+`PredSpec` alone, with no rank involved, which is what keeps `rankPair_lt_of_predSpec`
+devoted solely to licensing `predSpec_induction`. -/
+theorem exists_pair_of_predSpec {x y s : ZFSet.{u}} (h : PredSpec condSet x y s) :
+    ∃ u v, s = ZFSet.pair u v := by
+  rcases h with ⟨c, z, -, -, rfl⟩ | ⟨c, z, -, -, rfl⟩ | ⟨c, z, -, -, rfl⟩
+  · exact ⟨x, z, rfl⟩
+  · exact ⟨z, y, rfl⟩
+  · exact ⟨z, x, rfl⟩
+
 /-- **Rank decrease**: every consulted state is `rankPair`-smaller. This is the theorem that
 licenses the recursion, and the only place rank appears in this layer. -/
 theorem rankPair_lt_of_predSpec {x y s : ZFSet.{u}} (h : PredSpec condSet x y s) :
@@ -1050,12 +1060,17 @@ theorem exists_approximation_step {A D₀ R₀ x y : ZFSet.{u}}
 
 /-! #### Instantiating the principle -/
 
-/-- **The approximation form of the principle.** Supply a step that produces an approximation
-at a state from approximations at its clause predecessors, and every state over `A` has one.
+/-- **An external approximation form of the principle.** Supply a step producing an
+approximation at a state from approximations at its clause predecessors, and every state over
+`A` has one.
 
-The step is exactly the material obligation: gather the predecessors' packages, filter, flatten
-(`approximation_union`), then apply the case split (`exists_approximation_step`). None of that
-happens here. -/
+**This is not the material obligation.** Its witnesses are plain `ZFSet`s, so the induction
+hypothesis it hands the step does not prove `D ∈ M` or `R ∈ M` — insufficient for a Collection
+whose coverage witness must be a carrier element coding `⟨D, R⟩`. The material construction
+instantiates `predSpec_induction` with a **carrier-valued** motive instead; see
+`MaterialGround.exists_materialApproximation`.
+
+This form remains useful where only the external statement is wanted. -/
 theorem exists_approximation_of_step {A : ZFSet.{u}}
     (step : ∀ x y, x ∈ A → y ∈ A →
       (∀ u v, PredSpec condSet x y (ZFSet.pair u v) → u ∈ A → v ∈ A →
