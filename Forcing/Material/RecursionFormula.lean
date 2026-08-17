@@ -236,6 +236,12 @@ private theorem right_mem_of_pair_mem {a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ 
   M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
     (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
 
+/-- The left component, likewise. Both coordinates of a coded state are carrier elements for
+purely structural reasons — nothing about the state's provenance is needed. -/
+private theorem left_mem_of_pair_mem {a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ M) : a ∈ M :=
+  M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
+    (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
+
 /-- **The arbitrary-tag entry law**: the formula says exactly that `e` names the nested
 pair. -/
 theorem realize_entryDef :
@@ -781,16 +787,20 @@ theorem realize_rowValueDef
 
 /-- **The fixed-point law**: the formula realizes to exactly the semantic `CorrectOn`.
 
-Two hypotheses beyond the tags. The candidate entries must lie in the carrier, as for every
+One hypothesis beyond the tags: the candidate entries must lie in the carrier, as for every
 statement in this layer that quantifies over all sets while the formula quantifies over
-carrier elements. And the states of `D` must decode to carrier elements — supplied by
-`DescentClosed`'s first clause together with transitivity, wherever this is used. -/
+carrier elements. That is the genuine finite-construction obligation, discharged by
+`entry_mem`.
+
+Nothing is assumed about `D`. That the coordinates of its states are carrier elements is
+**structural** — `D` is a carrier element, so transitivity puts the coded state in the
+carrier, and descending the Kuratowski pair gives both components. Taking it as a hypothesis
+instead would falsely couple this law to `DescentClosed` and make the eventual conjunction
+order-dependent. -/
 theorem realize_correctOnDef
     {tagMem tagEq condSet orderCode D R : memLang.Term (α ⊕ Fin n)}
     (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
     (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag)
-    (hstates : ∀ a b : ZFSet.{u},
-      ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) → a ∈ M ∧ b ∈ M)
     (hentM : ∀ a b : ZFSet.{u},
       ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) →
       ∀ p ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}),
@@ -802,6 +812,13 @@ theorem realize_correctOnDef
         ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) := by
   have hRM : ((Term.realize (Sum.elim v xs) R : ↥M) : ZFSet.{u}) ∈ M :=
     (Term.realize (Sum.elim v xs) R : ↥M).2
+  have hDM : ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) D : ↥M).2
+  -- Structural, not a hypothesis: a coded state in `D` has both coordinates in the carrier.
+  have hstates : ∀ a b : ZFSet.{u},
+      ZFSet.pair a b ∈ ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) →
+      a ∈ M ∧ b ∈ M := fun a b hab ↦
+    ⟨left_mem_of_pair_mem (M.mem_trans hab hDM), right_mem_of_pair_mem (M.mem_trans hab hDM)⟩
   have hbody : ∀ e a b : ↥M,
       (pairMemDef (&(Fin.castSucc (Fin.last (n + 1)))) (&(Fin.last (n + 2)))
           (liftTerm (liftTerm (liftTerm D)))).Realize v (Fin.snoc (Fin.snoc (Fin.snoc xs e) a) b) ↔
