@@ -271,6 +271,17 @@ def approximationDef (tagMem tagEq condSet orderCode A D R : memLang.Term (α �
     memLang.BoundedFormula α n :=
   descentClosedDef condSet A D ⊓ correctOnDef tagMem tagEq condSet orderCode D R
 
+/-- **The package predicate**, as a formula: `a` codes a pair whose components satisfy the
+approximation conditions, with the domain covering `s`. -/
+def packageAtDef (tagMem tagEq condSet orderCode A s a : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (pairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm a)) ⊓
+    (approximationDef (liftTerm (liftTerm tagMem)) (liftTerm (liftTerm tagEq))
+        (liftTerm (liftTerm condSet)) (liftTerm (liftTerm orderCode))
+        (liftTerm (liftTerm A)) (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1))) ⊓
+      memFormula (liftTerm (liftTerm s)) (&(Fin.castSucc (Fin.last n)))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}

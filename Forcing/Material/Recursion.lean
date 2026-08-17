@@ -833,6 +833,20 @@ to which domain, and the merge argument below depends on that pairing at every s
 def Approximation (condSet orderCode A a : ZFSet.{u}) : Prop :=
   ∃ D R, a = ZFSet.pair D R ∧ DescentClosed condSet A D ∧ CorrectOn condSet orderCode D R
 
+/-- A package **certified at a state**: an approximation whose domain covers `s`. This is the
+exact predicate the filter carries — the approximation conditions *and* the coverage that
+records which predecessor the package was collected for. Dropping the coverage conjunct would
+retain packages whose provenance is unknown, and projection could then not recover
+`hpred`. -/
+def PackageAt (condSet orderCode A s a : ZFSet.{u}) : Prop :=
+  ∃ D R, a = ZFSet.pair D R ∧ DescentClosed condSet A D ∧
+    CorrectOn condSet orderCode D R ∧ s ∈ D
+
+theorem approximation_of_packageAt {A s a : ZFSet.{u}}
+    (h : PackageAt condSet orderCode A s a) : Approximation condSet orderCode A a := by
+  obtain ⟨D, R, he, hd, hc, -⟩ := h
+  exact ⟨D, R, he, hd, hc⟩
+
 /-- **Exact support, read backwards**: an entry in `R` pins the state it belongs to into `D`.
 This is the direction `AtomicCoherentOn` cannot supply, and the merge below turns on it. -/
 private theorem state_mem_of_memWitness {D R p x y : ZFSet.{u}}
