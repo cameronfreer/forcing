@@ -710,6 +710,79 @@ theorem exists_packageFamily (hgat : packageGatherSentence ∈ T)
     have hpa' := (hgather ⟨s, _⟩ a).1 hpa
     exact ⟨(a : ZFSet.{u}), (hF a).2 ⟨haB, (hfilter a).2 ⟨s, hs, hpa'⟩⟩, hpa'⟩
 
+/-! ### The material induction
+
+`exists_approximation_of_step` cannot serve here: its witnesses are plain `ZFSet`s, so its
+induction hypothesis proves no carrier membership, and `exists_packageFamily` needs a coverage
+witness that is a carrier element coding `⟨D, R⟩`. The fix is to instantiate the generic
+`predSpec_induction` with a **carrier-valued motive** — the states stay `ZFSet`s, since the
+descent is on them, while the approximation components are carrier elements throughout. -/
+
+/-- **The material induction.** The predecessor hypothesis supplies *internal* `D` and `R`,
+so a package can be constructed from them at finite closure, and `predSpec_mem_domain` is the
+sole bridge supplying the `u, v ∈ A` side conditions — the step never has to establish them
+itself. -/
+theorem exists_materialApproximation (condSet orderCode A : ↥M.toMaterialCarrier)
+    (hA : (A : ZFSet.{u}).IsTransitive)
+    (step : ∀ x y : ZFSet.{u}, x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      (∀ u v : ZFSet.{u}, PredSpec (condSet : ZFSet.{u}) x y (ZFSet.pair u v) →
+        ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair u v ∈ (D : ZFSet.{u}) ∧
+          DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+          CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+            (R : ZFSet.{u})) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u})) :
+    ∀ x y : ZFSet.{u}, x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u}) := by
+  refine predSpec_induction (condSet := (condSet : ZFSet.{u}))
+    (motive := fun x y ↦ x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u}))
+    fun x y ih hx hy ↦ step x y hx hy fun u v hpred ↦ ?_
+  obtain ⟨u', hu', v', hv', heq⟩ := predSpec_mem_domain hA hx hy hpred
+  obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 heq
+  exact ih u v hpred hu' hv'
+
+/-- The predecessor packages are carrier elements, at pairing: this is the step that turns the
+material induction hypothesis into `exists_packageFamily`'s coverage hypothesis. -/
+theorem packageAt_mem (hp : pairingSentence ∈ T) {condSet orderCode A s : ZFSet.{u}}
+    {D R : ↥M.toMaterialCarrier} (hsD : s ∈ (D : ZFSet.{u}))
+    (hdc : DescentClosed condSet A (D : ZFSet.{u}))
+    (hco : CorrectOn condSet orderCode (D : ZFSet.{u}) (R : ZFSet.{u})) :
+    ∃ a : ↥M.toMaterialCarrier, PackageAt condSet orderCode A s (a : ZFSet.{u}) :=
+  ⟨⟨ZFSet.pair (D : ZFSet.{u}) (R : ZFSet.{u}), M.pair_mem hp D.2 R.2⟩,
+    (D : ZFSet.{u}), (R : ZFSet.{u}), rfl, hdc, hco, hsD⟩
+
+/-- **The interface**: the material induction hypothesis is exactly what
+`exists_packageFamily` needs. Decoding a member of the exact predecessor set back into a
+state is `rankPair_lt_of_predSpec`'s other job, and pairing turns the internal `D`, `R` into
+the internal package. -/
+theorem exists_packageCoverage (hp : pairingSentence ∈ T)
+    {condSet orderCode A P : ↥M.toMaterialCarrier} {x y : ZFSet.{u}}
+    (hP : PredValue (condSet : ZFSet.{u}) x y (P : ZFSet.{u}))
+    (ih : ∀ u v : ZFSet.{u}, PredSpec (condSet : ZFSet.{u}) x y (ZFSet.pair u v) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair u v ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u})) :
+    ∀ s : ↥M.toMaterialCarrier, (s : ZFSet.{u}) ∈ (P : ZFSet.{u}) →
+      ∃ a : ↥M.toMaterialCarrier,
+        PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
+          (s : ZFSet.{u}) (a : ZFSet.{u}) := by
+  intro s hs
+  have hpred : PredSpec (condSet : ZFSet.{u}) x y (s : ZFSet.{u}) := (hP _).1 hs
+  obtain ⟨u, v, hsuv, -⟩ := rankPair_lt_of_predSpec hpred
+  obtain ⟨D, R, hsD, hdc, hco⟩ := ih u v (by rw [← hsuv]; exact hpred)
+  refine M.packageAt_mem hp ?_ hdc hco
+  rw [hsuv]; exact hsD
+
 end MaterialGround
 
 end Forcing
