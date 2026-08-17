@@ -67,7 +67,7 @@ against a stated whole:
 * the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
   — for entries and for the two-tag bound;
 * `unionSentence`, general Union, at each of the two flattening steps;
-* the six scheme instances named above.
+* the eight scheme instances named above.
 
 Absent, and load-bearing as negative findings: **no Foundation, no Infinity, no Power Set**.
 Nothing here mentions `InternalNameCoding` or the external forcing relation.
@@ -81,9 +81,11 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
 
 ## Main definitions
 
-* `Forcing.AtomicRecursion.stageFormula`, `Forcing.AtomicRecursion.entryBoundFormula`,
-  `Forcing.AtomicRecursion.stageGatherFormula`, `Forcing.AtomicRecursion.stageFilterFormula`:
-  the instance formulas.
+* `Forcing.AtomicRecursion.entryBoundFormula`, `Forcing.AtomicRecursion.stageFormula`,
+  `Forcing.AtomicRecursion.stageGatherFormula`, `Forcing.AtomicRecursion.stageFilterFormula`,
+  `Forcing.AtomicRecursion.rowGatherFormula`, `Forcing.AtomicRecursion.rowFilterFormula`,
+  `Forcing.AtomicRecursion.packageGatherFormula`,
+  `Forcing.AtomicRecursion.packageFilterFormula`: the eight instance formulas.
 * the corresponding `…Sentence` definitions: the named instances.
 
 ## Main results
@@ -94,6 +96,8 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   row and the graph exist, each with an exact membership characterization.
 * `Forcing.MaterialGround.exists_graphValue_coherent_of_agree`: aggregation plus the bridge,
   with the remaining fixed-point obligation stated rather than discharged.
+* `Forcing.MaterialGround.exists_packageFamily`: the recursion's predecessor packages —
+  every retained one valid, and every predecessor covered by a retained one.
 -/
 
 universe u v
