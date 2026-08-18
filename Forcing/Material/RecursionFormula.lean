@@ -314,6 +314,22 @@ def predSpecDef (condSet x y s : memLang.Term (α ⊕ Fin n)) : memLang.BoundedF
   predWitnessRightDef condSet y x s ⊔
     (predWitnessLeftDef condSet x y s ⊔ predWitnessLeftDef condSet y x s)
 
+/-- The right-oriented **bound** formula, for Collection: whenever `w` decodes as a branch
+`⟨c, z⟩`, the witness is `⟨fixed, z⟩`. Unconditional on `w` — a `w` that is not a coded pair
+imposes nothing, which is what makes the witness relation total on its whole index set. Note
+that no condition-set guard appears: a bound needs only to *contain* the witnesses, and the
+guard is applied later by the `predSpecDef` separation. -/
+def predBoundRightDef (fixed w s : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∀' ∀' (pairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm w)) ⟹
+    pairDef (liftTerm (liftTerm fixed)) (&(Fin.last (n + 1))) (liftTerm (liftTerm s)))
+
+/-- The left-oriented bound formula. -/
+def predBoundLeftDef (fixed w s : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∀' ∀' (pairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm w)) ⟹
+    pairDef (&(Fin.last (n + 1))) (liftTerm (liftTerm fixed)) (liftTerm (liftTerm s)))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -1142,6 +1158,36 @@ theorem realize_predSpecDef {condSet x y s : memLang.Term (α ⊕ Fin n)} :
   simp only [BoundedFormula.realize_sup]
   exact or_congr realize_predWitnessRightDef
     (or_congr realize_predWitnessLeftDef realize_predWitnessLeftDef)
+
+/-- **The right bound law.** No hypotheses and no theory axioms. -/
+theorem realize_predBoundRightDef {fixed w s : memLang.Term (α ⊕ Fin n)} :
+    (predBoundRightDef fixed w s).Realize v xs ↔
+      ∀ c z, ((Term.realize (Sum.elim v xs) w : ↥M) : ZFSet.{u}) = ZFSet.pair c z →
+        ((Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) =
+          ZFSet.pair ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) z := by
+  have hwM : ((Term.realize (Sum.elim v xs) w : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) w : ↥M).2
+  simp only [predBoundRightDef, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc,
+    realize_liftTerm, realize_pairDef]
+  refine ⟨fun h c z hcz ↦ ?_, fun h c z ↦ h (c : ZFSet.{u}) (z : ZFSet.{u})⟩
+  have hpM : ZFSet.pair c z ∈ M := hcz ▸ hwM
+  exact h ⟨c, left_mem_of_pair_mem hpM⟩ ⟨z, right_mem_of_pair_mem hpM⟩ hcz
+
+/-- **The left bound law.** -/
+theorem realize_predBoundLeftDef {fixed w s : memLang.Term (α ⊕ Fin n)} :
+    (predBoundLeftDef fixed w s).Realize v xs ↔
+      ∀ c z, ((Term.realize (Sum.elim v xs) w : ↥M) : ZFSet.{u}) = ZFSet.pair c z →
+        ((Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) =
+          ZFSet.pair z ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) := by
+  have hwM : ((Term.realize (Sum.elim v xs) w : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) w : ↥M).2
+  simp only [predBoundLeftDef, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc,
+    realize_liftTerm, realize_pairDef]
+  refine ⟨fun h c z hcz ↦ ?_, fun h c z ↦ h (c : ZFSet.{u}) (z : ZFSet.{u})⟩
+  have hpM : ZFSet.pair c z ∈ M := hcz ▸ hwM
+  exact h ⟨c, left_mem_of_pair_mem hpM⟩ ⟨z, right_mem_of_pair_mem hpM⟩ hcz
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
