@@ -290,6 +290,30 @@ def domainFamilyDef (F d : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula
 def graphFamilyDef (F r : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   ∃' (pairMemDef (&(Fin.last n)) (liftTerm r) (liftTerm F))
 
+/-- One predecessor *witness* shape, right-oriented: `s` is `⟨fixed, z⟩` for a valid branch
+`z` of `source`. Private, and split by orientation for the same reason as the closure
+shapes — the three cases differ only by argument choice. -/
+private def predWitnessRightDef (condSet source fixed s : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm source)) ⊓
+    (memFormula (&(Fin.castSucc (Fin.last n))) (liftTerm (liftTerm condSet)) ⊓
+      pairDef (liftTerm (liftTerm fixed)) (&(Fin.last (n + 1))) (liftTerm (liftTerm s))))
+
+/-- The left-oriented witness shape: the branch supplies the first coordinate. -/
+private def predWitnessLeftDef (condSet source fixed s : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm source)) ⊓
+    (memFormula (&(Fin.castSucc (Fin.last n))) (liftTerm (liftTerm condSet)) ⊓
+      pairDef (&(Fin.last (n + 1))) (liftTerm (liftTerm fixed)) (liftTerm (liftTerm s))))
+
+/-- **The predecessor relation**, as a formula: `s` is one of the three states the clauses at
+`(x, y)` consult. This is what the `Pred` Separation instance carves with. -/
+def predSpecDef (condSet x y s : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  predWitnessRightDef condSet y x s ⊔
+    (predWitnessLeftDef condSet x y s ⊔ predWitnessLeftDef condSet y x s)
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -1070,6 +1094,54 @@ theorem realize_graphFamilyDef {F r : memLang.Term (α ⊕ Fin n)} :
     Sum.elim_inr, Function.comp_apply, Fin.snoc_last, realize_liftTerm]
   exact ⟨fun ⟨D, hD⟩ ↦ ⟨(D : ZFSet.{u}), hD⟩,
     fun ⟨D, hD⟩ ↦ ⟨⟨D, (component_mem hFM hD).1⟩, hD⟩⟩
+
+private theorem realize_predWitnessRightDef
+    {condSet source fixed s : memLang.Term (α ⊕ Fin n)} :
+    (predWitnessRightDef condSet source fixed s).Realize v xs ↔
+      ∃ c z, ZFSet.pair c z ∈ ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∧
+        c ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∧
+        ((Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) =
+          ZFSet.pair ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) z := by
+  have hsM : ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) source : ↥M).2
+  simp only [predWitnessRightDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, realize_pairMemDef, realize_pairDef]
+  exact ⟨fun ⟨c, z, hb, hc, hp⟩ ↦ ⟨(c : ZFSet.{u}), (z : ZFSet.{u}), hb, hc, hp⟩,
+    fun ⟨c, z, hb, hc, hp⟩ ↦ ⟨⟨c, (branch_components_mem hsM hb).1⟩,
+      ⟨z, (branch_components_mem hsM hb).2⟩, hb, hc, hp⟩⟩
+
+private theorem realize_predWitnessLeftDef
+    {condSet source fixed s : memLang.Term (α ⊕ Fin n)} :
+    (predWitnessLeftDef condSet source fixed s).Realize v xs ↔
+      ∃ c z, ZFSet.pair c z ∈ ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∧
+        c ∈ ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u}) ∧
+        ((Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) =
+          ZFSet.pair z ((Term.realize (Sum.elim v xs) fixed : ↥M) : ZFSet.{u}) := by
+  have hsM : ((Term.realize (Sum.elim v xs) source : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) source : ↥M).2
+  simp only [predWitnessLeftDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, realize_pairMemDef, realize_pairDef]
+  exact ⟨fun ⟨c, z, hb, hc, hp⟩ ↦ ⟨(c : ZFSet.{u}), (z : ZFSet.{u}), hb, hc, hp⟩,
+    fun ⟨c, z, hb, hc, hp⟩ ↦ ⟨⟨c, (branch_components_mem hsM hb).1⟩,
+      ⟨z, (branch_components_mem hsM hb).2⟩, hb, hc, hp⟩⟩
+
+/-- **The predecessor law**: the formula realizes to exactly the semantic `PredSpec`. **No
+auxiliary hypotheses and no theory axioms** — every bridge is the structural one for branch
+components. -/
+theorem realize_predSpecDef {condSet x y s : memLang.Term (α ⊕ Fin n)} :
+    (predSpecDef condSet x y s).Realize v xs ↔
+      PredSpec ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) := by
+  rw [predSpecDef, PredSpec]
+  simp only [BoundedFormula.realize_sup]
+  exact or_congr realize_predWitnessRightDef
+    (or_congr realize_predWitnessLeftDef realize_predWitnessLeftDef)
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
