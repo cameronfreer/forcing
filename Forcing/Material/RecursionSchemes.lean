@@ -234,14 +234,14 @@ def predSepFormula : memLang.BoundedFormula (Fin 3) 1 :=
 /-- **The row-gathering instance** (Collection): for a fixed first coordinate, a package
 covering the state `⟨x, y⟩` for each `y ∈ A`. -/
 def rowStateGatherFormula : memLang.BoundedFormula (Fin 6) 2 :=
-  stagePackageAtDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+  statePackageAtDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
     (var (Sum.inl 4)) (var (Sum.inl 5)) (&0) (&1)
 
 /-- **The row-filter instance** (Separation): keep only packages certified at a state
 `⟨x, y⟩` with `y ∈ A`. -/
 def rowStateFilterFormula : memLang.BoundedFormula (Fin 6) 1 :=
   ∃' (memFormula (&(Fin.last 1)) (liftTerm (var (Sum.inl 4))) ⊓
-    stagePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+    statePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
       (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3))) (liftTerm (var (Sum.inl 4)))
       (liftTerm (var (Sum.inl 5))) (&(Fin.last 1)) (liftTerm (&0)))
 
@@ -1192,14 +1192,14 @@ section RowAggregation
 variable {β : Type v} {k : ℕ} {w : β → ↥M.toMaterialCarrier} {xs : Fin k → ↥M.toMaterialCarrier}
 
 /-- The state-package law, at an arbitrary assignment. -/
-theorem realize_stagePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
+theorem realize_statePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
     (hu : binaryUnionSentence ∈ T)
     {tagMem tagEq condSet orderCode A x y a : memLang.Term (β ⊕ Fin k)}
     (hm : ((Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier) : ZFSet.{u}) =
       natCode memWitnessTag)
     (hq : ((Term.realize (Sum.elim w xs) tagEq : ↥M.toMaterialCarrier) : ZFSet.{u}) =
       natCode eqTag) :
-    (stagePackageAtDef tagMem tagEq condSet orderCode A x y a).Realize w xs ↔
+    (statePackageAtDef tagMem tagEq condSet orderCode A x y a).Realize w xs ↔
       PackageAt ((Term.realize (Sum.elim w xs) condSet : ↥M.toMaterialCarrier) : ZFSet.{u})
         ((Term.realize (Sum.elim w xs) orderCode : ↥M.toMaterialCarrier) : ZFSet.{u})
         ((Term.realize (Sum.elim w xs) A : ↥M.toMaterialCarrier) : ZFSet.{u})
@@ -1219,7 +1219,7 @@ theorem realize_stagePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSen
     rw [M.realize_packageAtDef he hp hu (by simpa [realize_liftTerm] using hm)
       (by simpa [realize_liftTerm] using hq)]
     simp [realize_liftTerm]
-  simp only [stagePackageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+  simp only [statePackageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
     realize_pairDef, Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
     realize_liftTerm]
   constructor
@@ -1267,7 +1267,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
         PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
           (ZFSet.pair (x : ZFSet.{u}) (y : ZFSet.{u})) (a : ZFSet.{u})) := by
     intro y a
-    rw [rowStateGatherFormula, M.realize_stagePackageAtDef he hp hu (by simpa using hm)
+    rw [rowStateGatherFormula, M.realize_statePackageAtDef he hp hu (by simpa using hm)
       (by simpa using hq)]
     simp
   -- Step 1: gather a package for each `y ∈ A`.
@@ -1288,7 +1288,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
           (A : ZFSet.{u}) (ZFSet.pair (x : ZFSet.{u}) y) (a : ZFSet.{u})) := by
     intro a
     have hsp : ∀ t : ↥M.toMaterialCarrier,
-        ((stagePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+        ((statePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
             (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3)))
             (liftTerm (var (Sum.inl 4))) (liftTerm (var (Sum.inl 5))) (&(Fin.last 1))
             (liftTerm (&0))).Realize
@@ -1296,7 +1296,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
           PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
             (ZFSet.pair (x : ZFSet.{u}) (t : ZFSet.{u})) (a : ZFSet.{u})) := by
       intro t
-      rw [M.realize_stagePackageAtDef he hp hu
+      rw [M.realize_statePackageAtDef he hp hu
         (by simpa [liftTerm, Term.realize_relabel] using hm)
         (by simpa [liftTerm, Term.realize_relabel] using hq)]
       simp [liftTerm]

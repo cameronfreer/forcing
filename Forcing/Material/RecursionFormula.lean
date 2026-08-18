@@ -332,7 +332,7 @@ def predBoundLeftDef (fixed w s : memLang.Term (α ⊕ Fin n)) : memLang.Bounded
 
 /-- `a` is a package covering the state `⟨x, y⟩`. The state is built by an existential rather
 than a term, since the language is function-free. -/
-def stagePackageAtDef (tagMem tagEq condSet orderCode A x y a :
+def statePackageAtDef (tagMem tagEq condSet orderCode A x y a :
     memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓
     packageAtDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
