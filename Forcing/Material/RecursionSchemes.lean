@@ -28,12 +28,16 @@ The instances, each named by its job:
 | `packageFilterFormula` | Separation | keep only packages certified at a predecessor |
 | `domainFamilyFormula` | Separation | the domains occurring in a package family |
 | `graphFamilyFormula` | Separation | the graphs occurring in a package family |
+| `predBoundRightFormula` | Collection | right-oriented predecessor witnesses |
+| `predBoundLeftFormula` | Collection | left-oriented predecessor witnesses |
+| `predSepFormula` | Separation | the exact predecessor set |
 
 The count is **discovery-driven**: it is read off the construction that compiled, not chosen
-in advance. It came to **ten** — two Collection/Separation pairs for the aggregation
-levels, the bound and stage instances, one more pair for the recursion's package family, and
-two provenance-preserving projections. `entryBoundFormula` takes the tag as a parameter, so one
-sentence serves both tags rather than two.
+in advance. It came to **thirteen** — two Collection/Separation pairs for the aggregation
+levels, the bound and stage instances, one more pair for the recursion's package family, two
+provenance-preserving projections, and three for the predecessor set.
+`entryBoundFormula` takes the tag as a parameter, so one sentence serves both tags rather
+than two.
 
 ## Aggregation is not coherence
 
@@ -69,7 +73,7 @@ against a stated whole:
 * the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
   — for entries and for the two-tag bound;
 * `unionSentence`, general Union, at each of the two flattening steps;
-* the ten scheme instances named above.
+* the thirteen scheme instances named above.
 
 Absent, and load-bearing as negative findings: **no Foundation, no Infinity, no Power Set**.
 Nothing here mentions `InternalNameCoding` or the external forcing relation.
@@ -89,7 +93,10 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   `Forcing.AtomicRecursion.packageGatherFormula`,
   `Forcing.AtomicRecursion.packageFilterFormula`,
   `Forcing.AtomicRecursion.domainFamilyFormula`,
-  `Forcing.AtomicRecursion.graphFamilyFormula`: the ten instance formulas.
+  `Forcing.AtomicRecursion.graphFamilyFormula`,
+  `Forcing.AtomicRecursion.predBoundRightFormula`,
+  `Forcing.AtomicRecursion.predBoundLeftFormula`,
+  `Forcing.AtomicRecursion.predSepFormula`: the thirteen instance formulas.
 * the corresponding `…Sentence` definitions: the named instances.
 
 ## Main results
@@ -107,6 +114,9 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
 * `Forcing.MaterialGround.exists_materialApproximation_step`: the carrier-valued case split.
 * `Forcing.MaterialGround.exists_materialApproximation_at`: parameterized existence of an
   approximation at each state, given the predecessor sets.
+* `Forcing.MaterialGround.exists_predValue`: the exact predecessor set.
+* `Forcing.MaterialGround.exists_approximation_at_state`: per-state existence with every
+  hypothesis discharged.
 -/
 
 universe u v
@@ -199,7 +209,37 @@ def domainFamilyFormula : memLang.BoundedFormula (Fin 1) 1 :=
 def graphFamilyFormula : memLang.BoundedFormula (Fin 1) 1 :=
   graphFamilyDef (var (Sum.inl 0)) (&0)
 
+/-- **The right predecessor-bound instance** (Collection). Gives **coverage only** — a raw
+Collection output may contain junk, so exactness waits for the separation below. -/
+def predBoundRightFormula : memLang.BoundedFormula (Fin 1) 2 :=
+  predBoundRightDef (var (Sum.inl 0)) (&0) (&1)
+
+/-- **The left predecessor-bound instance** (Collection), used at two parameter settings. -/
+def predBoundLeftFormula : memLang.BoundedFormula (Fin 1) 2 :=
+  predBoundLeftDef (var (Sum.inl 0)) (&0) (&1)
+
+/-- **The predecessor instance** (Separation): carves the exact predecessor set out of the
+combined bound. This is where the condition-set guard and the orientation constraints are
+applied, and where `PredValue` becomes exact. -/
+def predSepFormula : memLang.BoundedFormula (Fin 3) 1 :=
+  predSpecDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (&0)
+
 def entryBoundSentence : memLang.Sentence := collectionSentence entryBoundFormula
+
+def predBoundRightSentence : memLang.Sentence := collectionSentence predBoundRightFormula
+
+def predBoundLeftSentence : memLang.Sentence := collectionSentence predBoundLeftFormula
+
+def predSepSentence : memLang.Sentence := separationSentence predSepFormula
+
+theorem predBoundRightSentence_mem_scheme : predBoundRightSentence ∈ collectionScheme :=
+  collectionSentence_mem_scheme predBoundRightFormula
+
+theorem predBoundLeftSentence_mem_scheme : predBoundLeftSentence ∈ collectionScheme :=
+  collectionSentence_mem_scheme predBoundLeftFormula
+
+theorem predSepSentence_mem_scheme : predSepSentence ∈ separationScheme :=
+  separationSentence_mem_scheme predSepFormula
 
 def domainFamilySentence : memLang.Sentence := separationSentence domainFamilyFormula
 
@@ -969,6 +1009,145 @@ theorem exists_materialApproximation_at (hbnd : entryBoundSentence ∈ T)
     exact (hDc s).2 ⟨D, R, haF, hsD⟩
   exact M.exists_materialApproximation_step hbnd hsep he hp hu tagMem tagEq condSet orderCode
     A hm hq hx hy hDC₀ hCO₀ hpred
+
+/-! ### The predecessor set
+
+Gather, union, then separate — and **only after separating** is membership exact. A raw
+Collection output supplies coverage and nothing more: it may contain junk, and the two bound
+formulas deliberately impose no condition-set guard, since a bound need only *contain* the
+witnesses. The guard, the orientations, and exactness all arrive with `predSepFormula`. -/
+
+/-- Right-oriented coverage. Not exactness: `E` may contain anything else besides. -/
+theorem exists_predBoundRight (hcol : predBoundRightSentence ∈ T) (hp : pairingSentence ∈ T)
+    (fixed source : ↥M.toMaterialCarrier) :
+    ∃ E : ↥M.toMaterialCarrier, ∀ c z, ZFSet.pair c z ∈ (source : ZFSet.{u}) →
+      ZFSet.pair (fixed : ZFSet.{u}) z ∈ (E : ZFSet.{u}) := by
+  have hbody : ∀ w s : ↥M.toMaterialCarrier,
+      (predBoundRightFormula.Realize ![fixed] ![w, s] ↔
+        ∀ c z, (w : ZFSet.{u}) = ZFSet.pair c z →
+          (s : ZFSet.{u}) = ZFSet.pair (fixed : ZFSet.{u}) z) := by
+    intro w s
+    rw [predBoundRightFormula, realize_predBoundRightDef]
+    simp
+  obtain ⟨E, hE⟩ := M.exists_collection (φ := predBoundRightFormula) hcol ![fixed] source
+    (fun w hw ↦ by
+      classical
+      by_cases hpair : ∃ c z, (w : ZFSet.{u}) = ZFSet.pair c z
+      · obtain ⟨c, z, hcz⟩ := hpair
+        have hpM : ZFSet.pair c z ∈ M.toMaterialCarrier := hcz ▸ w.2
+        have hzM : z ∈ M.toMaterialCarrier :=
+          M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
+            (M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+        refine ⟨⟨ZFSet.pair (fixed : ZFSet.{u}) z, M.pair_mem hp fixed.2 hzM⟩, ?_⟩
+        refine (hbody w _).2 fun c' z' hcz' ↦ ?_
+        obtain ⟨-, rfl⟩ := ZFSet.pair_inj.1 (hcz.symm.trans hcz')
+        rfl
+      · exact ⟨w, (hbody w w).2 fun c z hcz ↦ absurd ⟨c, z, hcz⟩ hpair⟩)
+  refine ⟨E, fun c z hcz ↦ ?_⟩
+  have hwM : ZFSet.pair c z ∈ M.toMaterialCarrier :=
+    M.toMaterialCarrier.mem_trans hcz source.2
+  obtain ⟨s, hsE, hval⟩ := hE ⟨ZFSet.pair c z, hwM⟩ hcz
+  rw [← (hbody ⟨_, hwM⟩ s).1 hval c z rfl]
+  exact hsE
+
+/-- Left-oriented coverage. -/
+theorem exists_predBoundLeft (hcol : predBoundLeftSentence ∈ T) (hp : pairingSentence ∈ T)
+    (fixed source : ↥M.toMaterialCarrier) :
+    ∃ E : ↥M.toMaterialCarrier, ∀ c z, ZFSet.pair c z ∈ (source : ZFSet.{u}) →
+      ZFSet.pair z (fixed : ZFSet.{u}) ∈ (E : ZFSet.{u}) := by
+  have hbody : ∀ w s : ↥M.toMaterialCarrier,
+      (predBoundLeftFormula.Realize ![fixed] ![w, s] ↔
+        ∀ c z, (w : ZFSet.{u}) = ZFSet.pair c z →
+          (s : ZFSet.{u}) = ZFSet.pair z (fixed : ZFSet.{u})) := by
+    intro w s
+    rw [predBoundLeftFormula, realize_predBoundLeftDef]
+    simp
+  obtain ⟨E, hE⟩ := M.exists_collection (φ := predBoundLeftFormula) hcol ![fixed] source
+    (fun w hw ↦ by
+      classical
+      by_cases hpair : ∃ c z, (w : ZFSet.{u}) = ZFSet.pair c z
+      · obtain ⟨c, z, hcz⟩ := hpair
+        have hpM : ZFSet.pair c z ∈ M.toMaterialCarrier := hcz ▸ w.2
+        have hzM : z ∈ M.toMaterialCarrier :=
+          M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
+            (M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+        refine ⟨⟨ZFSet.pair z (fixed : ZFSet.{u}), M.pair_mem hp hzM fixed.2⟩, ?_⟩
+        refine (hbody w _).2 fun c' z' hcz' ↦ ?_
+        obtain ⟨-, rfl⟩ := ZFSet.pair_inj.1 (hcz.symm.trans hcz')
+        rfl
+      · exact ⟨w, (hbody w w).2 fun c z hcz ↦ absurd ⟨c, z, hcz⟩ hpair⟩)
+  refine ⟨E, fun c z hcz ↦ ?_⟩
+  have hwM : ZFSet.pair c z ∈ M.toMaterialCarrier :=
+    M.toMaterialCarrier.mem_trans hcz source.2
+  obtain ⟨s, hsE, hval⟩ := hE ⟨ZFSet.pair c z, hwM⟩ hcz
+  rw [← (hbody ⟨_, hwM⟩ s).1 hval c z rfl]
+  exact hsE
+
+/-- **The predecessor set exists inside the ground, exactly.**
+
+The three instantiated bounds cover the three shapes, binary union combines them, and the
+separation makes membership exact — applying the condition-set guard and the orientation
+constraints that the bounds deliberately omitted. Charged: two Collection instances (the left
+one twice), one Separation, pairing, and binary union. -/
+theorem exists_predValue (hbr : predBoundRightSentence ∈ T)
+    (hbl : predBoundLeftSentence ∈ T) (hsep : predSepSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (condSet x y : ↥M.toMaterialCarrier) :
+    ∃ P : ↥M.toMaterialCarrier,
+      PredValue (condSet : ZFSet.{u}) (x : ZFSet.{u}) (y : ZFSet.{u}) (P : ZFSet.{u}) := by
+  obtain ⟨E₁, hE₁⟩ := M.exists_predBoundRight hbr hp x y
+  obtain ⟨E₂, hE₂⟩ := M.exists_predBoundLeft hbl hp y x
+  obtain ⟨E₃, hE₃⟩ := M.exists_predBoundLeft hbl hp x y
+  set bound : ↥M.toMaterialCarrier :=
+    ⟨(E₁ : ZFSet.{u}) ∪ ((E₂ : ZFSet.{u}) ∪ (E₃ : ZFSet.{u})),
+      M.union_mem hu E₁.2 (M.union_mem hu E₂.2 E₃.2)⟩ with hbdef
+  -- Coverage of the combined bound, still not exactness.
+  have hcover : ∀ s, PredSpec (condSet : ZFSet.{u}) (x : ZFSet.{u}) (y : ZFSet.{u}) s →
+      s ∈ (bound : ZFSet.{u}) := by
+    rintro s (⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩ | ⟨c, z, hb, -, rfl⟩)
+    · exact ZFSet.mem_union.2 (Or.inl (hE₁ c z hb))
+    · exact ZFSet.mem_union.2 (Or.inr (ZFSet.mem_union.2 (Or.inl (hE₂ c z hb))))
+    · exact ZFSet.mem_union.2 (Or.inr (ZFSet.mem_union.2 (Or.inr (hE₃ c z hb))))
+  obtain ⟨P, hP⟩ := M.exists_separation (φ := predSepFormula) hsep ![condSet, x, y] bound
+  have hbody : ∀ s : ↥M.toMaterialCarrier,
+      (predSepFormula.Realize ![condSet, x, y] ![s] ↔
+        PredSpec (condSet : ZFSet.{u}) (x : ZFSet.{u}) (y : ZFSet.{u}) (s : ZFSet.{u})) := by
+    intro s
+    rw [predSepFormula, realize_predSpecDef]
+    simp
+  refine ⟨P, fun s ↦ ⟨fun hs ↦ ?_, fun hs ↦ ?_⟩⟩
+  · have hsM := M.toMaterialCarrier.mem_trans hs P.2
+    exact (hbody ⟨s, hsM⟩).1 ((hP ⟨s, hsM⟩).1 hs).2
+  · have hsb := hcover s hs
+    have hsM := M.toMaterialCarrier.mem_trans hsb bound.2
+    exact (hP ⟨s, hsM⟩).2 ⟨hsb, (hbody ⟨s, hsM⟩).2 hs⟩
+
+/-- **Per-state existence, with every hypothesis discharged.**
+
+The last hypothesis of `exists_materialApproximation_at` was the predecessor set; the tranche
+above builds it. What remains are only named scheme-instance memberships and the finite
+closure axioms — no `InternalNameCoding`, no external forcing relation, **no Foundation, no
+Infinity, and no Power Set**. -/
+theorem exists_approximation_at_state (hbnd : entryBoundSentence ∈ T)
+    (hsep : stageSeparationSentence ∈ T) (hgat : packageGatherSentence ∈ T)
+    (hfil : packageFilterSentence ∈ T) (hdom : domainFamilySentence ∈ T)
+    (hgra : graphFamilySentence ∈ T) (hbr : predBoundRightSentence ∈ T)
+    (hbl : predBoundLeftSentence ∈ T) (hpsep : predSepSentence ∈ T)
+    (huni : unionSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
+    (hA : (A : ZFSet.{u}).IsTransitive)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
+    ∀ x y : ZFSet.{u}, x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u}) :=
+  M.exists_materialApproximation_at hbnd hsep hgat hfil hdom hgra huni he hp hu
+    tagMem tagEq condSet orderCode A hA hm hq
+    (fun x y hx hy ↦ M.exists_predValue hbr hbl hpsep hp hu condSet
+      ⟨x, M.toMaterialCarrier.mem_trans hx A.2⟩ ⟨y, M.toMaterialCarrier.mem_trans hy A.2⟩)
 
 end MaterialGround
 
