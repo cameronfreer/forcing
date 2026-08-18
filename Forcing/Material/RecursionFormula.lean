@@ -330,6 +330,14 @@ def predBoundLeftDef (fixed w s : memLang.Term (α ⊕ Fin n)) : memLang.Bounded
       (liftTerm (liftTerm w)) ⟹
     pairDef (&(Fin.last (n + 1))) (liftTerm (liftTerm fixed)) (liftTerm (liftTerm s)))
 
+/-- `a` is a package covering the state `⟨x, y⟩`. The state is built by an existential rather
+than a term, since the language is function-free. -/
+def stagePackageAtDef (tagMem tagEq condSet orderCode A x y a :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓
+    packageAtDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
+      (liftTerm A) (&(Fin.last n)) (liftTerm a))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
