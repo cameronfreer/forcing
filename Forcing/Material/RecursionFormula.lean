@@ -282,6 +282,14 @@ def packageAtDef (tagMem tagEq condSet orderCode A s a : memLang.Term (α ⊕ Fi
         (liftTerm (liftTerm A)) (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1))) ⊓
       memFormula (liftTerm (liftTerm s)) (&(Fin.castSucc (Fin.last n)))))
 
+/-- The domain-selection formula: `d` occurs as a first coordinate in `F`. -/
+def domainFamilyDef (F d : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (pairMemDef (liftTerm d) (&(Fin.last n)) (liftTerm F))
+
+/-- The graph-selection formula: `r` occurs as a second coordinate in `F`. -/
+def graphFamilyDef (F r : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (pairMemDef (&(Fin.last n)) (liftTerm r) (liftTerm F))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -1032,6 +1040,36 @@ theorem realize_approximationDef
   rw [approximationDef]
   simp only [BoundedFormula.realize_inf]
   exact and_congr realize_descentClosedDef (realize_correctOnDef hm hq hentM)
+
+/-- The other component of a package in a carrier element is a carrier element — the bridge
+the selection quantifiers need, structural and axiom-free. -/
+private theorem component_mem {F a b : ZFSet.{u}} (hF : F ∈ M) (h : ZFSet.pair a b ∈ F) :
+    a ∈ M ∧ b ∈ M :=
+  ⟨left_mem_of_pair_mem (M.mem_trans h hF), right_mem_of_pair_mem (M.mem_trans h hF)⟩
+
+/-- **The domain-selection law.** No hypotheses and no theory axioms. -/
+theorem realize_domainFamilyDef {F d : memLang.Term (α ⊕ Fin n)} :
+    (domainFamilyDef F d).Realize v xs ↔
+      ∃ R, ZFSet.pair ((Term.realize (Sum.elim v xs) d : ↥M) : ZFSet.{u}) R ∈
+        ((Term.realize (Sum.elim v xs) F : ↥M) : ZFSet.{u}) := by
+  have hFM : ((Term.realize (Sum.elim v xs) F : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) F : ↥M).2
+  simp only [domainFamilyDef, BoundedFormula.realize_ex, realize_pairMemDef, Term.realize_var,
+    Sum.elim_inr, Function.comp_apply, Fin.snoc_last, realize_liftTerm]
+  exact ⟨fun ⟨R, hR⟩ ↦ ⟨(R : ZFSet.{u}), hR⟩,
+    fun ⟨R, hR⟩ ↦ ⟨⟨R, (component_mem hFM hR).2⟩, hR⟩⟩
+
+/-- **The graph-selection law.** Likewise. -/
+theorem realize_graphFamilyDef {F r : memLang.Term (α ⊕ Fin n)} :
+    (graphFamilyDef F r).Realize v xs ↔
+      ∃ D, ZFSet.pair D ((Term.realize (Sum.elim v xs) r : ↥M) : ZFSet.{u}) ∈
+        ((Term.realize (Sum.elim v xs) F : ↥M) : ZFSet.{u}) := by
+  have hFM : ((Term.realize (Sum.elim v xs) F : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) F : ↥M).2
+  simp only [graphFamilyDef, BoundedFormula.realize_ex, realize_pairMemDef, Term.realize_var,
+    Sum.elim_inr, Function.comp_apply, Fin.snoc_last, realize_liftTerm]
+  exact ⟨fun ⟨D, hD⟩ ↦ ⟨(D : ZFSet.{u}), hD⟩,
+    fun ⟨D, hD⟩ ↦ ⟨⟨D, (component_mem hFM hD).1⟩, hD⟩⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
