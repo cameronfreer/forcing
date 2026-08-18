@@ -338,6 +338,26 @@ def statePackageAtDef (tagMem tagEq condSet orderCode A x y a :
     packageAtDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet) (liftTerm orderCode)
       (liftTerm A) (&(Fin.last n)) (liftTerm a))
 
+/-- The universal row-coverage condition: every `y` in the domain gives a state `⟨x, y⟩` in
+`D`. Factored out so its realization law can be public — `pairMemDef` stays private. -/
+def rowCoverageDef (A x D : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm A) ⟹
+    pairMemDef (liftTerm x) (&(Fin.last n)) (liftTerm D))
+
+/-- **The row-package predicate**, as a formula: `a` codes an approximation whose domain
+covers every state `⟨x, y⟩` with `y ∈ A`. Both conjuncts are load-bearing — the approximation
+conditions and the *universal row coverage* — since dropping the second would leave the final
+aggregation with no route to global coverage. -/
+def rowPackageAtDef (tagMem tagEq condSet orderCode A x a : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' ∃' (pairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
+      (liftTerm (liftTerm a)) ⊓
+    (approximationDef (liftTerm (liftTerm tagMem)) (liftTerm (liftTerm tagEq))
+        (liftTerm (liftTerm condSet)) (liftTerm (liftTerm orderCode))
+        (liftTerm (liftTerm A)) (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1))) ⊓
+      rowCoverageDef (liftTerm (liftTerm A)) (liftTerm (liftTerm x))
+        (&(Fin.castSucc (Fin.last n)))))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -1196,6 +1216,20 @@ theorem realize_predBoundLeftDef {fixed w s : memLang.Term (α ⊕ Fin n)} :
   refine ⟨fun h c z hcz ↦ ?_, fun h c z ↦ h (c : ZFSet.{u}) (z : ZFSet.{u})⟩
   have hpM : ZFSet.pair c z ∈ M := hcz ▸ hwM
   exact h ⟨c, left_mem_of_pair_mem hpM⟩ ⟨z, right_mem_of_pair_mem hpM⟩ hcz
+
+/-- **The row-coverage law.** No hypotheses and no theory axioms. -/
+theorem realize_rowCoverageDef {A D : memLang.Term (α ⊕ Fin n)} :
+    (rowCoverageDef A x D).Realize v xs ↔
+      ∀ y ∈ ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}),
+        ZFSet.pair ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) y ∈
+          ((Term.realize (Sum.elim v xs) D : ↥M) : ZFSet.{u}) := by
+  have hAM : ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) A : ↥M).2
+  simp only [rowCoverageDef, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm, realize_pairMemDef]
+  exact ⟨fun h y hy ↦ h ⟨y, M.mem_trans hy hAM⟩ hy, fun h y ↦ h (y : ZFSet.{u})⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
