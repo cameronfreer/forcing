@@ -104,6 +104,9 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   every retained one valid, and every predecessor covered by a retained one.
 * `Forcing.MaterialGround.exists_projections`: the component families, selected by
   provenance and flattened to exactly the merge's hypotheses.
+* `Forcing.MaterialGround.exists_materialApproximation_step`: the carrier-valued case split.
+* `Forcing.MaterialGround.exists_materialApproximation_at`: parameterized existence of an
+  approximation at each state, given the predecessor sets.
 -/
 
 universe u v
@@ -879,6 +882,93 @@ theorem exists_projections (hdom : domainFamilySentence ∈ T)
         (hgraBody ⟨r, hrM⟩).2 ⟨D, hD⟩⟩
   exact ⟨⟨_, M.sUnion_mem huni Dfam.2⟩, ⟨_, M.sUnion_mem huni Rfam.2⟩,
     sUnion_domainFamily hDsel, sUnion_graphFamily hRsel⟩
+
+/-! ### The material case split, and the composite step
+
+`exists_approximation_step` cannot be used here for the same reason
+`exists_approximation_of_step` could not: its witnesses are plain `ZFSet`s. The carrier-valued
+counterpart is named below rather than buried in the composite, so its finite-closure ledger
+stays inspectable — it charges **pairing and binary union**, and nothing else beyond what
+`exists_stageValue` already charges. -/
+
+/-- **The material case split** — the carrier-valued counterpart of
+`exists_approximation_step`.
+
+Every construction is internal and priced: transitivity puts `x` and `y` in the carrier,
+pairing builds the coded state, pairing with binary union builds the extended domain,
+`exists_stageValue` supplies the stage against `R₀`, and binary union builds the extended
+graph. No scheme instance beyond those `exists_stageValue` already uses. -/
+theorem exists_materialApproximation_step (hbnd : entryBoundSentence ∈ T)
+    (hsep : stageSeparationSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
+    {x y : ZFSet.{u}} (hx : x ∈ (A : ZFSet.{u})) (hy : y ∈ (A : ZFSet.{u}))
+    {D₀ R₀ : ↥M.toMaterialCarrier}
+    (hDC₀ : DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D₀ : ZFSet.{u}))
+    (hCO₀ : CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D₀ : ZFSet.{u})
+      (R₀ : ZFSet.{u}))
+    (hpred : ∀ s, PredSpec (condSet : ZFSet.{u}) x y s → s ∈ (D₀ : ZFSet.{u})) :
+    ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+      DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+      CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+        (R : ZFSet.{u}) := by
+  have hxM : x ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans hx A.2
+  have hyM : y ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans hy A.2
+  by_cases hmem : ZFSet.pair x y ∈ (D₀ : ZFSet.{u})
+  · -- Already covered; nothing is constructed and nothing is charged.
+    exact ⟨D₀, R₀, hmem, hDC₀, hCO₀⟩
+  · obtain ⟨stage, hst⟩ := M.exists_stageValue hbnd hsep he hp hu tagMem tagEq condSet
+      orderCode R₀ ⟨x, hxM⟩ ⟨y, hyM⟩ hm hq
+    have hext := approximation_extend (D₁ := insert (ZFSet.pair x y) (D₀ : ZFSet.{u}))
+      (R₁ := (R₀ : ZFSet.{u}) ∪ (stage : ZFSet.{u})) hDC₀ hCO₀ hx hy hpred hmem hst
+      (fun t ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm) (fun e ↦ ZFSet.mem_union)
+    exact ⟨⟨_, M.insert_mem hp hu (M.pair_mem hp hxM hyM) D₀.2⟩,
+      ⟨_, M.union_mem hu R₀.2 stage.2⟩, ZFSet.mem_insert_iff.2 (Or.inl rfl),
+      hext.1, hext.2⟩
+
+/-- **The composite step, and the parameterized existence at a state.**
+
+Gather the predecessors' packages, filter, project by provenance, flatten, merge, then case
+split — each move a named theorem. The predecessor set is a hypothesis: constructing it
+internally is a separate obligation, and stating it here keeps this theorem's ledger exact.
+
+Nothing here mentions `InternalNameCoding` or the external forcing relation, and no Infinity,
+Foundation, or Power Set is charged. -/
+theorem exists_materialApproximation_at (hbnd : entryBoundSentence ∈ T)
+    (hsep : stageSeparationSentence ∈ T) (hgat : packageGatherSentence ∈ T)
+    (hfil : packageFilterSentence ∈ T) (hdom : domainFamilySentence ∈ T)
+    (hgra : graphFamilySentence ∈ T) (huni : unionSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
+    (hA : (A : ZFSet.{u}).IsTransitive)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
+    (hPred : ∀ x y : ZFSet.{u}, x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      ∃ P : ↥M.toMaterialCarrier,
+        PredValue (condSet : ZFSet.{u}) x y (P : ZFSet.{u})) :
+    ∀ x y : ZFSet.{u}, x ∈ (A : ZFSet.{u}) → y ∈ (A : ZFSet.{u}) →
+      ∃ D R : ↥M.toMaterialCarrier, ZFSet.pair x y ∈ (D : ZFSet.{u}) ∧
+        DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u}) := by
+  refine M.exists_materialApproximation condSet orderCode A hA fun x y hx hy ih ↦ ?_
+  obtain ⟨P, hP⟩ := hPred x y hx hy
+  -- gather → filter
+  obtain ⟨F, hvalid, hcover⟩ := M.exists_packageFamily hgat hfil he hp hu tagMem tagEq
+    condSet orderCode A P hm hq (M.exists_packageCoverage hp hP ih)
+  -- project by provenance → flatten
+  obtain ⟨D₀, R₀, hDc, hRc⟩ := M.exists_projections hdom hgra huni F
+  -- merge
+  obtain ⟨hDC₀, hCO₀⟩ := approximation_union hvalid hDc hRc
+  -- the predecessors landed in the merged domain
+  have hpred : ∀ s, PredSpec (condSet : ZFSet.{u}) x y s → s ∈ (D₀ : ZFSet.{u}) := by
+    intro s hs
+    obtain ⟨a, haF, D, R, rfl, -, -, hsD⟩ := hcover s ((hP s).2 hs)
+    exact (hDc s).2 ⟨D, R, haF, hsD⟩
+  exact M.exists_materialApproximation_step hbnd hsep he hp hu tagMem tagEq condSet orderCode
+    A hm hq hx hy hDC₀ hCO₀ hpred
 
 end MaterialGround
 
