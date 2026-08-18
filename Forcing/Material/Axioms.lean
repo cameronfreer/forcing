@@ -21,9 +21,10 @@ The named axioms introduced here are the ones the coding layers actually need:
 * `emptySetSentence` — some set has no members;
 * `pairingSentence` — any two sets have an unordered pair;
 * `binaryUnionSentence` — any two sets have a union;
-* `unionSentence` — every family has a union.
+* `unionSentence` — every family has a union;
+* `infinitySentence` — some set contains `∅` and is closed under successor.
 
-**On the last two.** General Union subsumes binary union: given pairing, `a ∪ b = ⋃₀ {a, b}`,
+**On the two unions.** General Union subsumes binary union: given pairing, `a ∪ b = ⋃₀ {a, b}`,
 and `union_mem_of_sUnion` proves exactly that. They are both kept because the ledger records
 what each theorem *actually* costs, and most of the coding layer costs only the binary
 fragment. General Union is charged where a genuine family must be flattened — the atomic
@@ -32,6 +33,12 @@ needs their entries. For that construction the binary fragment does not suffice:
 prototype found no bound on the members-of-members of the collected family reachable from it.
 That is a dependency finding about the construction being formalized, not a claim that no
 alternative construction could avoid Union.
+
+**On Infinity.** It is charged for exactly one job: supplying a transitive ambient domain
+containing an arbitrary pair of name codes. The atomic recursion takes that domain as a
+*parameter*, and its endpoint (`MaterialGround.exists_atomicCoherentOn`) is priced without
+Infinity. That separation is the point of stating the parameterized version first, and it
+should stay visible in the signatures rather than being collapsed into one theorem.
 
 Empty set and pairing close a ground under `∅`, singletons, unordered pairs, and hence
 Kuratowski pairs (`pair_mem`). Binary union is what `insert` costs — and therefore what the
@@ -50,7 +57,7 @@ sets.
 ## Main definitions
 
 * `Forcing.emptySetSentence`, `Forcing.pairingSentence`, `Forcing.binaryUnionSentence`,
-  `Forcing.unionSentence`: the named axioms.
+  `Forcing.unionSentence`, `Forcing.infinitySentence`: the named axioms.
 
 ## Main results
 
@@ -59,6 +66,7 @@ sets.
   consequences, each priced by the sentences it cites.
 * `Forcing.MaterialGround.sUnion_mem`: closure under general union, the flattening step.
 * `Forcing.MaterialGround.union_mem_of_sUnion`: general Union subsumes the binary fragment.
+* `Forcing.MaterialGround.exists_inductive`: the consequence of Infinity.
 -/
 
 universe u
@@ -78,6 +86,19 @@ def pairingSentence : memLang.Sentence :=
 /-- **The binary-union axiom**: any two sets have a union. -/
 def binaryUnionSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
+
+/-- **Infinity**: some set contains the empty set and is closed under successor.
+
+Charged **only** for the ambient domain of the atomic recursion — supplying a transitive set
+containing an arbitrary pair of name codes. The recursion itself takes that set as a
+parameter and never needs Infinity; see `Forcing/Material/RecursionExistence.lean`, whose
+endpoint is priced without it. Keeping the two apart is the point of the parameterized
+statement. -/
+def infinitySentence : memLang.Sentence :=
+  ∃' ((∃' (memFormula &1 &0 ⊓ ∀' ∼(memFormula &2 &1))) ⊓
+    ∀' (memFormula &1 &0 ⟹
+      ∃' (memFormula &2 &0 ⊓
+        ∀' (memFormula &3 &2 ⇔ (memFormula &3 &1 ⊔ (&3 =' &1))))))
 
 /-- **General Union**: every family has a union — the members of the members of `a` form a
 set. Charged only where a genuine family is flattened; see the module docstring. -/
@@ -185,6 +206,36 @@ theorem union_mem_of_sUnion (hu : unionSentence ∈ T) (hp : pairingSentence ∈
         · exact ⟨x, Or.inl rfl, hz⟩
         · exact ⟨y, Or.inr rfl, hz⟩
   exact hxy ▸ M.sUnion_mem hu (M.insert_pair_mem hp hx hy)
+
+/-- **An inductive set lies in the ground** — the consequence of Infinity, and the only place
+it is used. Everything else in the material development is priced without it. -/
+theorem exists_inductive (h : infinitySentence ∈ T) :
+    ∃ w : ZFSet.{u}, w ∈ M ∧ (∅ : ZFSet.{u}) ∈ w ∧ ∀ x ∈ w, insert x x ∈ w := by
+  have hr := M.realize_of_mem h
+  have key : ∃ w : ↥M.toMaterialCarrier,
+      (∃ e : ↥M.toMaterialCarrier, (e : ZFSet.{u}) ∈ (w : ZFSet.{u}) ∧
+          ∀ z : ↥M.toMaterialCarrier, (z : ZFSet.{u}) ∉ (e : ZFSet.{u})) ∧
+        ∀ x : ↥M.toMaterialCarrier, (x : ZFSet.{u}) ∈ (w : ZFSet.{u}) →
+          ∃ s : ↥M.toMaterialCarrier, (s : ZFSet.{u}) ∈ (w : ZFSet.{u}) ∧
+            ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (s : ZFSet.{u}) ↔
+              ((z : ZFSet.{u}) ∈ (x : ZFSet.{u}) ∨ (z : ZFSet.{u}) = (x : ZFSet.{u}))) := by
+    simpa [infinitySentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
+      using hr
+  obtain ⟨w, ⟨e, heW, hempty⟩, hsucc⟩ := key
+  have heE : (e : ZFSet.{u}) = ∅ := by
+    refine (ZFSet.eq_empty _).2 fun z hz ↦ ?_
+    exact hempty ⟨z, mem_trans hz (mem_trans heW w.2)⟩ hz
+  refine ⟨w, w.2, heE ▸ heW, fun x hx ↦ ?_⟩
+  obtain ⟨s, hsW, hs⟩ := hsucc ⟨x, mem_trans hx w.2⟩ hx
+  have hse : (s : ZFSet.{u}) = insert (x : ZFSet.{u}) (x : ZFSet.{u}) := by
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · rcases (hs ⟨z, mem_trans hz (mem_trans hsW w.2)⟩).1 hz with h1 | h1
+      · exact ZFSet.mem_insert_iff.2 (Or.inr h1)
+      · exact ZFSet.mem_insert_iff.2 (Or.inl h1)
+    · rcases ZFSet.mem_insert_iff.1 hz with rfl | h1
+      · exact (hs ⟨z, mem_trans hx w.2⟩).2 (Or.inr rfl)
+      · exact (hs ⟨z, mem_trans h1 (mem_trans hx w.2)⟩).2 (Or.inl h1)
+  exact hse ▸ hsW
 
 /-- **Closure under `insert`**: a singleton unioned on, priced at pairing and union. -/
 theorem insert_mem (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
