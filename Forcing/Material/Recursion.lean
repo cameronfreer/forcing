@@ -902,6 +902,45 @@ private theorem agreeAt_union {A F R : ZFSet.{u}}
     exact (agreeAt_of_correctOn hDC hDC₀ hCO hCO₀ x y (state_mem_of_eq hCO hS) hxy).2 p hp
       |>.1 hS
 
+/-! ##### Projections
+
+The two component families of a package family, each selected **with its provenance**: a
+domain is kept because it occurs as the first coordinate of a package, not because of any
+property it has on its own. Selecting instead among the members of `⋃⋃F` by a property of the
+component would forget the pairing, and could pair one package's domain with another's graph.
+
+No functionality of the Collection output is assumed anywhere: several packages may share a
+domain, or a domain may occur with several graphs, and the flattened laws below are unaffected
+because they quantify over the *pair* being in `F`. -/
+
+/-- The domains occurring in `F`, selected by provenance. -/
+def DomainFamily (F Dfam : ZFSet.{u}) : Prop := ∀ d, d ∈ Dfam ↔ ∃ R, ZFSet.pair d R ∈ F
+
+/-- The graphs occurring in `F`, selected by provenance. -/
+def GraphFamily (F Rfam : ZFSet.{u}) : Prop := ∀ r, r ∈ Rfam ↔ ∃ D, ZFSet.pair D r ∈ F
+
+/-- Flattening the domain family gives exactly `approximation_union`'s `hDc`. -/
+theorem sUnion_domainFamily {F Dfam : ZFSet.{u}} (h : DomainFamily F Dfam) (s : ZFSet.{u}) :
+    s ∈ ZFSet.sUnion Dfam ↔ ∃ D R, ZFSet.pair D R ∈ F ∧ s ∈ D := by
+  rw [ZFSet.mem_sUnion]
+  constructor
+  · rintro ⟨d, hd, hsd⟩
+    obtain ⟨R, hR⟩ := (h d).1 hd
+    exact ⟨d, R, hR, hsd⟩
+  · rintro ⟨D, R, hDR, hsD⟩
+    exact ⟨D, (h D).2 ⟨R, hDR⟩, hsD⟩
+
+/-- Flattening the graph family gives exactly `approximation_union`'s `hRc`. -/
+theorem sUnion_graphFamily {F Rfam : ZFSet.{u}} (h : GraphFamily F Rfam) (e : ZFSet.{u}) :
+    e ∈ ZFSet.sUnion Rfam ↔ ∃ D R, ZFSet.pair D R ∈ F ∧ e ∈ R := by
+  rw [ZFSet.mem_sUnion]
+  constructor
+  · rintro ⟨r, hr, her⟩
+    obtain ⟨D, hD⟩ := (h r).1 hr
+    exact ⟨D, r, hD, her⟩
+  · rintro ⟨D, R, hDR, heR⟩
+    exact ⟨R, (h R).2 ⟨D, hDR⟩, heR⟩
+
 /-- **The merge**: the union of a family of approximations is an approximation.
 
 Both the domain and the graph are given by exact membership characterizations, which is how

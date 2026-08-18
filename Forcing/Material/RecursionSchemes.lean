@@ -26,11 +26,13 @@ The instances, each named by its job:
 | `rowFilterFormula` | Separation | discard Collection's junk, again before flattening |
 | `packageGatherFormula` | Collection | one covering ⟨D, R⟩ package per predecessor state |
 | `packageFilterFormula` | Separation | keep only packages certified at a predecessor |
+| `domainFamilyFormula` | Separation | the domains occurring in a package family |
+| `graphFamilyFormula` | Separation | the graphs occurring in a package family |
 
 The count is **discovery-driven**: it is read off the construction that compiled, not chosen
-in advance. It came to **eight** — two Collection/Separation pairs for the aggregation
-levels, the bound and stage instances, and one more pair for the recursion's package
-family. `entryBoundFormula` takes the tag as a parameter, so one
+in advance. It came to **ten** — two Collection/Separation pairs for the aggregation
+levels, the bound and stage instances, one more pair for the recursion's package family, and
+two provenance-preserving projections. `entryBoundFormula` takes the tag as a parameter, so one
 sentence serves both tags rather than two.
 
 ## Aggregation is not coherence
@@ -67,7 +69,7 @@ against a stated whole:
 * the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
   — for entries and for the two-tag bound;
 * `unionSentence`, general Union, at each of the two flattening steps;
-* the eight scheme instances named above.
+* the ten scheme instances named above.
 
 Absent, and load-bearing as negative findings: **no Foundation, no Infinity, no Power Set**.
 Nothing here mentions `InternalNameCoding` or the external forcing relation.
@@ -85,7 +87,9 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   `Forcing.AtomicRecursion.stageGatherFormula`, `Forcing.AtomicRecursion.stageFilterFormula`,
   `Forcing.AtomicRecursion.rowGatherFormula`, `Forcing.AtomicRecursion.rowFilterFormula`,
   `Forcing.AtomicRecursion.packageGatherFormula`,
-  `Forcing.AtomicRecursion.packageFilterFormula`: the eight instance formulas.
+  `Forcing.AtomicRecursion.packageFilterFormula`,
+  `Forcing.AtomicRecursion.domainFamilyFormula`,
+  `Forcing.AtomicRecursion.graphFamilyFormula`: the ten instance formulas.
 * the corresponding `…Sentence` definitions: the named instances.
 
 ## Main results
@@ -98,6 +102,8 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   with the remaining fixed-point obligation stated rather than discharged.
 * `Forcing.MaterialGround.exists_packageFamily`: the recursion's predecessor packages —
   every retained one valid, and every predecessor covered by a retained one.
+* `Forcing.MaterialGround.exists_projections`: the component families, selected by
+  provenance and flattened to exactly the merge's hypotheses.
 -/
 
 universe u v
@@ -180,7 +186,27 @@ def packageFilterFormula : memLang.BoundedFormula (Fin 6) 1 :=
       (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3))) (liftTerm (var (Sum.inl 4)))
       (&(Fin.last 1)) (liftTerm (&0)))
 
+/-- **The domain-projection instance**: keep the sets occurring as a package's first
+coordinate. Selection is by **provenance** — occurrence in a pair of `F` — never by a property
+of the component alone, which would forget the pairing. -/
+def domainFamilyFormula : memLang.BoundedFormula (Fin 1) 1 :=
+  domainFamilyDef (var (Sum.inl 0)) (&0)
+
+/-- **The graph-projection instance**, dually. -/
+def graphFamilyFormula : memLang.BoundedFormula (Fin 1) 1 :=
+  graphFamilyDef (var (Sum.inl 0)) (&0)
+
 def entryBoundSentence : memLang.Sentence := collectionSentence entryBoundFormula
+
+def domainFamilySentence : memLang.Sentence := separationSentence domainFamilyFormula
+
+def graphFamilySentence : memLang.Sentence := separationSentence graphFamilyFormula
+
+theorem domainFamilySentence_mem_scheme : domainFamilySentence ∈ separationScheme :=
+  separationSentence_mem_scheme domainFamilyFormula
+
+theorem graphFamilySentence_mem_scheme : graphFamilySentence ∈ separationScheme :=
+  separationSentence_mem_scheme graphFamilyFormula
 
 def packageGatherSentence : memLang.Sentence := collectionSentence packageGatherFormula
 
@@ -782,6 +808,77 @@ theorem exists_packageCoverage (hp : pairingSentence ∈ T)
   obtain ⟨D, R, hsD, hdc, hco⟩ := ih u v (by rw [← hsuv]; exact hpred)
   refine M.packageAt_mem hp ?_ hdc hco
   rw [hsuv]; exact hsD
+
+/-! ### The projections
+
+Select each component family by provenance, then flatten. The results are literally
+`approximation_union`'s `hDc` and `hRc`. **No functionality of the Collection output is
+assumed**: packages may share a domain, or a domain may occur with several graphs, and the
+laws are unaffected because they quantify over the *pair* being in `F`. -/
+
+/-- Both components of a package in `F` lie in `⋃⋃F`, which is the bound the two Separation
+instances carve from. Structural. -/
+private theorem components_mem_sUnion_sUnion {F a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ F) :
+    a ∈ ZFSet.sUnion (ZFSet.sUnion F) ∧ b ∈ ZFSet.sUnion (ZFSet.sUnion F) := by
+  have hmid : ({a, b} : ZFSet.{u}) ∈ ZFSet.sUnion F :=
+    ZFSet.mem_sUnion.2 ⟨ZFSet.pair a b, h, ZFSet.mem_pair.2 (Or.inr rfl)⟩
+  exact ⟨ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inl rfl)⟩,
+    ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inr rfl)⟩⟩
+
+/-- **The projections exist inside the ground, with exactly the laws the merge needs.**
+
+Charged: two Separation instances and general Union. The bound `⋃⋃F` is where the packages'
+components live, and provenance is what the separated conditions test. -/
+theorem exists_projections (hdom : domainFamilySentence ∈ T)
+    (hgra : graphFamilySentence ∈ T) (huni : unionSentence ∈ T)
+    (F : ↥M.toMaterialCarrier) :
+    ∃ D₀ R₀ : ↥M.toMaterialCarrier,
+      (∀ s, s ∈ (D₀ : ZFSet.{u}) ↔
+        ∃ D R, ZFSet.pair D R ∈ (F : ZFSet.{u}) ∧ s ∈ D) ∧
+      ∀ e, e ∈ (R₀ : ZFSet.{u}) ↔
+        ∃ D R, ZFSet.pair D R ∈ (F : ZFSet.{u}) ∧ e ∈ R := by
+  have hb : ZFSet.sUnion (ZFSet.sUnion (F : ZFSet.{u})) ∈ M.toMaterialCarrier :=
+    M.sUnion_mem huni (M.sUnion_mem huni F.2)
+  set bound : ↥M.toMaterialCarrier := ⟨_, hb⟩ with hbound
+  obtain ⟨Dfam, hDfam⟩ := M.exists_separation (φ := domainFamilyFormula) hdom ![F] bound
+  obtain ⟨Rfam, hRfam⟩ := M.exists_separation (φ := graphFamilyFormula) hgra ![F] bound
+  have hdomBody : ∀ d : ↥M.toMaterialCarrier,
+      (domainFamilyFormula.Realize ![F] ![d] ↔
+        ∃ R, ZFSet.pair (d : ZFSet.{u}) R ∈ (F : ZFSet.{u})) := by
+    intro d
+    rw [domainFamilyFormula, realize_domainFamilyDef]
+    simp
+  have hgraBody : ∀ r : ↥M.toMaterialCarrier,
+      (graphFamilyFormula.Realize ![F] ![r] ↔
+        ∃ D, ZFSet.pair D (r : ZFSet.{u}) ∈ (F : ZFSet.{u})) := by
+    intro r
+    rw [graphFamilyFormula, realize_graphFamilyDef]
+    simp
+  -- The selections are exact: the bound already contains every component.
+  have hDsel : DomainFamily (F : ZFSet.{u}) (Dfam : ZFSet.{u}) := by
+    intro d
+    constructor
+    · intro hd
+      exact (hdomBody ⟨d, M.toMaterialCarrier.mem_trans hd Dfam.2⟩).1
+        ((hDfam ⟨d, M.toMaterialCarrier.mem_trans hd Dfam.2⟩).1 hd).2
+    · rintro ⟨R, hR⟩
+      have hdM : d ∈ M.toMaterialCarrier :=
+        M.toMaterialCarrier.mem_trans (components_mem_sUnion_sUnion hR).1 hb
+      exact (hDfam ⟨d, hdM⟩).2 ⟨(components_mem_sUnion_sUnion hR).1,
+        (hdomBody ⟨d, hdM⟩).2 ⟨R, hR⟩⟩
+  have hRsel : GraphFamily (F : ZFSet.{u}) (Rfam : ZFSet.{u}) := by
+    intro r
+    constructor
+    · intro hr
+      exact (hgraBody ⟨r, M.toMaterialCarrier.mem_trans hr Rfam.2⟩).1
+        ((hRfam ⟨r, M.toMaterialCarrier.mem_trans hr Rfam.2⟩).1 hr).2
+    · rintro ⟨D, hD⟩
+      have hrM : r ∈ M.toMaterialCarrier :=
+        M.toMaterialCarrier.mem_trans (components_mem_sUnion_sUnion hD).2 hb
+      exact (hRfam ⟨r, hrM⟩).2 ⟨(components_mem_sUnion_sUnion hD).2,
+        (hgraBody ⟨r, hrM⟩).2 ⟨D, hD⟩⟩
+  exact ⟨⟨_, M.sUnion_mem huni Dfam.2⟩, ⟨_, M.sUnion_mem huni Rfam.2⟩,
+    sUnion_domainFamily hDsel, sUnion_graphFamily hRsel⟩
 
 end MaterialGround
 
