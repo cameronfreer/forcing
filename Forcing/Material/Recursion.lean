@@ -857,6 +857,22 @@ theorem approximation_of_packageAt {A s a : ZFSet.{u}}
   obtain ⟨D, R, he, hd, hc, -⟩ := h
   exact ⟨D, R, he, hd, hc⟩
 
+/-- A package certified as a **row** at `x`: an approximation whose domain covers *every*
+state `(x, y)` with `y ∈ A`.
+
+Universal row coverage, not merely `Approximation`, is what the row filter must certify. The
+second aggregation level gathers these, and if a retained row package carried only the
+approximation conditions there would be no route from it to the final coverage — exactly the
+provenance problem the package filter already solved one level down. -/
+def RowPackageAt (condSet orderCode A x a : ZFSet.{u}) : Prop :=
+  ∃ D R, a = ZFSet.pair D R ∧ DescentClosed condSet A D ∧
+    CorrectOn condSet orderCode D R ∧ ∀ y ∈ A, ZFSet.pair x y ∈ D
+
+theorem approximation_of_rowPackageAt {A x a : ZFSet.{u}}
+    (h : RowPackageAt condSet orderCode A x a) : Approximation condSet orderCode A a := by
+  obtain ⟨D, R, he, hd, hc, -⟩ := h
+  exact ⟨D, R, he, hd, hc⟩
+
 /-- **Exact support, read backwards**: an entry in `R` pins the state it belongs to into `D`.
 This is the direction `AtomicCoherentOn` cannot supply, and the merge below turns on it. -/
 private theorem state_mem_of_memWitness {D R p x y : ZFSet.{u}}

@@ -31,11 +31,14 @@ The instances, each named by its job:
 | `predBoundRightFormula` | Collection | right-oriented predecessor witnesses |
 | `predBoundLeftFormula` | Collection | left-oriented predecessor witnesses |
 | `predSepFormula` | Separation | the exact predecessor set |
+| `rowStateGatherFormula` | Collection | a package per state along a row |
+| `rowStateFilterFormula` | Separation | keep only packages certified along that row |
 
 The count is **discovery-driven**: it is read off the construction that compiled, not chosen
 in advance. It came to **thirteen** — two Collection/Separation pairs for the aggregation
 levels, the bound and stage instances, one more pair for the recursion's package family, two
-provenance-preserving projections, and three for the predecessor set.
+provenance-preserving projections, three for the predecessor set, and one pair for the row
+aggregation.
 `entryBoundFormula` takes the tag as a parameter, so one sentence serves both tags rather
 than two.
 
@@ -73,7 +76,7 @@ against a stated whole:
 * the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
   — for entries and for the two-tag bound;
 * `unionSentence`, general Union, at each of the two flattening steps;
-* the thirteen scheme instances named above.
+* the fifteen scheme instances named above.
 
 Absent, and load-bearing as negative findings: **no Foundation, no Infinity, no Power Set**.
 Nothing here mentions `InternalNameCoding` or the external forcing relation.
@@ -96,7 +99,9 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
   `Forcing.AtomicRecursion.graphFamilyFormula`,
   `Forcing.AtomicRecursion.predBoundRightFormula`,
   `Forcing.AtomicRecursion.predBoundLeftFormula`,
-  `Forcing.AtomicRecursion.predSepFormula`: the thirteen instance formulas.
+  `Forcing.AtomicRecursion.predSepFormula`,
+  `Forcing.AtomicRecursion.rowStateGatherFormula`,
+  `Forcing.AtomicRecursion.rowStateFilterFormula`: the fifteen instance formulas.
 * the corresponding `…Sentence` definitions: the named instances.
 
 ## Main results
@@ -117,6 +122,8 @@ constructing bounds is `exists_stageBound`'s job and is charged there.
 * `Forcing.MaterialGround.exists_predValue`: the exact predecessor set.
 * `Forcing.MaterialGround.exists_approximation_at_state`: per-state existence with every
   hypothesis discharged.
+* `Forcing.MaterialGround.exists_rowApproximation`: the row approximation, carrying universal
+  row coverage.
 -/
 
 universe u v
@@ -224,7 +231,31 @@ applied, and where `PredValue` becomes exact. -/
 def predSepFormula : memLang.BoundedFormula (Fin 3) 1 :=
   predSpecDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (&0)
 
+/-- **The row-gathering instance** (Collection): for a fixed first coordinate, a package
+covering the state `⟨x, y⟩` for each `y ∈ A`. -/
+def rowStateGatherFormula : memLang.BoundedFormula (Fin 6) 2 :=
+  statePackageAtDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+    (var (Sum.inl 4)) (var (Sum.inl 5)) (&0) (&1)
+
+/-- **The row-filter instance** (Separation): keep only packages certified at a state
+`⟨x, y⟩` with `y ∈ A`. -/
+def rowStateFilterFormula : memLang.BoundedFormula (Fin 6) 1 :=
+  ∃' (memFormula (&(Fin.last 1)) (liftTerm (var (Sum.inl 4))) ⊓
+    statePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+      (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3))) (liftTerm (var (Sum.inl 4)))
+      (liftTerm (var (Sum.inl 5))) (&(Fin.last 1)) (liftTerm (&0)))
+
 def entryBoundSentence : memLang.Sentence := collectionSentence entryBoundFormula
+
+def rowStateGatherSentence : memLang.Sentence := collectionSentence rowStateGatherFormula
+
+def rowStateFilterSentence : memLang.Sentence := separationSentence rowStateFilterFormula
+
+theorem rowStateGatherSentence_mem_scheme : rowStateGatherSentence ∈ collectionScheme :=
+  collectionSentence_mem_scheme rowStateGatherFormula
+
+theorem rowStateFilterSentence_mem_scheme : rowStateFilterSentence ∈ separationScheme :=
+  separationSentence_mem_scheme rowStateFilterFormula
 
 def predBoundRightSentence : memLang.Sentence := collectionSentence predBoundRightFormula
 
@@ -1148,6 +1179,152 @@ theorem exists_approximation_at_state (hbnd : entryBoundSentence ∈ T)
     tagMem tagEq condSet orderCode A hA hm hq
     (fun x y hx hy ↦ M.exists_predValue hbr hbl hpsep hp hu condSet
       ⟨x, M.toMaterialCarrier.mem_trans hx A.2⟩ ⟨y, M.toMaterialCarrier.mem_trans hy A.2⟩)
+
+/-! ### The row aggregation
+
+The first of the two final levels. For a fixed first coordinate, gather a package for every
+`y ∈ A`, filter, project by provenance, and merge — reusing `exists_projections` and
+`approximation_union` unchanged. The result carries **universal row coverage**, which is the
+certificate the second level will filter on. `A × A` is never formed. -/
+
+section RowAggregation
+
+variable {β : Type v} {k : ℕ} {w : β → ↥M.toMaterialCarrier} {xs : Fin k → ↥M.toMaterialCarrier}
+
+/-- The state-package law, at an arbitrary assignment. -/
+theorem realize_statePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
+    (hu : binaryUnionSentence ∈ T)
+    {tagMem tagEq condSet orderCode A x y a : memLang.Term (β ⊕ Fin k)}
+    (hm : ((Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier) : ZFSet.{u}) =
+      natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim w xs) tagEq : ↥M.toMaterialCarrier) : ZFSet.{u}) =
+      natCode eqTag) :
+    (statePackageAtDef tagMem tagEq condSet orderCode A x y a).Realize w xs ↔
+      PackageAt ((Term.realize (Sum.elim w xs) condSet : ↥M.toMaterialCarrier) : ZFSet.{u})
+        ((Term.realize (Sum.elim w xs) orderCode : ↥M.toMaterialCarrier) : ZFSet.{u})
+        ((Term.realize (Sum.elim w xs) A : ↥M.toMaterialCarrier) : ZFSet.{u})
+        (ZFSet.pair ((Term.realize (Sum.elim w xs) x : ↥M.toMaterialCarrier) : ZFSet.{u})
+          ((Term.realize (Sum.elim w xs) y : ↥M.toMaterialCarrier) : ZFSet.{u}))
+        ((Term.realize (Sum.elim w xs) a : ↥M.toMaterialCarrier) : ZFSet.{u}) := by
+  have hpk : ∀ s : ↥M.toMaterialCarrier,
+      (packageAtDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+          (liftTerm orderCode) (liftTerm A) (&(Fin.last k)) (liftTerm a)).Realize w
+        (Fin.snoc xs s) ↔
+        PackageAt ((Term.realize (Sum.elim w xs) condSet : ↥M.toMaterialCarrier) : ZFSet.{u})
+          ((Term.realize (Sum.elim w xs) orderCode : ↥M.toMaterialCarrier) : ZFSet.{u})
+          ((Term.realize (Sum.elim w xs) A : ↥M.toMaterialCarrier) : ZFSet.{u})
+          (s : ZFSet.{u})
+          ((Term.realize (Sum.elim w xs) a : ↥M.toMaterialCarrier) : ZFSet.{u}) := by
+    intro s
+    rw [M.realize_packageAtDef he hp hu (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  simp only [statePackageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+    realize_pairDef, Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    realize_liftTerm]
+  constructor
+  · rintro ⟨s, hs, hpa⟩
+    rw [← hs]
+    exact (hpk s).1 hpa
+  · intro hpa
+    have hxyM : ZFSet.pair
+        ((Term.realize (Sum.elim w xs) x : ↥M.toMaterialCarrier) : ZFSet.{u})
+        ((Term.realize (Sum.elim w xs) y : ↥M.toMaterialCarrier) : ZFSet.{u}) ∈
+          M.toMaterialCarrier :=
+      M.pair_mem hp (Term.realize (Sum.elim w xs) x : ↥M.toMaterialCarrier).2
+        (Term.realize (Sum.elim w xs) y : ↥M.toMaterialCarrier).2
+    exact ⟨⟨_, hxyM⟩, rfl, (hpk ⟨_, hxyM⟩).2 hpa⟩
+
+end RowAggregation
+
+/-- **The row approximation, with universal row coverage.**
+
+Gather a package for every `y ∈ A`, filter, project by provenance, merge. The coverage
+conclusion — `∀ y ∈ A, ⟨x, y⟩ ∈ D` — is what the second aggregation level filters on; it is
+recovered from the retained packages exactly as `hpred` was, through the filter's coverage
+field and the provenance projection. -/
+theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
+    (hsep : stageSeparationSentence ∈ T) (hgat : packageGatherSentence ∈ T)
+    (hfil : packageFilterSentence ∈ T) (hdom : domainFamilySentence ∈ T)
+    (hgra : graphFamilySentence ∈ T) (hbr : predBoundRightSentence ∈ T)
+    (hbl : predBoundLeftSentence ∈ T) (hpsep : predSepSentence ∈ T)
+    (hrgat : rowStateGatherSentence ∈ T) (hrfil : rowStateFilterSentence ∈ T)
+    (huni : unionSentence ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
+    (hA : (A : ZFSet.{u}).IsTransitive)
+    (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
+    (x : ↥M.toMaterialCarrier) (hx : (x : ZFSet.{u}) ∈ (A : ZFSet.{u})) :
+    ∃ D R : ↥M.toMaterialCarrier,
+      DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
+        CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
+          (R : ZFSet.{u}) ∧
+        ∀ y ∈ (A : ZFSet.{u}), ZFSet.pair (x : ZFSet.{u}) y ∈ (D : ZFSet.{u}) := by
+  have hAM : (A : ZFSet.{u}) ∈ M.toMaterialCarrier := A.2
+  have hgatherBody : ∀ y a : ↥M.toMaterialCarrier,
+      (rowStateGatherFormula.Realize ![tagMem, tagEq, condSet, orderCode, A, x] ![y, a] ↔
+        PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
+          (ZFSet.pair (x : ZFSet.{u}) (y : ZFSet.{u})) (a : ZFSet.{u})) := by
+    intro y a
+    rw [rowStateGatherFormula, M.realize_statePackageAtDef he hp hu (by simpa using hm)
+      (by simpa using hq)]
+    simp
+  -- Step 1: gather a package for each `y ∈ A`.
+  obtain ⟨B, hB⟩ := M.exists_collection (φ := rowStateGatherFormula) hrgat
+    ![tagMem, tagEq, condSet, orderCode, A, x] A
+    (fun y hy ↦ by
+      obtain ⟨D, R, hstate, hdc, hco⟩ := M.exists_approximation_at_state hbnd hsep hgat hfil
+        hdom hgra hbr hbl hpsep huni he hp hu tagMem tagEq condSet orderCode A hA hm hq
+        (x : ZFSet.{u}) (y : ZFSet.{u}) hx hy
+      obtain ⟨a, ha⟩ := M.packageAt_mem hp hstate hdc hco
+      exact ⟨a, (hgatherBody y a).2 ha⟩)
+  -- Step 2: filter.
+  obtain ⟨F, hF⟩ := M.exists_separation (φ := rowStateFilterFormula) hrfil
+    ![tagMem, tagEq, condSet, orderCode, A, x] B
+  have hfilterBody : ∀ a : ↥M.toMaterialCarrier,
+      (rowStateFilterFormula.Realize ![tagMem, tagEq, condSet, orderCode, A, x] ![a] ↔
+        ∃ y ∈ (A : ZFSet.{u}), PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u})
+          (A : ZFSet.{u}) (ZFSet.pair (x : ZFSet.{u}) y) (a : ZFSet.{u})) := by
+    intro a
+    have hsp : ∀ t : ↥M.toMaterialCarrier,
+        ((statePackageAtDef (liftTerm (var (Sum.inl 0))) (liftTerm (var (Sum.inl 1)))
+            (liftTerm (var (Sum.inl 2))) (liftTerm (var (Sum.inl 3)))
+            (liftTerm (var (Sum.inl 4))) (liftTerm (var (Sum.inl 5))) (&(Fin.last 1))
+            (liftTerm (&0))).Realize
+          ![tagMem, tagEq, condSet, orderCode, A, x] (Fin.snoc ![a] t) ↔
+          PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
+            (ZFSet.pair (x : ZFSet.{u}) (t : ZFSet.{u})) (a : ZFSet.{u})) := by
+      intro t
+      rw [M.realize_statePackageAtDef he hp hu
+        (by simpa [liftTerm, Term.realize_relabel] using hm)
+        (by simpa [liftTerm, Term.realize_relabel] using hq)]
+      simp [liftTerm]
+    simp only [rowStateFilterFormula, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+      memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+      Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+      realize_liftTerm]
+    exact ⟨fun ⟨t, ht, hpa⟩ ↦ ⟨(t : ZFSet.{u}), ht, (hsp t).1 hpa⟩,
+      fun ⟨t, ht, hpa⟩ ↦ ⟨⟨t, M.toMaterialCarrier.mem_trans ht hAM⟩, ht,
+        (hsp ⟨t, _⟩).2 hpa⟩⟩
+  -- Step 3: project by provenance, then merge.
+  obtain ⟨D₀, R₀, hDc, hRc⟩ := M.exists_projections hdom hgra huni F
+  have hvalid : ∀ a ∈ (F : ZFSet.{u}),
+      Approximation (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u}) a := by
+    intro a ha
+    have haM := M.toMaterialCarrier.mem_trans ha F.2
+    obtain ⟨-, hcert⟩ := (hF ⟨a, haM⟩).1 ha
+    obtain ⟨t, -, hpa⟩ := (hfilterBody ⟨a, haM⟩).1 hcert
+    exact approximation_of_packageAt hpa
+  obtain ⟨hDC₀, hCO₀⟩ := approximation_union hvalid hDc hRc
+  refine ⟨D₀, R₀, hDC₀, hCO₀, fun y hy ↦ ?_⟩
+  -- Universal row coverage, recovered through the filter's coverage field.
+  obtain ⟨a, haB, hpa⟩ := hB ⟨y, M.toMaterialCarrier.mem_trans hy hAM⟩ hy
+  have hpa' := (hgatherBody ⟨y, _⟩ a).1 hpa
+  have haF : (a : ZFSet.{u}) ∈ (F : ZFSet.{u}) :=
+    (hF a).2 ⟨haB, (hfilterBody a).2 ⟨y, hy, hpa'⟩⟩
+  obtain ⟨D, R, haeq, -, -, hsD⟩ := hpa'
+  exact (hDc _).2 ⟨D, R, haeq ▸ haF, hsD⟩
 
 end MaterialGround
 
