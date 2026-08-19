@@ -67,9 +67,12 @@ sets.
 * `Forcing.MaterialGround.sUnion_mem`: closure under general union, the flattening step.
 * `Forcing.MaterialGround.union_mem_of_sUnion`: general Union subsumes the binary fragment.
 * `Forcing.MaterialGround.exists_inductive`: the consequence of Infinity.
+* `Forcing.IsInductive`, `Forcing.inductiveDef`, `Forcing.realize_inductiveDef`: the shared
+  notion of "inductive", so the axiom, the leastness condition defining `ω`, and the
+  induction proof cannot drift apart.
 -/
 
-universe u
+universe u v
 
 namespace Forcing
 
@@ -87,6 +90,63 @@ def pairingSentence : memLang.Sentence :=
 def binaryUnionSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
 
+/-- A set is **inductive**: it contains `∅` and is closed under successor. -/
+def IsInductive (u : ZFSet.{u}) : Prop :=
+  (∅ : ZFSet.{u}) ∈ u ∧ ∀ x ∈ u, insert x x ∈ u
+
+/-- **Inductiveness, as a formula**, function-free. Factored so that Infinity, the leastness
+condition defining `ω`, and the induction proof cannot drift apart in what they mean by
+"inductive" — all three are stated against this one definition. -/
+def inductiveDef {α : Type v} {n : ℕ} (u : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  (∃' (memFormula (&(Fin.last n)) (liftTerm u) ⊓
+      ∀' ∼(memFormula (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n))))))
+  ⊓ ∀' (memFormula (&(Fin.last n)) (liftTerm u) ⟹
+    ∃' (memFormula (&(Fin.last (n + 1))) (liftTerm (liftTerm u)) ⊓
+      ∀' (memFormula (&(Fin.last (n + 2))) (&(Fin.castSucc (Fin.last (n + 1)))) ⇔
+        (memFormula (&(Fin.last (n + 2))) (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) ⊔
+          (&(Fin.last (n + 2)) =' &(Fin.castSucc (Fin.castSucc (Fin.last n))))))))
+
+/-- **The inductiveness law.** No hypotheses and no theory axioms: `∅` and each successor are
+members of a carrier element, so transitivity supplies them. -/
+theorem realize_inductiveDef {α : Type v} {n : ℕ} {M : MaterialCarrier.{u}}
+    {v : α → M} {xs : Fin n → M} {u : memLang.Term (α ⊕ Fin n)} :
+    (inductiveDef u).Realize v xs ↔
+      IsInductive ((Term.realize (Sum.elim v xs) u : ↥M) : ZFSet.{u}) := by
+  have huM : ((Term.realize (Sum.elim v xs) u : ↥M) : ZFSet.{u}) ∈ M :=
+    (Term.realize (Sum.elim v xs) u : ↥M).2
+  rw [inductiveDef, IsInductive]
+  simp only [BoundedFormula.realize_inf, BoundedFormula.realize_ex, BoundedFormula.realize_all,
+    BoundedFormula.realize_imp, BoundedFormula.realize_not, BoundedFormula.realize_iff,
+    BoundedFormula.realize_sup, BoundedFormula.realize_bdEqual, memFormula,
+    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, Subtype.ext_iff]
+  refine and_congr ⟨?_, ?_⟩ ⟨?_, ?_⟩
+  · rintro ⟨e, heU, hemp⟩
+    have : (e : ZFSet.{u}) = ∅ :=
+      (ZFSet.eq_empty _).2 fun z hz ↦
+        hemp ⟨z, M.mem_trans hz (M.mem_trans heU huM)⟩ hz
+    exact this ▸ heU
+  · intro h
+    exact ⟨⟨∅, M.mem_trans h huM⟩, h, fun z hz ↦ absurd hz (ZFSet.notMem_empty _)⟩
+  · intro h x hx
+    obtain ⟨s, hsU, hs⟩ := h ⟨x, M.mem_trans hx huM⟩ hx
+    have hse : (s : ZFSet.{u}) = insert x x := by
+      refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+      · rcases (hs ⟨z, M.mem_trans hz (M.mem_trans hsU huM)⟩).1 hz with h1 | h1
+        · exact ZFSet.mem_insert_iff.2 (Or.inr h1)
+        · exact ZFSet.mem_insert_iff.2 (Or.inl h1)
+      · rcases ZFSet.mem_insert_iff.1 hz with rfl | h1
+        · exact (hs ⟨z, M.mem_trans hx huM⟩).2 (Or.inr rfl)
+        · exact (hs ⟨z, M.mem_trans h1 (M.mem_trans hx huM)⟩).2 (Or.inl h1)
+    exact hse ▸ hsU
+  · intro h x hx
+    refine ⟨⟨insert (x : ZFSet.{u}) (x : ZFSet.{u}),
+      M.mem_trans (h (x : ZFSet.{u}) hx) huM⟩, h (x : ZFSet.{u}) hx, fun z ↦ ?_⟩
+    rw [ZFSet.mem_insert_iff]
+    exact Or.comm
+
 /-- **Infinity**: some set contains the empty set and is closed under successor.
 
 Charged **only** for the ambient domain of the atomic recursion — supplying a transitive set
@@ -95,10 +155,7 @@ parameter and never needs Infinity; see `Forcing/Material/RecursionExistence.lea
 endpoint is priced without it. Keeping the two apart is the point of the parameterized
 statement. -/
 def infinitySentence : memLang.Sentence :=
-  ∃' ((∃' (memFormula &1 &0 ⊓ ∀' ∼(memFormula &2 &1))) ⊓
-    ∀' (memFormula &1 &0 ⟹
-      ∃' (memFormula &2 &0 ⊓
-        ∀' (memFormula &3 &2 ⇔ (memFormula &3 &1 ⊔ (&3 =' &1))))))
+  ∃' (inductiveDef (&(Fin.last 0)))
 
 /-- **General Union**: every family has a union — the members of the members of `a` form a
 set. Charged only where a genuine family is flattened; see the module docstring. -/
@@ -208,34 +265,14 @@ theorem union_mem_of_sUnion (hu : unionSentence ∈ T) (hp : pairingSentence ∈
   exact hxy ▸ M.sUnion_mem hu (M.insert_pair_mem hp hx hy)
 
 /-- **An inductive set lies in the ground** — the consequence of Infinity, and the only place
-it is used. Everything else in the material development is priced without it. -/
+it is used. Stated against the shared `IsInductive`, so it cannot drift from the sentence. -/
 theorem exists_inductive (h : infinitySentence ∈ T) :
-    ∃ w : ZFSet.{u}, w ∈ M ∧ (∅ : ZFSet.{u}) ∈ w ∧ ∀ x ∈ w, insert x x ∈ w := by
+    ∃ w : ZFSet.{u}, w ∈ M ∧ IsInductive w := by
   have hr := M.realize_of_mem h
-  have key : ∃ w : ↥M.toMaterialCarrier,
-      (∃ e : ↥M.toMaterialCarrier, (e : ZFSet.{u}) ∈ (w : ZFSet.{u}) ∧
-          ∀ z : ↥M.toMaterialCarrier, (z : ZFSet.{u}) ∉ (e : ZFSet.{u})) ∧
-        ∀ x : ↥M.toMaterialCarrier, (x : ZFSet.{u}) ∈ (w : ZFSet.{u}) →
-          ∃ s : ↥M.toMaterialCarrier, (s : ZFSet.{u}) ∈ (w : ZFSet.{u}) ∧
-            ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (s : ZFSet.{u}) ↔
-              ((z : ZFSet.{u}) ∈ (x : ZFSet.{u}) ∨ (z : ZFSet.{u}) = (x : ZFSet.{u}))) := by
-    simpa [infinitySentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
-      using hr
-  obtain ⟨w, ⟨e, heW, hempty⟩, hsucc⟩ := key
-  have heE : (e : ZFSet.{u}) = ∅ := by
-    refine (ZFSet.eq_empty _).2 fun z hz ↦ ?_
-    exact hempty ⟨z, mem_trans hz (mem_trans heW w.2)⟩ hz
-  refine ⟨w, w.2, heE ▸ heW, fun x hx ↦ ?_⟩
-  obtain ⟨s, hsW, hs⟩ := hsucc ⟨x, mem_trans hx w.2⟩ hx
-  have hse : (s : ZFSet.{u}) = insert (x : ZFSet.{u}) (x : ZFSet.{u}) := by
-    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
-    · rcases (hs ⟨z, mem_trans hz (mem_trans hsW w.2)⟩).1 hz with h1 | h1
-      · exact ZFSet.mem_insert_iff.2 (Or.inr h1)
-      · exact ZFSet.mem_insert_iff.2 (Or.inl h1)
-    · rcases ZFSet.mem_insert_iff.1 hz with rfl | h1
-      · exact (hs ⟨z, mem_trans hx w.2⟩).2 (Or.inr rfl)
-      · exact (hs ⟨z, mem_trans h1 (mem_trans hx w.2)⟩).2 (Or.inl h1)
-  exact hse ▸ hsW
+  rw [infinitySentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_ex] at hr
+  obtain ⟨w, hw⟩ := hr
+  exact ⟨w, w.2, realize_inductiveDef.1 hw⟩
 
 /-- **Closure under `insert`**: a singleton unioned on, priced at pairing and union. -/
 theorem insert_mem (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
