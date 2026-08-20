@@ -29,6 +29,7 @@ import Forcing.Material.Names
 import Forcing.Material.Recursion
 import Forcing.Material.RecursionEntry
 import Forcing.Material.RecursionFormula
+import Forcing.Material.Omega
 import Forcing.Material.RecursionSchemes
 import Forcing.Material.RecursionExistence
 import Forcing.Material.Semantics
