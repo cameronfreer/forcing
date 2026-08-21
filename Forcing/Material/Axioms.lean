@@ -80,13 +80,18 @@ open FirstOrder Language
 
 /-- **The empty-set axiom**: some set has no members. -/
 def emptySetSentence : memLang.Sentence :=
-  ∃' ∀' ∼(memFormula &1 &0)
+  ∃' (emptyDef (&(Fin.last 0)))
 
 /-- **The pairing axiom**: any two sets have an unordered pair. -/
 def pairingSentence : memLang.Sentence :=
-  ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ ((&3 =' &0) ⊔ (&3 =' &1)))
+  ∀' ∀' ∃' (unorderedPairDef (&(Fin.castSucc (Fin.castSucc (Fin.last 0))))
+    (&(Fin.castSucc (Fin.last 1))) (&(Fin.last 2)))
 
-/-- **The binary-union axiom**: any two sets have a union. -/
+/-- **The binary-union axiom**: any two sets have a union.
+
+Deliberately *not* routed through a `binaryUnionDef` builder: there is no second syntactic
+consumer of binary union, and a builder with one use would be abstraction ahead of demand.
+Consumer-gating, as with the rest of this vocabulary. -/
 def binaryUnionSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
 
@@ -153,33 +158,22 @@ variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 "no member of the witness lies in the ground" to "the witness is empty". -/
 theorem empty_mem (h : emptySetSentence ∈ T) : (∅ : ZFSet.{u}) ∈ M := by
   have hr := M.realize_of_mem h
-  have key : ∃ x : ↥M.toMaterialCarrier, ∀ y : ↥M.toMaterialCarrier,
-      (y : ZFSet.{u}) ∉ (x : ZFSet.{u}) := by
-    simpa [emptySetSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
-  obtain ⟨x, hx⟩ := key
-  have hxe : (x : ZFSet.{u}) = ∅ := by
-    refine (ZFSet.eq_empty _).2 fun z hz ↦ ?_
-    exact hx ⟨z, mem_trans hz x.2⟩ hz
-  exact hxe ▸ x.2
+  rw [emptySetSentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_ex,
+    realize_emptyDef] at hr
+  obtain ⟨x, hx⟩ := hr
+  exact hx ▸ x.2
 
 /-- **Closure under unordered pairs**, priced at the pairing axiom. -/
 theorem insert_pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M)
     (hy : y ∈ M) : ({x, y} : ZFSet.{u}) ∈ M := by
   have hr := M.realize_of_mem h
-  have key : ∀ a b : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
-      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔ z = a ∨ z = b) := by
-    simpa [pairingSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
-  obtain ⟨c, hc⟩ := key ⟨x, hx⟩ ⟨y, hy⟩
-  have hce : (c : ZFSet.{u}) = {x, y} := by
-    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
-    · have hzM : z ∈ M := mem_trans hz c.2
-      rcases (hc ⟨z, hzM⟩).1 (by simpa using hz) with h1 | h1
-      · exact ZFSet.mem_pair.2 (Or.inl (congrArg Subtype.val h1))
-      · exact ZFSet.mem_pair.2 (Or.inr (congrArg Subtype.val h1))
-    · rcases ZFSet.mem_pair.1 hz with rfl | rfl
-      · simpa using (hc ⟨z, hx⟩).2 (Or.inl rfl)
-      · simpa using (hc ⟨z, hy⟩).2 (Or.inr rfl)
-  exact hce ▸ c.2
+  rw [pairingSentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_all,
+    BoundedFormula.realize_ex, realize_unorderedPairDef, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc] at hr
+  obtain ⟨c, hc⟩ := hr ⟨x, hx⟩ ⟨y, hy⟩
+  exact hc ▸ c.2
 
 /-- **Closure under singletons**: the diagonal case of pairing. -/
 theorem singleton_mem (h : pairingSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M) :
