@@ -73,4 +73,30 @@ def pairDef {α : Type v} {n : ℕ} (x y z : memLang.Term (α ⊕ Fin n)) :
       unorderedPairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
         (liftTerm (liftTerm z))))
 
+/-! ### Set-operation formulas
+
+The function-free vocabulary. `memLang` has no function symbols, so `∅`, successor, and
+general union are each *characterized* by a formula rather than denoted by a term. Factored
+here, as the pair builders were, so that the several places needing them — Infinity,
+inductiveness, the `ω` facts, the iteration's approximations, and the Union axiom — cannot
+drift into four different notions of successor or of general union. -/
+
+/-- `e` is the empty set. -/
+def emptyDef {α : Type v} {n : ℕ} (e : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' ∼(memFormula (&(Fin.last n)) (liftTerm e))
+
+/-- `s` is the successor `insert x x`. -/
+def successorDef {α : Type v} {n : ℕ} (x s : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm s) ⇔
+    (memFormula (&(Fin.last n)) (liftTerm x) ⊔ (&(Fin.last n) =' liftTerm x)))
+
+/-- `u` is the general union `⋃₀ a`. -/
+def sUnionDef {α : Type v} {n : ℕ} (a u : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm u) ⇔
+    ∃' (memFormula (&(Fin.last (n + 1))) (liftTerm (liftTerm a)) ⊓
+      memFormula (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))))
+
 end Forcing

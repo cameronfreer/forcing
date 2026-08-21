@@ -80,13 +80,18 @@ open FirstOrder Language
 
 /-- **The empty-set axiom**: some set has no members. -/
 def emptySetSentence : memLang.Sentence :=
-  ∃' ∀' ∼(memFormula &1 &0)
+  ∃' (emptyDef (&(Fin.last 0)))
 
 /-- **The pairing axiom**: any two sets have an unordered pair. -/
 def pairingSentence : memLang.Sentence :=
-  ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ ((&3 =' &0) ⊔ (&3 =' &1)))
+  ∀' ∀' ∃' (unorderedPairDef (&(Fin.castSucc (Fin.castSucc (Fin.last 0))))
+    (&(Fin.castSucc (Fin.last 1))) (&(Fin.last 2)))
 
-/-- **The binary-union axiom**: any two sets have a union. -/
+/-- **The binary-union axiom**: any two sets have a union.
+
+Deliberately *not* routed through a `binaryUnionDef` builder: there is no second syntactic
+consumer of binary union, and a builder with one use would be abstraction ahead of demand.
+Consumer-gating, as with the rest of this vocabulary. -/
 def binaryUnionSentence : memLang.Sentence :=
   ∀' ∀' ∃' ∀' (memFormula &3 &2 ⇔ (memFormula &3 &0 ⊔ memFormula &3 &1))
 
@@ -99,13 +104,10 @@ condition defining `ω`, and the induction proof cannot drift apart in what they
 "inductive" — all three are stated against this one definition. -/
 def inductiveDef {α : Type v} {n : ℕ} (u : memLang.Term (α ⊕ Fin n)) :
     memLang.BoundedFormula α n :=
-  (∃' (memFormula (&(Fin.last n)) (liftTerm u) ⊓
-      ∀' ∼(memFormula (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n))))))
+  (∃' (memFormula (&(Fin.last n)) (liftTerm u) ⊓ emptyDef (&(Fin.last n))))
   ⊓ ∀' (memFormula (&(Fin.last n)) (liftTerm u) ⟹
     ∃' (memFormula (&(Fin.last (n + 1))) (liftTerm (liftTerm u)) ⊓
-      ∀' (memFormula (&(Fin.last (n + 2))) (&(Fin.castSucc (Fin.last (n + 1)))) ⇔
-        (memFormula (&(Fin.last (n + 2))) (&(Fin.castSucc (Fin.castSucc (Fin.last n)))) ⊔
-          (&(Fin.last (n + 2)) =' &(Fin.castSucc (Fin.castSucc (Fin.last n))))))))
+      successorDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))))
 
 /-- **The inductiveness law.** No hypotheses and no theory axioms: `∅` and each successor are
 members of a carrier element, so transitivity supplies them. -/
@@ -117,35 +119,21 @@ theorem realize_inductiveDef {α : Type v} {n : ℕ} {M : MaterialCarrier.{u}}
     (Term.realize (Sum.elim v xs) u : ↥M).2
   rw [inductiveDef, IsInductive]
   simp only [BoundedFormula.realize_inf, BoundedFormula.realize_ex, BoundedFormula.realize_all,
-    BoundedFormula.realize_imp, BoundedFormula.realize_not, BoundedFormula.realize_iff,
-    BoundedFormula.realize_sup, BoundedFormula.realize_bdEqual, memFormula,
-    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
-    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
-    Matrix.cons_val_one, realize_liftTerm, Subtype.ext_iff]
+    BoundedFormula.realize_imp, memFormula, BoundedFormula.realize_rel₂, relMap_mem,
+    Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc,
+    Matrix.cons_val_zero, Matrix.cons_val_one, realize_liftTerm, realize_emptyDef,
+    realize_successorDef]
   refine and_congr ⟨?_, ?_⟩ ⟨?_, ?_⟩
-  · rintro ⟨e, heU, hemp⟩
-    have : (e : ZFSet.{u}) = ∅ :=
-      (ZFSet.eq_empty _).2 fun z hz ↦
-        hemp ⟨z, M.mem_trans hz (M.mem_trans heU huM)⟩ hz
-    exact this ▸ heU
+  · rintro ⟨e, heU, hee⟩
+    exact hee ▸ heU
   · intro h
-    exact ⟨⟨∅, M.mem_trans h huM⟩, h, fun z hz ↦ absurd hz (ZFSet.notMem_empty _)⟩
+    exact ⟨⟨∅, M.mem_trans h huM⟩, h, rfl⟩
   · intro h x hx
-    obtain ⟨s, hsU, hs⟩ := h ⟨x, M.mem_trans hx huM⟩ hx
-    have hse : (s : ZFSet.{u}) = insert x x := by
-      refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
-      · rcases (hs ⟨z, M.mem_trans hz (M.mem_trans hsU huM)⟩).1 hz with h1 | h1
-        · exact ZFSet.mem_insert_iff.2 (Or.inr h1)
-        · exact ZFSet.mem_insert_iff.2 (Or.inl h1)
-      · rcases ZFSet.mem_insert_iff.1 hz with rfl | h1
-        · exact (hs ⟨z, M.mem_trans hx huM⟩).2 (Or.inr rfl)
-        · exact (hs ⟨z, M.mem_trans h1 (M.mem_trans hx huM)⟩).2 (Or.inl h1)
+    obtain ⟨s, hsU, hse⟩ := h ⟨x, M.mem_trans hx huM⟩ hx
     exact hse ▸ hsU
   · intro h x hx
-    refine ⟨⟨insert (x : ZFSet.{u}) (x : ZFSet.{u}),
-      M.mem_trans (h (x : ZFSet.{u}) hx) huM⟩, h (x : ZFSet.{u}) hx, fun z ↦ ?_⟩
-    rw [ZFSet.mem_insert_iff]
-    exact Or.comm
+    exact ⟨⟨insert (x : ZFSet.{u}) (x : ZFSet.{u}),
+      M.mem_trans (h (x : ZFSet.{u}) hx) huM⟩, h (x : ZFSet.{u}) hx, rfl⟩
 
 /-- **Infinity**: some set contains the empty set and is closed under successor.
 
@@ -160,7 +148,7 @@ def infinitySentence : memLang.Sentence :=
 /-- **General Union**: every family has a union — the members of the members of `a` form a
 set. Charged only where a genuine family is flattened; see the module docstring. -/
 def unionSentence : memLang.Sentence :=
-  ∀' ∃' ∀' (memFormula &2 &1 ⇔ ∃' (memFormula &3 &0 ⊓ memFormula &2 &3))
+  ∀' ∃' (sUnionDef (&(Fin.castSucc (Fin.last 0))) (&(Fin.last 1)))
 
 namespace MaterialGround
 
@@ -170,33 +158,22 @@ variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 "no member of the witness lies in the ground" to "the witness is empty". -/
 theorem empty_mem (h : emptySetSentence ∈ T) : (∅ : ZFSet.{u}) ∈ M := by
   have hr := M.realize_of_mem h
-  have key : ∃ x : ↥M.toMaterialCarrier, ∀ y : ↥M.toMaterialCarrier,
-      (y : ZFSet.{u}) ∉ (x : ZFSet.{u}) := by
-    simpa [emptySetSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
-  obtain ⟨x, hx⟩ := key
-  have hxe : (x : ZFSet.{u}) = ∅ := by
-    refine (ZFSet.eq_empty _).2 fun z hz ↦ ?_
-    exact hx ⟨z, mem_trans hz x.2⟩ hz
-  exact hxe ▸ x.2
+  rw [emptySetSentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_ex,
+    realize_emptyDef] at hr
+  obtain ⟨x, hx⟩ := hr
+  exact hx ▸ x.2
 
 /-- **Closure under unordered pairs**, priced at the pairing axiom. -/
 theorem insert_pair_mem (h : pairingSentence ∈ T) {x y : ZFSet.{u}} (hx : x ∈ M)
     (hy : y ∈ M) : ({x, y} : ZFSet.{u}) ∈ M := by
   have hr := M.realize_of_mem h
-  have key : ∀ a b : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
-      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔ z = a ∨ z = b) := by
-    simpa [pairingSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc] using hr
-  obtain ⟨c, hc⟩ := key ⟨x, hx⟩ ⟨y, hy⟩
-  have hce : (c : ZFSet.{u}) = {x, y} := by
-    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
-    · have hzM : z ∈ M := mem_trans hz c.2
-      rcases (hc ⟨z, hzM⟩).1 (by simpa using hz) with h1 | h1
-      · exact ZFSet.mem_pair.2 (Or.inl (congrArg Subtype.val h1))
-      · exact ZFSet.mem_pair.2 (Or.inr (congrArg Subtype.val h1))
-    · rcases ZFSet.mem_pair.1 hz with rfl | rfl
-      · simpa using (hc ⟨z, hx⟩).2 (Or.inl rfl)
-      · simpa using (hc ⟨z, hy⟩).2 (Or.inr rfl)
-  exact hce ▸ c.2
+  rw [pairingSentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_all,
+    BoundedFormula.realize_ex, realize_unorderedPairDef, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc] at hr
+  obtain ⟨c, hc⟩ := hr ⟨x, hx⟩ ⟨y, hy⟩
+  exact hc ▸ c.2
 
 /-- **Closure under singletons**: the diagonal case of pairing. -/
 theorem singleton_mem (h : pairingSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M) :
@@ -230,21 +207,12 @@ Collection yields a set whose members are stage *sets* and the graph needs their
 theorem sUnion_mem (h : unionSentence ∈ T) {x : ZFSet.{u}} (hx : x ∈ M) :
     ZFSet.sUnion x ∈ M := by
   have hr := M.realize_of_mem h
-  have key : ∀ a : ↥M.toMaterialCarrier, ∃ c : ↥M.toMaterialCarrier,
-      ∀ z : ↥M.toMaterialCarrier, ((z : ZFSet.{u}) ∈ (c : ZFSet.{u}) ↔
-        ∃ w : ↥M.toMaterialCarrier, (w : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧
-          (z : ZFSet.{u}) ∈ (w : ZFSet.{u})) := by
-    simpa [unionSentence, memFormula, Sentence.Realize, Formula.Realize, Fin.snoc]
-      using hr
-  obtain ⟨c, hc⟩ := key ⟨x, hx⟩
-  have hce : (c : ZFSet.{u}) = ZFSet.sUnion x := by
-    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
-    · obtain ⟨w, hwx, hzw⟩ := (hc ⟨z, mem_trans hz c.2⟩).1 hz
-      exact ZFSet.mem_sUnion.2 ⟨(w : ZFSet.{u}), hwx, hzw⟩
-    · obtain ⟨w, hwx, hzw⟩ := ZFSet.mem_sUnion.1 hz
-      exact (hc ⟨z, mem_trans hzw (mem_trans hwx hx)⟩).2
-        ⟨⟨w, mem_trans hwx hx⟩, hwx, hzw⟩
-  exact hce ▸ c.2
+  rw [unionSentence] at hr
+  simp only [Sentence.Realize, Formula.Realize, BoundedFormula.realize_all,
+    BoundedFormula.realize_ex, realize_sUnionDef, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc] at hr
+  obtain ⟨c, hc⟩ := hr ⟨x, hx⟩
+  exact hc ▸ c.2
 
 /-- **General Union subsumes the binary fragment**, given pairing: `a ∪ b = ⋃₀ {a, b}`. The
 ledger keeps both sentences anyway, so that each theorem records the strength it actually
