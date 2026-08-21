@@ -109,6 +109,83 @@ theorem realize_unorderedPairDef :
       · exact ZFSet.mem_pair.2 (Or.inl rfl)
       · exact ZFSet.mem_pair.2 (Or.inr rfl)
 
+/-! ### Set-operation laws
+
+Realization for the function-free vocabulary. All three are **hypothesis-free and axiom-free**:
+each quantifier bridge is transitivity of the carrier, since the sets involved are members of
+carrier elements. -/
+
+/-- **The empty-set law.** -/
+theorem realize_emptyDef {e : memLang.Term (α ⊕ Fin n)} :
+    (emptyDef e).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) = ∅ := by
+  have heM : ((Language.Term.realize (Sum.elim v xs) e : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) e : ↥M).2
+  simp only [emptyDef, Language.BoundedFormula.realize_all,
+    Language.BoundedFormula.realize_not, memFormula, Language.BoundedFormula.realize_rel₂,
+    relMap_mem, Language.Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    Matrix.cons_val_zero, Matrix.cons_val_one, realize_liftTerm]
+  refine ⟨fun h ↦ (ZFSet.eq_empty _).2 fun z hz ↦ h ⟨z, M.mem_trans hz heM⟩ hz, ?_⟩
+  intro h z hz
+  rw [h] at hz
+  exact absurd hz (ZFSet.notMem_empty _)
+
+/-- **The successor law.** -/
+theorem realize_successorDef {x s : memLang.Term (α ⊕ Fin n)} :
+    (successorDef x s).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) =
+        insert ((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) := by
+  have hsM : ((Language.Term.realize (Sum.elim v xs) s : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) s : ↥M).2
+  have hxM : ((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) x : ↥M).2
+  simp only [successorDef, Language.BoundedFormula.realize_all,
+    Language.BoundedFormula.realize_iff, Language.BoundedFormula.realize_sup,
+    Language.BoundedFormula.realize_bdEqual, memFormula,
+    Language.BoundedFormula.realize_rel₂, relMap_mem, Language.Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm, Subtype.ext_iff]
+  constructor
+  · intro h
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · rcases (h ⟨z, M.mem_trans hz hsM⟩).1 hz with h1 | h1
+      · exact ZFSet.mem_insert_iff.2 (Or.inr h1)
+      · exact ZFSet.mem_insert_iff.2 (Or.inl h1)
+    · rcases ZFSet.mem_insert_iff.1 hz with rfl | h1
+      · exact (h ⟨_, hxM⟩).2 (Or.inr rfl)
+      · exact (h ⟨z, M.mem_trans h1 hxM⟩).2 (Or.inl h1)
+  · intro h z
+    rw [h, ZFSet.mem_insert_iff]
+    exact Or.comm
+
+/-- **The general-union law.** -/
+theorem realize_sUnionDef {a u : memLang.Term (α ⊕ Fin n)} :
+    (sUnionDef a u).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) u : ↥M) : ZFSet.{u}) =
+        ZFSet.sUnion ((Language.Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) := by
+  have huM : ((Language.Term.realize (Sum.elim v xs) u : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) u : ↥M).2
+  have haM : ((Language.Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) a : ↥M).2
+  simp only [sUnionDef, Language.BoundedFormula.realize_all,
+    Language.BoundedFormula.realize_iff, Language.BoundedFormula.realize_ex,
+    Language.BoundedFormula.realize_inf, memFormula, Language.BoundedFormula.realize_rel₂,
+    relMap_mem, Language.Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    Fin.snoc_castSucc, Matrix.cons_val_zero, Matrix.cons_val_one, realize_liftTerm]
+  constructor
+  · intro h
+    refine ZFSet.ext fun z ↦ ⟨fun hz ↦ ?_, fun hz ↦ ?_⟩
+    · obtain ⟨y, hya, hzy⟩ := (h ⟨z, M.mem_trans hz huM⟩).1 hz
+      exact ZFSet.mem_sUnion.2 ⟨(y : ZFSet.{u}), hya, hzy⟩
+    · obtain ⟨y, hya, hzy⟩ := ZFSet.mem_sUnion.1 hz
+      exact (h ⟨z, M.mem_trans hzy (M.mem_trans hya haM)⟩).2
+        ⟨⟨y, M.mem_trans hya haM⟩, hya, hzy⟩
+  · intro h z
+    rw [h, ZFSet.mem_sUnion]
+    exact ⟨fun ⟨y, hya, hzy⟩ ↦ ⟨⟨y, M.mem_trans hya haM⟩, hya, hzy⟩,
+      fun ⟨y, hya, hzy⟩ ↦ ⟨(y : ZFSet.{u}), hya, hzy⟩⟩
+
 /-- **The Kuratowski-pair law**: the formula holds exactly when the third term names the
 ordered pair of the first two. The backward direction needs the two intermediate sets in the
 carrier, and **transitivity supplies them** — they are members of a member. -/
