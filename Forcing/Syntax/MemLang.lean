@@ -22,7 +22,12 @@ depending on the other.
 
 * `Forcing.memRel`, `Forcing.memLang`: the membership language.
 * `Forcing.memFormula`: the atomic membership formula.
-* `Forcing.unorderedPairDef`, `Forcing.pairDef`: the pair relations, as builders over terms.
+* `Forcing.unorderedPairDef`, `Forcing.pairDef`, `Forcing.pairMemDef`: the pair relations, as
+  builders over terms.
+* `Forcing.emptyDef`, `Forcing.successorDef`, `Forcing.sUnionDef`: the function-free
+  set-operation vocabulary. `memLang` has no function symbols, so each operation is
+  *characterized* by a formula rather than denoted by a term; sharing these builders is what
+  keeps the axioms and the recursion layers from drifting into separate notions.
 -/
 
 universe v
@@ -72,6 +77,14 @@ def pairDef {α : Type v} {n : ℕ} (x y z : memLang.Term (α ⊕ Fin n)) :
         (&(Fin.last (n + 1))) ⊓
       unorderedPairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
         (liftTerm (liftTerm z))))
+
+/-- The Kuratowski pair `⟨x, y⟩` is a member of `S`. Shared rather than local: membership of a
+coded pair is needed by the recursion's clauses and by the iteration's approximations, and a
+second copy would recreate exactly the drift the pair builders exist to prevent. -/
+def pairMemDef {α : Type v} {n : ℕ} (x y S : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓
+    memFormula (&(Fin.last n)) (liftTerm S))
 
 /-! ### Set-operation formulas
 

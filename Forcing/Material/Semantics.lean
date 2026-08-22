@@ -32,6 +32,11 @@ truth layer.
   `evalTerm`.
 * `Forcing.InternalNamePresentation.forall_extensionCarrier_iff_names`: the
   carrier-quantifier bridge.
+* `Forcing.realize_unorderedPairDef`, `Forcing.realize_pairDef`, `Forcing.realize_pairMemDef`:
+  the pair-builder laws.
+* `Forcing.realize_emptyDef`, `Forcing.realize_successorDef`, `Forcing.realize_sUnionDef`: the
+  set-operation laws. All are hypothesis-free and axiom-free — every quantifier bridge is
+  carrier transitivity.
 -/
 
 universe u v
@@ -219,6 +224,27 @@ theorem realize_pairDef :
     refine ⟨⟨_, M.mem_trans h1 hzM⟩, ⟨_, M.mem_trans h2 hzM⟩, ?_, rfl, ?_⟩
     · exact (hself _).symm
     · exact hz
+
+/-- **The pair-membership law**: the coded pair lies in `S`. The backward direction needs the
+pair itself in the carrier, and **transitivity supplies it** — it is a member of a member. -/
+theorem realize_pairMemDef {x y S : memLang.Term (α ⊕ Fin n)} :
+    (pairMemDef x y S).Realize v xs ↔
+      ZFSet.pair ((Language.Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Language.Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈
+        ((Language.Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) := by
+  simp only [pairMemDef, Language.BoundedFormula.realize_ex,
+    Language.BoundedFormula.realize_inf, memFormula, Language.BoundedFormula.realize_rel₂,
+    relMap_mem, Language.Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    Matrix.cons_val_zero, Matrix.cons_val_one, realize_pairDef, realize_liftTerm]
+  constructor
+  · rintro ⟨w, hw, hmem⟩
+    rw [← hw]
+    exact hmem
+  · intro hmem
+    have hSM : ((Language.Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) ∈ M :=
+      (Language.Term.realize (Sum.elim v xs) S : ↥M).2
+    exact ⟨⟨_, M.mem_trans hmem hSM⟩, rfl, hmem⟩
+
 
 end PairRealization
 

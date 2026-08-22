@@ -69,11 +69,6 @@ def entryMemDef (tag p x y R : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFor
   ∃' (entryDef (liftTerm tag) (liftTerm p) (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓
     memFormula (&(Fin.last n)) (liftTerm R))
 
-/-- A pair belongs to `S`. Private: branch and order membership use it repeatedly, but it
-need not enlarge the shared syntax API yet. -/
-private def pairMemDef (x y S : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
-  ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓ memFormula (&(Fin.last n)) (liftTerm S))
-
 /-- **The density clause**, as a formula: every strengthening of `q` inside the condition set
 has a further strengthening carrying a tagged entry. The tag is an arbitrary term; realization
 specializes it. -/
@@ -339,7 +334,8 @@ def statePackageAtDef (tagMem tagEq condSet orderCode A x y a :
       (liftTerm A) (&(Fin.last n)) (liftTerm a))
 
 /-- The universal row-coverage condition: every `y` in the domain gives a state `⟨x, y⟩` in
-`D`. Factored out so its realization law can be public — `pairMemDef` stays private. -/
+`D`. A named condition rather than an inline conjunct, since it is what the final filter
+certifies and what global coverage is read off. -/
 def rowCoverageDef (A x D : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   ∀' (memFormula (&(Fin.last n)) (liftTerm A) ⟹
     pairMemDef (liftTerm x) (&(Fin.last n)) (liftTerm D))
@@ -397,26 +393,6 @@ theorem realize_entryDef :
     have h₁M := right_mem_of_pair_mem heM
     have h₂M := right_mem_of_pair_mem h₁M
     exact ⟨⟨_, h₂M⟩, ⟨_, h₁M⟩, rfl, rfl, he⟩
-
-/-- Pair membership: the formula says the pair lies in `S`. Backward direction axiom-free —
-the pair is a member of a member. -/
-private theorem realize_pairMemDef :
-    (pairMemDef x y S).Realize v xs ↔
-      ZFSet.pair ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
-          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈
-        ((Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) := by
-  simp only [pairMemDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
-    BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
-    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
-    realize_pairDef, realize_liftTerm]
-  constructor
-  · rintro ⟨w, hw, hmem⟩
-    rw [← hw]
-    exact hmem
-  · intro hmem
-    have hSM : ((Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) ∈ M :=
-      (Term.realize (Sum.elim v xs) S : ↥M).2
-    exact ⟨⟨_, M.mem_trans hmem hSM⟩, rfl, hmem⟩
 
 /-- **Specialization at a numeral tag**: the formula becomes a statement about the graph
 API's `entry`. -/
