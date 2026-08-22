@@ -22,7 +22,12 @@ depending on the other.
 
 * `Forcing.memRel`, `Forcing.memLang`: the membership language.
 * `Forcing.memFormula`: the atomic membership formula.
-* `Forcing.unorderedPairDef`, `Forcing.pairDef`: the pair relations, as builders over terms.
+* `Forcing.unorderedPairDef`, `Forcing.pairDef`, `Forcing.pairMemDef`: the pair relations, as
+  builders over terms.
+* `Forcing.emptyDef`, `Forcing.successorDef`, `Forcing.sUnionDef`: the function-free
+  set-operation vocabulary. `memLang` has no function symbols, so each operation is
+  *characterized* by a formula rather than denoted by a term; sharing these builders is what
+  keeps the axioms and the recursion layers from drifting into separate notions.
 -/
 
 universe v

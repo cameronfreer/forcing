@@ -32,6 +32,11 @@ truth layer.
   `evalTerm`.
 * `Forcing.InternalNamePresentation.forall_extensionCarrier_iff_names`: the
   carrier-quantifier bridge.
+* `Forcing.realize_unorderedPairDef`, `Forcing.realize_pairDef`, `Forcing.realize_pairMemDef`:
+  the pair-builder laws.
+* `Forcing.realize_emptyDef`, `Forcing.realize_successorDef`, `Forcing.realize_sUnionDef`: the
+  set-operation laws. All are hypothesis-free and axiom-free — every quantifier bridge is
+  carrier transitivity.
 -/
 
 universe u v
