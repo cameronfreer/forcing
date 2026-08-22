@@ -73,6 +73,14 @@ def pairDef {α : Type v} {n : ℕ} (x y z : memLang.Term (α ⊕ Fin n)) :
       unorderedPairDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
         (liftTerm (liftTerm z))))
 
+/-- The Kuratowski pair `⟨x, y⟩` is a member of `S`. Shared rather than local: membership of a
+coded pair is needed by the recursion's clauses and by the iteration's approximations, and a
+second copy would recreate exactly the drift the pair builders exist to prevent. -/
+def pairMemDef {α : Type v} {n : ℕ} (x y S : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∃' (pairDef (liftTerm x) (liftTerm y) (&(Fin.last n)) ⊓
+    memFormula (&(Fin.last n)) (liftTerm S))
+
 /-! ### Set-operation formulas
 
 The function-free vocabulary. `memLang` has no function symbols, so `∅`, successor, and
