@@ -38,17 +38,27 @@ and proving it would pull in a von Neumann ordinal development the repository do
 otherwise have. If a consumer ever wants it, it should be a separately named theorem rather
 than folded into this interface.
 
+Two related facts are also *not* declared here, for different reasons. `∅ ∈ n ∨ ∅ = n` for
+`n ∈ ω` is a **consequence** of an approximation existing — exact support applied to the base
+entry gives it — so it is left to the iteration to declare if the compiled proof turns out to
+want it. And `n ∉ n` is **free** from ambient well-foundedness (`ZFSet.mem_irrefl`), for the
+same reason Foundation is free for material carriers; charging an induction instance for it
+would be paying twice.
+
 ## Main definitions
 
 * `Forcing.OmegaValue`: the exact contract — membership in the supplied inductive set, plus
   membership in every *internal* inductive set.
 * `Forcing.omegaSepFormula`: the Separation instance carving it out.
+* `Forcing.omegaTransFormula`: the one named induction instance this module charges.
 
 ## Main results
 
 * `Forcing.MaterialGround.exists_omega`: `ω` exists inside the ground.
 * `Forcing.omegaValue_isInductive`, `Forcing.omegaValue_least`: the two structural facts.
 * `Forcing.MaterialGround.omega_induction`: formula-relative induction, separately priced.
+* `Forcing.MaterialGround.omegaValue_isTransitive`: `ω` is transitive — the load-bearing fact
+  for the iteration, since bounded approximation indices must return to `ω`.
 -/
 
 universe u v
@@ -100,6 +110,24 @@ theorem omegaValue_least {M : MaterialCarrier.{u}} {w omega : ZFSet.{u}}
     (hom : OmegaValue M w omega) (u : ↥M) (hu : IsInductive (u : ZFSet.{u})) :
     ∀ n ∈ omega, n ∈ (u : ZFSet.{u}) :=
   fun n hn ↦ ((hom n).1 hn).2 u hu
+
+/-- **The transitivity instance**: `n ⊆ ω`, with `ω` as the parameter and `n` the separated
+variable. One named formula-relative induction instance, and the only one this module
+charges. -/
+def omegaTransFormula : memLang.BoundedFormula (Fin 1) 1 :=
+  ∀' (memFormula (&(Fin.last 1)) (liftTerm (&(0 : Fin 1))) ⟹
+    memFormula (&(Fin.last 1)) (liftTerm (var (Sum.inl 0))))
+
+/-- The transitivity instance reads as containment in `ω`. No hypotheses, no theory axioms. -/
+theorem realize_omegaTransFormula {M : MaterialCarrier.{u}} (omega n : ↥M) :
+    omegaTransFormula.Realize ![omega] ![n] ↔
+      ∀ z ∈ (n : ZFSet.{u}), z ∈ (omega : ZFSet.{u}) := by
+  have hnM : (n : ZFSet.{u}) ∈ M := n.2
+  simp only [omegaTransFormula, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Sum.elim_inl, Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm]
+  exact ⟨fun h z hz ↦ h ⟨z, M.mem_trans hz hnM⟩ hz, fun h z ↦ h (z : ZFSet.{u})⟩
 
 namespace MaterialGround
 
@@ -154,6 +182,34 @@ theorem omega_induction {k : ℕ} {φ : memLang.BoundedFormula (Fin k) 1}
       exact (hS ⟨insert x x, hsM⟩).2 ⟨hsΩ, hsucc ⟨x, hxM⟩ hxΩ hφ ⟨insert x x, hsM⟩ rfl⟩
   intro n hn
   exact ((hS n).1 (omegaValue_least hom S hindS (n : ZFSet.{u}) hn)).2
+
+/-- **`ω` is transitive.**
+
+This is the load-bearing `ω`-fact for the iteration: an approximation's indices satisfy
+`k ∈ n ∨ k = n` with `n ∈ ω`, and it is transitivity that returns `k` to `ω` so that the
+recurrence and the induction hypotheses apply to it. Without it the bounded indices would
+escape the set the induction is over.
+
+Charged: one named induction instance, `omegaTransFormula`. -/
+theorem omegaValue_isTransitive (hsep : separationSentence omegaTransFormula ∈ T)
+    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
+    (hw : IsInductive w)
+    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u})) :
+    (omega : ZFSet.{u}).IsTransitive := by
+  have key : ∀ n : ↥M.toMaterialCarrier, (n : ZFSet.{u}) ∈ (omega : ZFSet.{u}) →
+      omegaTransFormula.Realize ![omega] ![n] := by
+    refine M.omega_induction hsep ![omega] hw hom (fun z hz ↦ ?_) (fun n hn hφ s hs ↦ ?_)
+    · rw [realize_omegaTransFormula, hz]
+      exact fun y hy ↦ absurd hy (ZFSet.notMem_empty _)
+    · rw [realize_omegaTransFormula, hs]
+      have hindΩ : IsInductive (omega : ZFSet.{u}) := omegaValue_isInductive hw hom
+      intro y hy
+      rcases ZFSet.mem_insert_iff.1 hy with rfl | hy'
+      · exact hn
+      · exact (realize_omegaTransFormula omega n).1 hφ y hy'
+  intro x hx
+  have hxM := M.toMaterialCarrier.mem_trans hx omega.2
+  exact (realize_omegaTransFormula omega ⟨x, hxM⟩).1 (key ⟨x, hxM⟩ hx)
 
 end MaterialGround
 
