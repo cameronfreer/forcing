@@ -126,6 +126,27 @@ The regular/Boolean completion of the already-existing separative quotient
 carefully scoped comparison theorems — distinguishing external completeness
 from completeness internal to `M`.
 
+**Boolean-valued satisfaction and the generic-ultrafilter quotient are separate
+branches.** They were previously grouped, which made the Boolean-valued lane
+look sequenced behind machinery it does not use:
+
+```text
+                complete Boolean algebra
+                          │
+             Boolean names and satisfaction
+                          │
+                 Boolean-model theorem
+                    ╱            ╲
+   soundness / completeness      generic-ultrafilter
+        endpoint                 quotient, M[G] comparison
+                                          │
+                                 material Boolean layer
+```
+
+A Boolean-valued model witnessing `|φ| = ⊤` refutes a proof of `¬φ` through
+soundness alone; no generic ultrafilter is needed anywhere on that branch.
+Neither branch should import the other merely for sequencing convenience.
+
 ## The vertical-slice summit
 
 The founding target of the project, from the original design: **"Cohen forcing
@@ -154,6 +175,33 @@ theory. What is **not** automatically unblocked is the *material* Boolean layer:
 a coded Boolean algebra with internal completeness, and the Boolean new-real
 theorem, both of which need the material coding infrastructure. The M9 tracker
 records that split ([#169](https://github.com/cameronfreer/forcing/issues/169)).
+
+## Two endpoint classes
+
+The project has two kinds of headline theorem, and they are **not** stages of
+one another. Naming them separately keeps a claim about one from being read as
+progress toward the other.
+
+1. **Native ground-relative theorem.** Forcing over a material ground `M`
+   constructs `M[G]`, preserves the required theory, and has the claimed
+   extension effect. This is the project's distinctive contribution: it is what
+   carries the axiom ledger, and it is what can answer minimal-base questions
+   that a "turn on all of ZFC" route cannot.
+2. **Proof-theoretic independence theorem.** A Boolean-valued model gives
+   `|φ| = ⊤`, and soundness plus completeness yield non-provability of `¬φ`.
+   This route needs no ground model, no generic filter, and no preservation
+   theory.
+
+`Forcing.Cohen.addsNewReal` belongs to class 1 and is **not** an independence
+statement; see [#161](https://github.com/cameronfreer/forcing/issues/161) for
+what it does and does not assume.
+
+**Parallel capability, not a staffing decision.** Class 2 is not gated on M7 or
+M8: generic Boolean-valued semantics can be developed over an arbitrary complete
+Boolean algebra. What it still needs is real — the Cohen specialization requires
+the completion API, and any proof-theoretic endpoint requires
+soundness/completeness infrastructure. **M7 remains the spine priority**; this
+records what *could* proceed in parallel, not a decision to move effort.
 
 ## Later endpoint work
 
