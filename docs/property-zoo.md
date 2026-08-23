@@ -83,6 +83,27 @@ resolution data).
   suitable invariant sentences). No certifiable content before the forcing relation; its
   first Lean deliverable is tied to the atomic-forcing spike (#93).
 
+  **Boundary note — truth-spectrum collapse versus representation-spectrum collapse
+  (provisional).** These are different collapses and the near-identical vocabulary invites
+  merging them, so the distinction is recorded before either has a second consumer.
+
+  `HomogeneousFor` collapses a *truth spectrum*: for a suitably invariant formula, the
+  possible truth values across a group orbit reduce to one, so the top condition decides it.
+  The inputs are equivariance, fixed parameters, orbit compatibility, and dense deciders.
+
+  A **homogeneous-reading** theorem — reported for random forcing, and not verified here —
+  would collapse a *representation spectrum* instead: a large family of names for reals is
+  thinned so that all its members are read by one Borel function from a common root and
+  pairwise disjoint fresh coordinates. Its inputs are small supports, a Δ-system argument,
+  and a cardinality bound on reading codes. Nothing about invariant formulas or orbits enters.
+
+  So they are neighbours in the zoo, not variants: one is a property of a formula under a
+  group action, the other a property of a *name family under a support/reading presentation*.
+  This note is **provisional and deliberately not a sixth axis**: the external claim is
+  unverified, no consumer exists in this repository, and no API is promised. If it becomes an
+  axis it will be indexed by the presentation tuple, not by the poset — see the tuple-relative
+  guardrail on the support/readability research issue.
+
 ## Effects, invariants, certificates
 
 "The fact" versus "the route proving the fact":
