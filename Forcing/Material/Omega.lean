@@ -9,7 +9,8 @@ import Forcing.Material.AxiomSchemes
 # The least internal inductive set
 
 `ω`, for the ambient-domain construction. Infinity supplies *some* inductive set; this module
-cuts out the least one and gives the iteration exactly the three facts it needs.
+cuts out the least one and gives the iteration the small, consumer-earned interface below —
+each fact declared because something needs it, not to round out a theory of `ω`.
 
 ## The scope of "least" is internal, and deliberately so
 
@@ -38,27 +39,35 @@ and proving it would pull in a von Neumann ordinal development the repository do
 otherwise have. If a consumer ever wants it, it should be a separately named theorem rather
 than folded into this interface.
 
-Two related facts are also *not* declared here, for different reasons. `∅ ∈ n ∨ ∅ = n` for
-`n ∈ ω` is a **consequence** of an approximation existing — exact support applied to the base
-entry gives it — so it is left to the iteration to declare if the compiled proof turns out to
-want it. And `n ∉ n` is **free** from ambient well-foundedness (`ZFSet.mem_irrefl`), for the
-same reason Foundation is free for material carriers; charging an induction instance for it
-would be paying twice.
+Two related facts are also *not* declared here, for different reasons.
+
+`∅ ∈ n ∨ ∅ = n` for `n ∈ ω` is a **consequence** of an approximation existing — exact support
+applied to the base entry gives it — so it was left to the iteration. That resolved as
+predicted: it *was* wanted, and is declared where it is used, as
+`UnionIteration.approx_empty_inApproxDomain`, priced at nothing.
+
+`n ∉ n` is **free** from ambient well-foundedness (`ZFSet.mem_irrefl`), for the same reason
+Foundation is free for material carriers; charging an induction instance for it would be
+paying twice.
 
 ## Main definitions
 
 * `Forcing.OmegaValue`: the exact contract — membership in the supplied inductive set, plus
   membership in every *internal* inductive set.
 * `Forcing.omegaSepFormula`: the Separation instance carving it out.
-* `Forcing.omegaTransFormula`: the one named induction instance this module charges.
+* `Forcing.omegaTransFormula`, `Forcing.omegaMemTransFormula`: the two named induction
+  instances this module charges.
 
 ## Main results
 
 * `Forcing.MaterialGround.exists_omega`: `ω` exists inside the ground.
 * `Forcing.omegaValue_isInductive`, `Forcing.omegaValue_least`: the two structural facts.
 * `Forcing.MaterialGround.omega_induction`: formula-relative induction, separately priced.
-* `Forcing.MaterialGround.omegaValue_isTransitive`: `ω` is transitive — the load-bearing fact
-  for the iteration, since bounded approximation indices must return to `ω`.
+* `Forcing.MaterialGround.omegaValue_isTransitive`: `ω` is transitive — bounded approximation
+  indices must return to `ω`.
+* `Forcing.MaterialGround.omegaValue_mem_isTransitive`: members of `ω` are transitive — needed
+  because `succ k ∈ N ∈ ω` returns `succ k ∈ ω`, while the recurrence at bound `N` needs
+  `k ∈ N`.
 -/
 
 universe u v
@@ -129,6 +138,29 @@ theorem realize_omegaTransFormula {M : MaterialCarrier.{u}} (omega n : ↥M) :
     Matrix.cons_val_one, realize_liftTerm]
   exact ⟨fun h z hz ↦ h ⟨z, M.mem_trans hz hnM⟩ hz, fun h z ↦ h (z : ZFSet.{u})⟩
 
+/-- **The member-transitivity instance**: `N` is transitive. No parameters — the separated
+variable is `N` itself. The second named induction instance this module charges. -/
+def omegaMemTransFormula : memLang.BoundedFormula (Fin 0) 1 :=
+  ∀' (memFormula (&(Fin.last 1)) (liftTerm (&(0 : Fin 1))) ⟹
+    ∀' (memFormula (&(Fin.last 2)) (&(Fin.castSucc (Fin.last 1))) ⟹
+      memFormula (&(Fin.last 2)) (liftTerm (liftTerm (&(0 : Fin 1))))))
+
+/-- The member-transitivity instance reads as ambient transitivity. No hypotheses, no theory
+axioms. -/
+theorem realize_omegaMemTransFormula {M : MaterialCarrier.{u}} (N : ↥M) :
+    omegaMemTransFormula.Realize (default : Fin 0 → ↥M) ![N] ↔
+      (N : ZFSet.{u}).IsTransitive := by
+  have hNM : (N : ZFSet.{u}) ∈ M := N.2
+  simp only [omegaMemTransFormula, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, realize_liftTerm, ZFSet.IsTransitive]
+  constructor
+  · intro h y hy z hz
+    exact h ⟨y, M.mem_trans hy hNM⟩ hy ⟨z, M.mem_trans hz (M.mem_trans hy hNM)⟩ hz
+  · intro h y hy z hz
+    exact h (y : ZFSet.{u}) hy hz
+
 namespace MaterialGround
 
 variable {T : memLang.Theory} (M : MaterialGround.{u} T)
@@ -182,6 +214,33 @@ theorem omega_induction {k : ℕ} {φ : memLang.BoundedFormula (Fin k) 1}
       exact (hS ⟨insert x x, hsM⟩).2 ⟨hsΩ, hsucc ⟨x, hxM⟩ hxΩ hφ ⟨insert x x, hsM⟩ rfl⟩
   intro n hn
   exact ((hS n).1 (omegaValue_least hom S hindS (n : ZFSet.{u}) hn)).2
+
+/-- **Members of `ω` are transitive.**
+
+`omegaValue_isTransitive` is not enough on its own. From `succ k ∈ N ∈ ω` it returns
+`succ k ∈ ω`, but the iteration's recurrence at bound `N` needs `k ∈ N` — a fact about `N`,
+not about `ω`. That is what this supplies.
+
+Strictly weaker than identifying members of `ω` as finite ordinals: no trichotomy, no
+`∈`-transitivity as an order, no ordinal arithmetic. Charged: one named induction instance,
+`omegaMemTransFormula`. -/
+theorem omegaValue_mem_isTransitive (hsep : separationSentence omegaMemTransFormula ∈ T)
+    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
+    (hw : IsInductive w)
+    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u})) :
+    ∀ N : ↥M.toMaterialCarrier, (N : ZFSet.{u}) ∈ (omega : ZFSet.{u}) →
+      (N : ZFSet.{u}).IsTransitive := by
+  intro N hN
+  refine (realize_omegaMemTransFormula N).1 ?_
+  refine M.omega_induction hsep default hw hom (fun z hz ↦ ?_) (fun n hn hφ s hs ↦ ?_) N hN
+  · rw [realize_omegaMemTransFormula, hz]
+    exact fun y hy ↦ absurd hy (ZFSet.notMem_empty _)
+  · rw [realize_omegaMemTransFormula, hs]
+    have hnT := (realize_omegaMemTransFormula n).1 hφ
+    intro y hy z hz
+    rcases ZFSet.mem_insert_iff.1 hy with rfl | hy'
+    · exact ZFSet.mem_insert_iff.2 (Or.inr hz)
+    · exact ZFSet.mem_insert_iff.2 (Or.inr (hnT y hy' hz))
 
 /-- **`ω` is transitive.**
 
