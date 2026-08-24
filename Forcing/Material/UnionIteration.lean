@@ -172,6 +172,20 @@ theorem approx_base_value {seed n t S : ZFSet.{u}} (h : IsApprox seed n t)
     (hS : ZFSet.pair (∅ : ZFSet.{u}) S ∈ t) : S = seed :=
   approx_value_unique h.2.1 (approx_empty_inApproxDomain h) hS h.2.2.1
 
+/-- **The base trace.** The singleton `{⟨∅, seed⟩}` is an approximation at bound `∅`. Kept
+beside `isApprox_extend` so that both the base and the successor algebra stay ground-free. -/
+theorem isApprox_base {seed t : ZFSet.{u}}
+    (ht : ∀ e, e ∈ t ↔ e = ZFSet.pair (∅ : ZFSet.{u}) seed) :
+    IsApprox seed (∅ : ZFSet.{u}) t := by
+  have hbase : ZFSet.pair (∅ : ZFSet.{u}) seed ∈ t := (ht _).2 rfl
+  refine ⟨fun e he ↦ ?_, fun k hk ↦ ?_, hbase, fun k hk ↦ ?_⟩
+  · exact ⟨∅, seed, (ht e).1 he, Or.inr rfl⟩
+  · rcases hk with hmem | rfl
+    · exact absurd hmem (ZFSet.notMem_empty _)
+    · refine ⟨seed, hbase, fun U hU ↦ ?_⟩
+      exact ((ZFSet.pair_inj.1 ((ht _).1 hU)).2).symm ▸ rfl
+  · exact absurd hk (ZFSet.notMem_empty _)
+
 /-- **Extension by one step.** The new bound's value is the general union of the old bound's,
 and no hypothesis of freshness is needed — `succ_notMem_approxDomain` supplies it. -/
 theorem isApprox_extend {seed n t S t' : ZFSet.{u}} (h : IsApprox seed n t)
