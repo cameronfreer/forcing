@@ -118,8 +118,9 @@ only definitions, implications, and order-level theorems.
 ## M9 — Boolean completion and Boolean-valued models
 
 **Status: planned**
-([#169](https://github.com/cameronfreer/forcing/issues/169), four layers with
-distinct dependencies; the external algebra is unblocked today).
+([#169](https://github.com/cameronfreer/forcing/issues/169), a five-layer
+branched DAG with distinct dependencies; the external algebra is unblocked
+today).
 
 The regular/Boolean completion of the already-existing separative quotient
 (complete regular algebra via `Heyting.Regular` on lower sets), `B`-names, and
@@ -157,8 +158,8 @@ separately, because they are independent deliverables rather than a sequence.
 | Leg | Status |
 |---|---|
 | Poset route | **Certified, parametrically** — `Forcing.Cohen.addsNewReal` |
-| Boolean-completion route | **Not started** (M9 layers 1–2 and 4) |
-| Comparison / equivalence | **Not started** (M9 layer 3, plus the material layer) |
+| Boolean-completion route | **Not started** (M9 layers 1, 2, 4, and 5) |
+| Comparison / equivalence | **Not started** (M9 layer 4, then material layer 5) |
 
 The completed poset leg remains **conditional on the material presentations
 listed in `addsNewReal`**: a `CohenMaterialPresentation`, an internal name
@@ -166,6 +167,10 @@ presentation with canonical names and a Cohen-real representative, and external
 countability of the carrier. No concrete carrier satisfying them has been
 constructed, and no `MaterialGround` occurs in its signature. M7 is what turns
 those hypotheses into a statement about a model of set theory.
+
+Layer 3 — the proof-theoretic endpoint — is not one of the summit's legs at
+all: it is the independent class-2 route, reaching non-provability without a
+ground model, a generic filter, or a comparison theorem.
 
 **Dependency note.** The Boolean leg is not gated on M7 or M8. Its *external
 algebra* — the regular-open completion of the separative quotient and the
