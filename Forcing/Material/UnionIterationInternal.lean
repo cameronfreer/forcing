@@ -130,6 +130,88 @@ theorem exists_isApprox (hex : separationSentence approxExistsFormula ∈ T)
         (t : ZFSet.{u}), M.insert_mem hp hu hentryM t.2⟩, ?_⟩
     exact isApprox_extend ht hS (fun e ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm)
 
+/-! ### The iteration relation's three laws
+
+Base, successor extension, and functionality — the interface the ambient-domain construction
+consumes. Each is priced separately, and the successor law charges no scheme instance at all:
+it extends a trace that is already given. -/
+
+/-- **Base.** The `∅`-th iterate of `seed` is `seed`.
+
+`z` is an internal representative of `∅`, taken as a parameter rather than constructed — which
+is what preserves the no-Empty-Set result. Cost: **Pairing only**. -/
+theorem unionIterate_base (hp : pairingSentence ∈ T) (seed z : ↥M.toMaterialCarrier)
+    (hz : (z : ZFSet.{u}) = ∅) :
+    UnionIterate M.toMaterialCarrier (seed : ZFSet.{u}) (∅ : ZFSet.{u})
+      (seed : ZFSet.{u}) := by
+  have h0M : (∅ : ZFSet.{u}) ∈ M.toMaterialCarrier := hz ▸ z.2
+  have hpairM : ZFSet.pair (∅ : ZFSet.{u}) (seed : ZFSet.{u}) ∈ M.toMaterialCarrier :=
+    M.pair_mem hp h0M seed.2
+  exact ⟨{ZFSet.pair (∅ : ZFSet.{u}) (seed : ZFSet.{u})}, M.singleton_mem hp hpairM,
+    isApprox_base fun e ↦ by simp [ZFSet.mem_singleton],
+    ZFSet.mem_singleton.2 rfl⟩
+
+/-- **Successor extension.** The successor's iterate is the general union of its
+predecessor's.
+
+The successor is accepted through its internal representative `s`, so constructing `insert n n`
+remains free. Cost: **Pairing, Binary Union, General Union** — and **no scheme instance**,
+since the witnessing trace is extended rather than built. -/
+theorem unionIterate_succ (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (huni : unionSentence ∈ T) {seed n S : ZFSet.{u}} (s : ↥M.toMaterialCarrier)
+    (hs : (s : ZFSet.{u}) = insert n n)
+    (h : UnionIterate M.toMaterialCarrier seed n S) :
+    UnionIterate M.toMaterialCarrier seed (insert n n) (ZFSet.sUnion S) := by
+  obtain ⟨t, htM, ht, hS⟩ := h
+  have hSM : S ∈ M.toMaterialCarrier :=
+    (MaterialCarrier.pair_components_mem_of_mem htM hS).2
+  have hsuccM : insert n n ∈ M.toMaterialCarrier := hs ▸ s.2
+  have hentryM : ZFSet.pair (insert n n) (ZFSet.sUnion S) ∈ M.toMaterialCarrier :=
+    M.pair_mem hp hsuccM (M.sUnion_mem huni hSM)
+  refine ⟨insert (ZFSet.pair (insert n n) (ZFSet.sUnion S)) t,
+    M.insert_mem hp hu hentryM htM, ?_, ZFSet.mem_insert_iff.2 (Or.inl rfl)⟩
+  exact isApprox_extend ht hS (fun e ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm)
+
+/-- **Functionality.** The iterate is determined.
+
+Compares the two internal trace witnesses with `isApprox_unique`, then their top entries with
+`approx_value_unique`. Cost: `omegaMemTransFormula` and `approxAgreeFormula`; **no closure
+axiom**, since nothing is constructed. -/
+theorem unionIterate_unique (hmem : separationSentence omegaMemTransFormula ∈ T)
+    (hagree : separationSentence approxAgreeFormula ∈ T)
+    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
+    (hw : IsInductive w)
+    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u}))
+    (seed N : ↥M.toMaterialCarrier) (hN : (N : ZFSet.{u}) ∈ (omega : ZFSet.{u}))
+    {S U : ZFSet.{u}}
+    (h₁ : UnionIterate M.toMaterialCarrier (seed : ZFSet.{u}) (N : ZFSet.{u}) S)
+    (h₂ : UnionIterate M.toMaterialCarrier (seed : ZFSet.{u}) (N : ZFSet.{u}) U) :
+    S = U := by
+  obtain ⟨t, htM, ht, hS⟩ := h₁
+  obtain ⟨u, huM, hu, hU⟩ := h₂
+  have htu : t = u :=
+    M.isApprox_unique hmem hagree hw hom seed N ⟨t, htM⟩ ⟨u, huM⟩ hN ht hu
+  exact approx_value_unique ht.2.1 (inApproxDomain_self _) hS (htu ▸ hU)
+
+/-- **Material totality.** Every bound in `ω` has an iterate inside the ground.
+
+A corollary of `exists_isApprox` and totality at the top index, adding **no new charge** — it
+is what the forthcoming Collection instance consumes. -/
+theorem exists_unionIterate (hex : separationSentence approxExistsFormula ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T) (huni : unionSentence ∈ T)
+    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
+    (hw : IsInductive w)
+    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u}))
+    (seed : ↥M.toMaterialCarrier) :
+    ∀ n : ↥M.toMaterialCarrier, (n : ZFSet.{u}) ∈ (omega : ZFSet.{u}) →
+      ∃ S, S ∈ M.toMaterialCarrier ∧
+        UnionIterate M.toMaterialCarrier (seed : ZFSet.{u}) (n : ZFSet.{u}) S := by
+  intro n hn
+  obtain ⟨t, ht⟩ := M.exists_isApprox hex hp hu huni hw hom seed n hn
+  obtain ⟨S, hS, -⟩ := ht.2.1 (n : ZFSet.{u}) (inApproxDomain_self _)
+  exact ⟨S, (MaterialCarrier.pair_components_mem_of_mem t.2 hS).2,
+    (t : ZFSet.{u}), t.2, ht, hS⟩
+
 end MaterialGround
 
 end Forcing
