@@ -106,6 +106,28 @@ def approxAgreeFormula : memLang.BoundedFormula (Fin 3) 1 :=
             (liftTerm (liftTerm (liftTerm (var (Sum.inl 2))))) ⟹
           (&(Fin.castSucc (Fin.last 2)) =' &(Fin.last 3)))))
 
+/-! ### The iteration relation
+
+`UnionIterate` is **carrier-relative by definition**, which is why it lives here rather than
+in the Mathlib-only semantic module: the witnessing trace must belong to `M`.
+
+That relativity is not incidental. `unionIterateDef` quantifies only over carrier elements,
+and `isApprox_unique` compares *internal* traces; a relation permitting an arbitrary external
+trace would make the realization law one-directional, since a formula can never produce a
+witness outside the carrier. -/
+
+/-- `S` is the `n`-th union iterate of `seed`, witnessed by a trace **inside `M`**. -/
+def UnionIterate (M : MaterialCarrier.{u}) (seed n S : ZFSet.{u}) : Prop :=
+  ∃ t, t ∈ M ∧ UnionIteration.IsApprox seed n t ∧ ZFSet.pair n S ∈ t
+
+/-- **The iteration relation**, as a formula: the direct existential. No set of traces is
+constructed, so the later gather/filter stage gets an exact, internally meaningful provenance
+predicate rather than a family to sift. -/
+def unionIterateDef {α : Type v} {m : ℕ} (seed n S : memLang.Term (α ⊕ Fin m)) :
+    memLang.BoundedFormula α m :=
+  ∃' (isApproxDef (liftTerm seed) (liftTerm n) (&(Fin.last m)) ⊓
+    pairMemDef (liftTerm n) (liftTerm S) (&(Fin.last m)))
+
 /-- **Approximation existence**, as a formula: the induction predicate for existence. The seed
 is the parameter; the separated variable is the bound. -/
 def approxExistsFormula : memLang.BoundedFormula (Fin 1) 1 :=
@@ -276,6 +298,19 @@ theorem realize_approxExistsFormula {M : MaterialCarrier.{u}} (seed n : ↥M) :
   simp only [approxExistsFormula, BoundedFormula.realize_ex, realize_isApproxDef,
     Term.realize_var, Sum.elim_inr, Sum.elim_inl, Function.comp_apply, Fin.snoc_last,
     Matrix.cons_val_zero, realize_liftTerm]
+
+/-- **The iteration law.** Hypothesis-free, and an honest equivalence in both directions
+precisely because `UnionIterate` requires its witness to be internal. -/
+theorem realize_unionIterateDef {seed n S : memLang.Term (α ⊕ Fin m)} :
+    (unionIterateDef seed n S).Realize v xs ↔
+      UnionIterate M ((Term.realize (Sum.elim v xs) seed : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) n : ↥M) : ZFSet.{u})
+        ((Term.realize (Sum.elim v xs) S : ↥M) : ZFSet.{u}) := by
+  simp only [unionIterateDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
+    realize_isApproxDef, realize_pairMemDef, Term.realize_var, Sum.elim_inr,
+    Function.comp_apply, Fin.snoc_last, realize_liftTerm, UnionIterate]
+  exact ⟨fun ⟨t, ha, hp⟩ ↦ ⟨(t : ZFSet.{u}), t.2, ha, hp⟩,
+    fun ⟨t, htM, ha, hp⟩ ↦ ⟨⟨t, htM⟩, ha, hp⟩⟩
 
 end Realization
 
