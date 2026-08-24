@@ -31,9 +31,10 @@ and **nothing else**. In particular no Pairing, no Union of either kind, no Coll
 Infinity, no Foundation, no Power Set. Nothing is constructed here: the argument only compares
 two traces that are already given.
 
-`omegaTransFormula` is deliberately **not** used. Transitivity of `ω` is the wrong fact for
-this argument — what the successor step needs is transitivity of the *bound* `N`, so that
-`succ n` in `N`'s domain returns `n` to it. That is `omegaValue_mem_isTransitive`.
+Transitivity of `ω` is the wrong fact for this argument, and is not charged: what the
+successor step needs is transitivity of the *bound* `N`, so that `succ n` in `N`'s domain
+returns `n` to it. That is `omegaValue_mem_isTransitive`. A transitivity-of-`ω` declaration
+existed briefly and was removed once the tranche compiled without any consumer.
 
 ## The shape of the induction
 
