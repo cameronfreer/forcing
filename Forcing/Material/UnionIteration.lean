@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Mathlib.SetTheory.ZFC.Basic
+import Mathlib.SetTheory.ZFC.Ordinal
 
 /-!
 # Union iteration: the approximation predicates
@@ -222,6 +223,77 @@ theorem isApprox_extend {seed n t S t' : ZFSet.{u}} (h : IsApprox seed n t)
         · have : k = n := succ_inj (ZFSet.pair_inj.1 h1).1
           exact absurd (this ▸ hkn) (ZFSet.mem_irrefl n)
       exact hstep k hkn S' U hS'old hUold
+
+/-! ### Agreement, and extensionality from it
+
+Uniqueness is proved by a **bounded-prefix** induction: rather than establishing agreement
+independently at every index, the induction carries agreement across a whole prefix at once.
+That is what lets the successor step reuse the predecessor's value instead of re-deriving it.
+
+The semantic extensionality argument is kept here, separate from the internally priced
+induction that establishes the hypothesis. -/
+
+/-- Two traces agree at an index. -/
+def ValuesAgreeAt (t u k : ZFSet.{u}) : Prop :=
+  ∀ S U, ZFSet.pair k S ∈ t → ZFSet.pair k U ∈ u → S = U
+
+/-- Agreement across the whole prefix below `n`, guarded by `n` lying in the final bound's
+domain. This is the induction predicate. -/
+def PrefixAgree (N t u n : ZFSet.{u}) : Prop :=
+  InApproxDomain N n → ∀ k, InApproxDomain n k → ValuesAgreeAt t u k
+
+/-- **Extensionality from agreement.** Two approximations over the same seed and bound that
+agree across the bound's domain are equal as sets — support locates every entry inside the
+domain, and totality on the other side produces the matching entry. -/
+theorem isApprox_eq_of_prefixAgree {seed N t u : ZFSet.{u}}
+    (ht : IsApprox seed N t) (hu : IsApprox seed N u)
+    (hag : ∀ k, InApproxDomain N k → ValuesAgreeAt t u k) : t = u := by
+  refine ZFSet.ext fun e ↦ ⟨fun he ↦ ?_, fun he ↦ ?_⟩
+  · obtain ⟨k, S, rfl, hdom⟩ := ht.1 e he
+    obtain ⟨U, hU, -⟩ := hu.2.1 k hdom
+    rw [hag k hdom S U he hU]
+    exact hU
+  · obtain ⟨k, U, rfl, hdom⟩ := hu.1 e he
+    obtain ⟨S, hS, -⟩ := ht.2.1 k hdom
+    rw [← hag k hdom S U hS he]
+    exact hS
+
+/-- The base of the prefix induction: the only index in `∅`'s domain is `∅` itself, where both
+traces read `seed`. -/
+theorem prefixAgree_empty {seed N t u : ZFSet.{u}}
+    (ht : IsApprox seed N t) (hu : IsApprox seed N u) :
+    PrefixAgree N t u (∅ : ZFSet.{u}) := by
+  rintro - k hk S U hS hU
+  rcases hk with hmem | rfl
+  · exact absurd hmem (ZFSet.notMem_empty _)
+  · rw [approx_base_value ht hS, approx_base_value hu hU]
+
+/-- The successor step of the prefix induction. `hNtrans` is where transitivity of the bound
+is consumed: it is what returns `n` to the bound's domain from `succ n`, so the induction
+hypothesis applies. -/
+theorem prefixAgree_succ {seed N t u n : ZFSet.{u}}
+    (ht : IsApprox seed N t) (hu : IsApprox seed N u) (hNtrans : N.IsTransitive)
+    (hprev : PrefixAgree N t u n) : PrefixAgree N t u (insert n n) := by
+  intro hsucc k hk
+  -- The bound's transitivity returns `n` to its domain.
+  have hnsucc : n ∈ insert n n := ZFSet.mem_insert_iff.2 (Or.inl rfl)
+  have hnN : InApproxDomain N n := by
+    rcases hsucc with hmem | heq
+    · exact Or.inl (hNtrans _ hmem hnsucc)
+    · rw [heq] at hnsucc
+      exact Or.inl hnsucc
+  rcases inApproxDomain_succ_iff.1 hk with hk' | rfl
+  · exact hprev hnN k hk'
+  · -- at the new index, both values are the union of the agreed predecessor value
+    intro S U hS hU
+    obtain ⟨V, hV, -⟩ := ht.2.1 n hnN
+    obtain ⟨W, hW, -⟩ := hu.2.1 n hnN
+    have hnmem : n ∈ N := by
+      rcases hnN with h | rfl
+      · exact h
+      · exact absurd hsucc (succ_notMem_approxDomain n)
+    rw [ht.2.2.2 n hnmem V S hV hS, hu.2.2.2 n hnmem W U hW hU,
+      hprev hnN n (inApproxDomain_self n) V W hV hW]
 
 end Algebra
 

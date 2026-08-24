@@ -32,6 +32,7 @@ import Forcing.Material.RecursionFormula
 import Forcing.Material.Omega
 import Forcing.Material.UnionIteration
 import Forcing.Material.UnionIterationFormula
+import Forcing.Material.UnionIterationInternal
 import Forcing.Material.RecursionSchemes
 import Forcing.Material.RecursionExistence
 import Forcing.Material.Semantics

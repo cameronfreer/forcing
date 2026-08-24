@@ -94,6 +94,18 @@ def isApproxDef {α : Type v} {m : ℕ} (seed n t : memLang.Term (α ⊕ Fin m))
   approxSupportDef n t ⊓ (approxTotalFunctionalDef n t ⊓
     (approxBaseDef seed t ⊓ approxStepDef n t))
 
+/-- **Prefix agreement**, as a formula: the induction predicate for uniqueness. Parameters are
+the final bound, the two traces; the separated variable is the prefix bound. -/
+def approxAgreeFormula : memLang.BoundedFormula (Fin 3) 1 :=
+  inApproxDomainDef (var (Sum.inl 0)) (&(0 : Fin 1)) ⟹
+    ∀' (inApproxDomainDef (liftTerm (&(0 : Fin 1))) (&(Fin.last 1)) ⟹
+      ∀' ∀' (pairMemDef (&(Fin.castSucc (Fin.castSucc (Fin.last 1))))
+            (&(Fin.castSucc (Fin.last 2)))
+            (liftTerm (liftTerm (liftTerm (var (Sum.inl 1))))) ⟹
+        (pairMemDef (&(Fin.castSucc (Fin.castSucc (Fin.last 1)))) (&(Fin.last 3))
+            (liftTerm (liftTerm (liftTerm (var (Sum.inl 2))))) ⟹
+          (&(Fin.castSucc (Fin.last 2)) =' &(Fin.last 3)))))
+
 section Realization
 
 variable {α : Type v} {m : ℕ} {M : MaterialCarrier.{u}} {v : α → M} {xs : Fin m → M}
@@ -239,6 +251,33 @@ theorem realize_isApproxDef {seed n t : memLang.Term (α ⊕ Fin m)} :
   exact and_congr realize_approxSupportDef
     (and_congr realize_approxTotalFunctionalDef
       (and_congr realize_approxBaseDef realize_approxStepDef))
+
+/-- **The prefix-agreement law.** No hypotheses, no theory axioms: the prefix bound reaches
+the carrier from the final bound's domain, and each value reaches it through its pair entry. -/
+theorem realize_approxAgreeFormula {M : MaterialCarrier.{u}} (N t u n : ↥M) :
+    approxAgreeFormula.Realize ![N, t, u] ![n] ↔
+      PrefixAgree (N : ZFSet.{u}) (t : ZFSet.{u}) (u : ZFSet.{u}) (n : ZFSet.{u}) := by
+  have hnM : (n : ZFSet.{u}) ∈ M := n.2
+  have htM : (t : ZFSet.{u}) ∈ M := t.2
+  have huM : (u : ZFSet.{u}) ∈ M := u.2
+  have hval : ∀ (S : ZFSet.{u}) (a b : ZFSet.{u}), ZFSet.pair a b ∈ S → S ∈ M → b ∈ M := by
+    intro S a b hab hSM
+    have hpM : ZFSet.pair a b ∈ M := M.mem_trans hab hSM
+    exact M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
+      (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+  simp only [approxAgreeFormula, BoundedFormula.realize_imp, BoundedFormula.realize_all,
+    BoundedFormula.realize_bdEqual, Term.realize_var, Sum.elim_inr, Sum.elim_inl,
+    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.tail_cons, realize_liftTerm,
+    realize_pairMemDef, realize_inApproxDomainDef, PrefixAgree, ValuesAgreeAt,
+    Subtype.ext_iff]
+  refine imp_congr_right fun _ ↦ ⟨fun h k hk S U hS hU ↦ ?_, fun h k hk S U hS hU ↦ ?_⟩
+  · have hkM : k ∈ M := by
+      rcases hk with h1 | rfl
+      · exact M.mem_trans h1 hnM
+      · exact hnM
+    exact h ⟨k, hkM⟩ hk ⟨S, hval _ _ _ hS htM⟩ ⟨U, hval _ _ _ hU huM⟩ hS hU
+  · exact h (k : ZFSet.{u}) hk (S : ZFSet.{u}) (U : ZFSet.{u}) hS hU
 
 end Realization
 
