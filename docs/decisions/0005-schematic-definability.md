@@ -36,7 +36,11 @@ exactly what 3b provides.
 
 ## The split
 
-* **3a** — named Separation, Replacement/Collection, and Foundation scheme infrastructure.
+* **3a** — named Separation and Collection scheme infrastructure, plus the Foundation
+  sentence. (**Corrected**: this originally said "Replacement/Collection". Replacement is
+  absent from the implementation — `collectionSentence` asserts no functionality and has no
+  reverse clause, so it is Collection, not Replacement or Strong Collection. The Foundation
+  sentence exists for general semantics but is *free* for material carriers; see below.)
 * **3b** — uniform definability of `ForcesMem`/`ForcesEq` by internal well-founded recursion
   on name codes.
 * **3c** — the external compiler and its per-formula correctness theorem.
@@ -49,9 +53,10 @@ remaining obligation isolated as a sorry annotated by the axiom it needs.
 **Where the costs actually are (3b).** The recursion is the usual "there is a coherent
 computation covering this pair of name codes":
 
-* **Foundation** — uniqueness of the computation, by ∈-induction on the pair;
-* **Separation + Replacement/Collection** — existence: carving the computation out of the
-  candidate partial computations and collecting the stage approximations;
+* ~~**Foundation** — uniqueness of the computation, by ∈-induction on the pair;~~
+  **Falsified** — see the amendment below.
+* **Separation + Collection** — existence: carving the computation out of the candidate
+  partial computations and collecting the stage approximations;
 * **Infinity — only for uniformity in the pair.** The existence statement takes a transitive
   set containing the two codes as a *parameter*; the recursion itself never needs Infinity.
   Supplying such a set for arbitrary codes is transitive closure, and *that* is what costs
@@ -61,6 +66,49 @@ computation covering this pair of name codes":
 * **No Power Set.** The candidate computations are bounded by Collection over a fixed
   transitive set, not by a power set. Recorded as a negative finding — if an implementation
   reaches for Power Set, that is a signal the construction has drifted.
+
+### Amendment: the Foundation prediction was falsified
+
+The spike predicted **Foundation** for uniqueness of the computation. That prediction is
+**wrong**, and PR #160 proved it so: Foundation is *free* for material carriers.
+
+The reason is that uniqueness is established externally, by well-founded induction on the
+ambient `ZFSet` membership relation, together with transitivity of the carrier. The metatheory
+already supplies the well-foundedness; nothing needs to be assumed of the ground theory. The
+implemented uniqueness results (`agreeAt_of_correctOn`, `correctOn_unique`) consume coherence,
+descent-closure, and ambient rank, and cite no Foundation sentence.
+
+Amended rather than rewritten, so that the record shows the spike made a prediction that the
+implementation refuted. A decision record that quietly absorbs its own errors cannot be used
+to calibrate the next spike.
+
+### Amendment: the Infinity prediction was confirmed
+
+The spike's main result — **"Infinity constructs uniformity, not the recursion"** — held
+exactly. `MaterialGround.exists_atomicCoherentOn` takes the transitive domain as a parameter
+and is priced without Infinity; `infinitySentence` occurs nowhere in `Recursion.lean`,
+`RecursionSchemes.lean`, or `RecursionExistence.lean`, and this is checked rather than
+asserted. Infinity was charged separately, and only for supplying a uniform ambient domain.
+
+Recording a confirmed prediction alongside a falsified one is what makes the spike method
+auditable: the same record shows which parts of the cost estimate were reliable.
+
+### The implemented parameterized ledger
+
+What `exists_atomicCoherentOn` actually charges, read off the compiled construction:
+
+* **17 named Separation/Collection instances** — six for the aggregation layer, eleven for the
+  fixed-point construction;
+* **Empty Set, Pairing, Binary Union** — finite closure, for entries and numerals;
+* **General Union** — the flattening steps.
+
+Absent: **no Foundation, no Infinity, no Power Set.** The Power Set negative finding recorded
+above held; nothing in the construction reached for it.
+
+The instance count was discovery-driven throughout — read off what compiled, not targeted. An
+early estimate of four proved low by more than a factor of four, mostly because each
+aggregation level needs its own gather/filter pair and the predecessor set needs three
+instances of its own.
 
 ### Amendment: general Union is charged (row-wise prototype)
 
