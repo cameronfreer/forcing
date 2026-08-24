@@ -106,9 +106,16 @@ def approxAgreeFormula : memLang.BoundedFormula (Fin 3) 1 :=
             (liftTerm (liftTerm (liftTerm (var (Sum.inl 2))))) ⟹
           (&(Fin.castSucc (Fin.last 2)) =' &(Fin.last 3)))))
 
+/-- **Approximation existence**, as a formula: the induction predicate for existence. The seed
+is the parameter; the separated variable is the bound. -/
+def approxExistsFormula : memLang.BoundedFormula (Fin 1) 1 :=
+  ∃' (isApproxDef (liftTerm (var (Sum.inl 0))) (liftTerm (&(0 : Fin 1))) (&(Fin.last 1)))
+
 section Realization
 
 variable {α : Type v} {m : ℕ} {M : MaterialCarrier.{u}} {v : α → M} {xs : Fin m → M}
+
+open MaterialCarrier
 
 /-- **The bounded-domain law.** -/
 theorem realize_inApproxDomainDef {n k : memLang.Term (α ⊕ Fin m)} :
@@ -140,11 +147,7 @@ theorem realize_approxSupportDef {n t : memLang.Term (α ⊕ Fin m)} :
   · intro h e he
     obtain ⟨k, S, hpair, hdom⟩ := h (e : ZFSet.{u}) he
     have hpM : ZFSet.pair k S ∈ M := hpair ▸ M.mem_trans he htM
-    refine ⟨⟨k, ?_⟩, ⟨S, ?_⟩, hpair, hdom⟩
-    · exact M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
-        (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
-    · exact M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
-        (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+    exact ⟨⟨k, left_mem_of_pair_mem hpM⟩, ⟨S, right_mem_of_pair_mem hpM⟩, hpair, hdom⟩
 
 /-- **The totality-and-functionality law.** The value returns to the carrier through its pair
 entry, so nothing is charged. -/
@@ -160,9 +163,7 @@ theorem realize_approxTotalFunctionalDef {n t : memLang.Term (α ⊕ Fin m)} :
   have hval : ∀ a b : ZFSet.{u}, ZFSet.pair a b ∈
       ((Term.realize (Sum.elim v xs) t : ↥M) : ZFSet.{u}) → b ∈ M := by
     intro a b hab
-    have hpM : ZFSet.pair a b ∈ M := M.mem_trans hab htM
-    exact M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
-      (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+    exact (pair_components_mem_of_mem htM hab).2
   simp only [approxTotalFunctionalDef, BoundedFormula.realize_all, BoundedFormula.realize_imp,
     BoundedFormula.realize_ex, BoundedFormula.realize_inf, BoundedFormula.realize_bdEqual,
     Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc,
@@ -196,12 +197,7 @@ theorem realize_approxBaseDef {seed t : memLang.Term (α ⊕ Fin m)} :
   · rintro ⟨e, he, hmem⟩
     rwa [he] at hmem
   · intro h
-    have hpM : ZFSet.pair (∅ : ZFSet.{u})
-        ((Term.realize (Sum.elim v xs) seed : ↥M) : ZFSet.{u}) ∈ M := M.mem_trans h htM
-    have h0M : (∅ : ZFSet.{u}) ∈ M :=
-      M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
-        (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
-    exact ⟨⟨∅, h0M⟩, rfl, h⟩
+    exact ⟨⟨∅, (pair_components_mem_of_mem htM h).1⟩, rfl, h⟩
 
 /-- **The recurrence law.** The forward direction instantiates the universally quantified
 successor only when an actual successor entry is in hand, and *that* entry supplies
@@ -217,11 +213,7 @@ theorem realize_approxStepDef {n t : memLang.Term (α ⊕ Fin m)} :
   have hidx : ∀ a b : ZFSet.{u}, ZFSet.pair a b ∈
       ((Term.realize (Sum.elim v xs) t : ↥M) : ZFSet.{u}) → a ∈ M ∧ b ∈ M := by
     intro a b hab
-    have hpM : ZFSet.pair a b ∈ M := M.mem_trans hab htM
-    exact ⟨M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
-        (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM),
-      M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
-        (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)⟩
+    exact pair_components_mem_of_mem htM hab
   simp only [approxStepDef, BoundedFormula.realize_all, BoundedFormula.realize_imp, memFormula,
     BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
     Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
@@ -260,11 +252,8 @@ theorem realize_approxAgreeFormula {M : MaterialCarrier.{u}} (N t u n : ↥M) :
   have hnM : (n : ZFSet.{u}) ∈ M := n.2
   have htM : (t : ZFSet.{u}) ∈ M := t.2
   have huM : (u : ZFSet.{u}) ∈ M := u.2
-  have hval : ∀ (S : ZFSet.{u}) (a b : ZFSet.{u}), ZFSet.pair a b ∈ S → S ∈ M → b ∈ M := by
-    intro S a b hab hSM
-    have hpM : ZFSet.pair a b ∈ M := M.mem_trans hab hSM
-    exact M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
-      (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
+  have hval : ∀ (S : ZFSet.{u}) (a b : ZFSet.{u}), ZFSet.pair a b ∈ S → S ∈ M → b ∈ M :=
+    fun _ _ _ hab hSM ↦ (pair_components_mem_of_mem hSM hab).2
   simp only [approxAgreeFormula, BoundedFormula.realize_imp, BoundedFormula.realize_all,
     BoundedFormula.realize_bdEqual, Term.realize_var, Sum.elim_inr, Sum.elim_inl,
     Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
@@ -278,6 +267,15 @@ theorem realize_approxAgreeFormula {M : MaterialCarrier.{u}} (N t u n : ↥M) :
       · exact hnM
     exact h ⟨k, hkM⟩ hk ⟨S, hval _ _ _ hS htM⟩ ⟨U, hval _ _ _ hU huM⟩ hS hU
   · exact h (k : ZFSet.{u}) hk (S : ZFSet.{u}) (U : ZFSet.{u}) hS hU
+
+/-- **The existence law.** Hypothesis-free. The existential is carrier-valued, which is the
+honest reading: the formula asserts a trace *inside the ground*. -/
+theorem realize_approxExistsFormula {M : MaterialCarrier.{u}} (seed n : ↥M) :
+    approxExistsFormula.Realize ![seed] ![n] ↔
+      ∃ t : ↥M, IsApprox (seed : ZFSet.{u}) (n : ZFSet.{u}) (t : ZFSet.{u}) := by
+  simp only [approxExistsFormula, BoundedFormula.realize_ex, realize_isApproxDef,
+    Term.realize_var, Sum.elim_inr, Sum.elim_inl, Function.comp_apply, Fin.snoc_last,
+    Matrix.cons_val_zero, realize_liftTerm]
 
 end Realization
 

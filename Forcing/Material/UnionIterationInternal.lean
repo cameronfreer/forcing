@@ -13,6 +13,13 @@ Where the iteration starts costing something. `UnionIteration.lean` establishes 
 clauses determine values; this module establishes it *inside the ground*, by formula-relative
 induction over internal `ω`.
 
+## Existence, and what it costs
+
+`exists_isApprox` charges **Pairing**, **Binary Union**, **General Union**, and one named
+induction instance. It does **not** charge Empty Set: the induction's base hands over a
+carrier element already equal to `∅`, so the empty set arrives through the binder. No
+Collection, Infinity, Foundation, or Power Set, and existence never consults uniqueness.
+
 ## Uniqueness, and what it costs
 
 `isApprox_unique` charges:
@@ -80,6 +87,48 @@ theorem isApprox_unique (hmem : separationSentence omegaMemTransFormula ∈ T)
   -- Instantiate at the bound itself; reflexivity puts it in its own domain.
   have hNagree := (realize_approxAgreeFormula N t u N).1 (key N hN) (inApproxDomain_self _)
   exact isApprox_eq_of_prefixAgree ht hu hNagree
+
+/-- **Approximation existence.** Every bound in `ω` carries an approximation inside the ground.
+
+Charged, and no more: **Pairing** (the base entry, its singleton, and the successor entry),
+**Binary Union** (inserting the successor entry), **General Union** (the successor value), and
+one named induction instance, `approxExistsFormula`.
+
+**No Empty Set.** The induction's base hands over a carrier element already equal to `∅`, so
+the empty set arrives through the binder rather than through an axiom. **No Collection, no
+Infinity, no Foundation, no Power Set**, and no uniqueness hypothesis — existence does not
+consult `isApprox_unique`. -/
+theorem exists_isApprox (hex : separationSentence approxExistsFormula ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T) (huni : unionSentence ∈ T)
+    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
+    (hw : IsInductive w)
+    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u}))
+    (seed : ↥M.toMaterialCarrier) :
+    ∀ n : ↥M.toMaterialCarrier, (n : ZFSet.{u}) ∈ (omega : ZFSet.{u}) →
+      ∃ t : ↥M.toMaterialCarrier,
+        IsApprox (seed : ZFSet.{u}) (n : ZFSet.{u}) (t : ZFSet.{u}) := by
+  intro N hN
+  refine (realize_approxExistsFormula seed N).1 ?_
+  refine M.omega_induction hex ![seed] hw hom (fun z hz ↦ ?_) (fun n hn hφ s hs ↦ ?_) N hN
+  · -- Base: the empty set arrives through the binder, so no Empty Set axiom is charged.
+    rw [realize_approxExistsFormula, hz]
+    have h0M : (∅ : ZFSet.{u}) ∈ M.toMaterialCarrier := hz ▸ z.2
+    have hpairM : ZFSet.pair (∅ : ZFSet.{u}) (seed : ZFSet.{u}) ∈ M.toMaterialCarrier :=
+      M.pair_mem hp h0M seed.2
+    exact ⟨⟨{ZFSet.pair (∅ : ZFSet.{u}) (seed : ZFSet.{u})}, M.singleton_mem hp hpairM⟩,
+      isApprox_base fun e ↦ by simp [ZFSet.mem_singleton]⟩
+  · -- Step: read the old value, take its general union, and extend.
+    rw [realize_approxExistsFormula, hs]
+    obtain ⟨t, ht⟩ := (realize_approxExistsFormula seed n).1 hφ
+    obtain ⟨S, hS, -⟩ := ht.2.1 (n : ZFSet.{u}) (inApproxDomain_self _)
+    have hSM : S ∈ M.toMaterialCarrier :=
+      (MaterialCarrier.pair_components_mem_of_mem t.2 hS).2
+    have hsuccM : insert (n : ZFSet.{u}) (n : ZFSet.{u}) ∈ M.toMaterialCarrier := hs ▸ s.2
+    have hentryM : ZFSet.pair (insert (n : ZFSet.{u}) (n : ZFSet.{u})) (ZFSet.sUnion S) ∈
+        M.toMaterialCarrier := M.pair_mem hp hsuccM (M.sUnion_mem huni hSM)
+    refine ⟨⟨insert (ZFSet.pair (insert (n : ZFSet.{u}) (n : ZFSet.{u})) (ZFSet.sUnion S))
+        (t : ZFSet.{u}), M.insert_mem hp hu hentryM t.2⟩, ?_⟩
+    exact isApprox_extend ht hS (fun e ↦ by rw [ZFSet.mem_insert_iff]; exact or_comm)
 
 end MaterialGround
 

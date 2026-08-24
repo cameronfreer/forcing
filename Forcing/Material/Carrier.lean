@@ -76,6 +76,36 @@ instance : SetLike MaterialCarrier.{u} ZFSet.{u} where
 theorem mem_trans (hxy : x ∈ y) (hyM : y ∈ M) : x ∈ M :=
   M.isTransitive.mem_trans hxy hyM
 
+/-! ### Components of coded pairs
+
+Three consumers now extract the components of a Kuratowski pair from a carrier: the recursion
+formulas, the union-iteration formulas, and the iteration's existence proof. Each was
+re-deriving the same two transitivity steps. Factored here because the demand is real, not in
+anticipation of it.
+
+Nothing beyond transitivity is used: `⟨a, b⟩ = {{a}, {a, b}}`, so both components are members
+of members of the pair. -/
+
+/-- The left component of a coded pair in the carrier. -/
+theorem left_mem_of_pair_mem (h : ZFSet.pair x y ∈ M) : x ∈ M :=
+  M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
+    (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
+
+/-- The right component of a coded pair in the carrier. -/
+theorem right_mem_of_pair_mem (h : ZFSet.pair x y ∈ M) : y ∈ M :=
+  M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
+    (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
+
+/-- Both components at once. -/
+theorem pair_components_mem (h : ZFSet.pair x y ∈ M) : x ∈ M ∧ y ∈ M :=
+  ⟨left_mem_of_pair_mem h, right_mem_of_pair_mem h⟩
+
+/-- Components of a coded pair that is a *member* of a carrier element — the shape that
+actually arises, where the pair reaches the carrier by one further transitivity step. -/
+theorem pair_components_mem_of_mem {S : ZFSet.{u}} (hS : S ∈ M) (h : ZFSet.pair x y ∈ S) :
+    x ∈ M ∧ y ∈ M :=
+  pair_components_mem (M.mem_trans h hS)
+
 /-- **Foundation is free for material carriers.** A carrier is a transitive collection of
 ambient `ZFSet`s, and ambient membership is well-founded, so every inhabited member has an
 `∈`-minimal element — with transitivity placing that element, and everything relevant below

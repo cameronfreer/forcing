@@ -359,17 +359,7 @@ section Realization
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
 variable {v : α → M} {xs : Fin n → M}
 
-/-- The right component of a Kuratowski pair in the carrier is in the carrier — repeated
-transitivity, no axiom. -/
-private theorem right_mem_of_pair_mem {a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ M) : b ∈ M :=
-  M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
-    (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
-
-/-- The left component, likewise. Both coordinates of a coded state are carrier elements for
-purely structural reasons — nothing about the state's provenance is needed. -/
-private theorem left_mem_of_pair_mem {a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ M) : a ∈ M :=
-  M.mem_trans (ZFSet.mem_pair.2 (Or.inl rfl))
-    (M.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) h)
+open MaterialCarrier
 
 /-- **The arbitrary-tag entry law**: the formula says exactly that `e` names the nested
 pair. -/
