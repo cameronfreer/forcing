@@ -34,6 +34,7 @@ import Forcing.Material.UnionIteration
 import Forcing.Material.UnionIterationFormula
 import Forcing.Material.UnionIterationInternal
 import Forcing.Material.UnionIterationFamily
+import Forcing.Material.AtomicDefinability
 import Forcing.Material.RecursionSchemes
 import Forcing.Material.RecursionExistence
 import Forcing.Material.Semantics
