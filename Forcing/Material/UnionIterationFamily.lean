@@ -20,11 +20,16 @@ takes its transitive domain as a hypothesis.
 IterateFamily M seed ω F  :=  ∀ S, S ∈ F ↔ ∃ n ∈ ω, UnionIterate M seed n S
 ```
 
-A biconditional, not coverage. Collection alone gives only the `←` direction, since its output
-may carry junk and its witness at each index is arbitrary. The `→` direction comes from the
-Separation filter, and the *upgrade* from coverage to exactness comes from
-`unionIterate_unique`: a genuine iterate at `n` must equal whichever witness Collection chose
-there, hence lies in the collected set.
+A **biconditional**, not coverage, and the two directions come from different places.
+Collection alone gives *neither*: its coverage says only that for each index some chosen
+witness lies in the collected set, which neither excludes junk nor accounts for a different
+witness at the same index.
+
+* `→` is the **Separation filter**: a member of `F` satisfies the filter's condition by
+  construction.
+* `←` is Collection's coverage **upgraded by `unionIterate_unique`**: a genuine iterate at `n`
+  must equal whichever witness Collection chose there, so it lies in the collected set and
+  then survives the filter. Uniqueness is what closes both of coverage's gaps.
 
 ## Where Infinity enters, and where it stops
 
