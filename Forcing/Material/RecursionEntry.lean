@@ -31,7 +31,8 @@ arrive with the graph itself.
 ## Main results
 
 * `Forcing.AtomicRecursion.entry_inj`: entries determine tag, condition, and both name codes.
-* `Forcing.MaterialGround.entry_mem`: entries lie in the ground, priced at finite closure.
+* `Forcing.MaterialGround.entry_mem`: entries lie in the ground, priced at **pairing alone**,
+  with the tag numeral taken as a hypothesis rather than built.
 -/
 
 universe u
@@ -76,15 +77,21 @@ namespace MaterialGround
 open AtomicRecursion
 
 variable {T : memLang.Theory} (M : MaterialGround.{u} T)
-variable (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
 
-include he hp hu in
-/-- **Entries lie in the ground**, priced at exactly the finite closure axioms: the tag is a
-numeral and the tuple is nested Kuratowski pairs. -/
-theorem entry_mem {tag : ℕ} {p x y : ZFSet.{u}} (hpm : p ∈ M) (hx : x ∈ M) (hy : y ∈ M) :
+/-- **Entries lie in the ground**, priced at **pairing alone**.
+
+The tag's numeral is a *hypothesis*, not a construction. Every consumer already holds the tag
+as a carrier element together with its defining equation, so it can discharge `htag` for free;
+building the numeral instead would charge Empty Set and Binary Union through `natCode_mem` at
+each of five call sites, none of which needs them for anything else.
+
+`natCode_mem` is still the way to obtain `htag` when a caller has no representative — but that
+charge then appears where the numeral is actually built, which is exactly once, at composition
+time. -/
+theorem entry_mem (hp : pairingSentence ∈ T) {tag : ℕ} {p x y : ZFSet.{u}}
+    (htag : natCode tag ∈ M) (hpm : p ∈ M) (hx : x ∈ M) (hy : y ∈ M) :
     entry tag p x y ∈ M :=
-  M.pair_mem hp (M.natCode_mem he hp hu tag)
-    (M.pair_mem hp hpm (M.pair_mem hp hx hy))
+  M.pair_mem hp htag (M.pair_mem hp hpm (M.pair_mem hp hx hy))
 
 end MaterialGround
 

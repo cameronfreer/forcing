@@ -99,7 +99,10 @@ What `exists_atomicCoherentOn` actually charges, read off the compiled construct
 
 * **17 named Separation/Collection instances** — six for the aggregation layer, eleven for the
   fixed-point construction;
-* **Empty Set, Pairing, Binary Union** — finite closure, for entries and numerals;
+* **Pairing, Binary Union** — finite closure, for entries and the two-tag bound. **Not Empty
+  Set**: `entry_mem` takes each tag's numeral as a hypothesis, and every consumer holds the tag
+  as a carrier element with its defining equation. Empty Set enters only when the numerals are
+  actually built, which happens once, at composition with the ambient domain;
 * **General Union** — the flattening steps.
 
 Absent: **no Foundation, no Infinity, no Power Set.** The Power Set negative finding recorded

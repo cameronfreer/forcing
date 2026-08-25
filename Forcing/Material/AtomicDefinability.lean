@@ -31,11 +31,18 @@ Everything the two halves charge, and nothing new:
 * Infinity and `omegaSepSentence`, for internal `ω` — and **only** through
   `exists_transitiveDomain`. `exists_atomicCoherentOn` remains priced without Infinity, which
   is the separation ADR 0005 predicted;
-* Empty Set, Pairing, Binary Union, General Union;
+* Pairing, Binary Union, General Union;
+* **Empty Set**, which appears here and *only* here;
 * **no Foundation, no Power Set**, and no Cartesian product.
 
-Empty Set appears here (through `natCode_mem`, for the tag numerals) even though neither half
-needed it on its own — worth stating, since the two halves' ledgers do not simply add.
+**On Empty Set.** Neither half charges it. `exists_transitiveDomain` takes `∅` from `ω`;
+`exists_atomicCoherentOn` takes its tags as parameters, and `entry_mem` takes each tag's
+numeral as a hypothesis rather than building it. Composition is the first point at which
+someone must actually construct the two numerals, which is `natCode_mem` — so Empty Set
+genuinely emerges at composition rather than being inherited.
+
+That is a real fact about the construction, not a bookkeeping accident, and it only became
+true after the parameterized recursion was weakened to take tag numerals as hypotheses.
 -/
 
 universe u
@@ -99,7 +106,7 @@ theorem exists_atomicCertificate
   -- the tag numerals, priced at finite closure
   refine ⟨A, ?_⟩
   obtain ⟨R, hR⟩ := M.exists_atomicCoherentOn hbnd hsep hgat hfil hdom hgra hbr hbl hpsep
-    hrgat hrfil hfgat hffil huni he hp hu
+    hrgat hrfil hfgat hffil huni hp hu
     ⟨natCode memWitnessTag, M.natCode_mem he hp hu memWitnessTag⟩
     ⟨natCode eqTag, M.natCode_mem he hp hu eqTag⟩
     Pres.conditionSet Pres.orderCode A hAtrans rfl rfl
