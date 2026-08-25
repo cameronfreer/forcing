@@ -50,24 +50,26 @@ predicted: it *was* wanted, and is declared where it is used, as
 Foundation is free for material carriers; charging an induction instance for it would be
 paying twice.
 
+Transitivity of `ω` itself was declared and then **removed**. It was added in anticipation of
+the iteration's uniqueness proof, which turned out not to need it: the bounded-prefix argument
+needs transitivity of each *bound* `N`, which is `omegaValue_mem_isTransitive`, not
+transitivity of `ω`. Having compiled the whole tranche without a single consumer, the
+declaration and its induction instance were withdrawn. Consumer-gating is only honest if it
+also removes what it admitted too early.
+
 ## Main definitions
 
 * `Forcing.OmegaValue`: the exact contract — membership in the supplied inductive set, plus
   membership in every *internal* inductive set.
 * `Forcing.omegaSepFormula`: the Separation instance carving it out.
-* `Forcing.omegaTransFormula`, `Forcing.omegaMemTransFormula`: the two named induction
-  instances this module charges.
+* `Forcing.omegaMemTransFormula`: the one named induction instance this module charges.
 
 ## Main results
 
 * `Forcing.MaterialGround.exists_omega`: `ω` exists inside the ground.
 * `Forcing.omegaValue_isInductive`, `Forcing.omegaValue_least`: the two structural facts.
 * `Forcing.MaterialGround.omega_induction`: formula-relative induction, separately priced.
-* `Forcing.MaterialGround.omegaValue_isTransitive`: `ω` is transitive — bounded approximation
-  indices must return to `ω`.
-* `Forcing.MaterialGround.omegaValue_mem_isTransitive`: members of `ω` are transitive — needed
-  because `succ k ∈ N ∈ ω` returns `succ k ∈ ω`, while the recurrence at bound `N` needs
-  `k ∈ N`.
+* `Forcing.MaterialGround.omegaValue_mem_isTransitive`: members of `ω` are transitive.
 -/
 
 universe u v
@@ -119,24 +121,6 @@ theorem omegaValue_least {M : MaterialCarrier.{u}} {w omega : ZFSet.{u}}
     (hom : OmegaValue M w omega) (u : ↥M) (hu : IsInductive (u : ZFSet.{u})) :
     ∀ n ∈ omega, n ∈ (u : ZFSet.{u}) :=
   fun n hn ↦ ((hom n).1 hn).2 u hu
-
-/-- **The transitivity instance**: `n ⊆ ω`, with `ω` as the parameter and `n` the separated
-variable. One named formula-relative induction instance, and the only one this module
-charges. -/
-def omegaTransFormula : memLang.BoundedFormula (Fin 1) 1 :=
-  ∀' (memFormula (&(Fin.last 1)) (liftTerm (&(0 : Fin 1))) ⟹
-    memFormula (&(Fin.last 1)) (liftTerm (var (Sum.inl 0))))
-
-/-- The transitivity instance reads as containment in `ω`. No hypotheses, no theory axioms. -/
-theorem realize_omegaTransFormula {M : MaterialCarrier.{u}} (omega n : ↥M) :
-    omegaTransFormula.Realize ![omega] ![n] ↔
-      ∀ z ∈ (n : ZFSet.{u}), z ∈ (omega : ZFSet.{u}) := by
-  have hnM : (n : ZFSet.{u}) ∈ M := n.2
-  simp only [omegaTransFormula, BoundedFormula.realize_all, BoundedFormula.realize_imp,
-    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
-    Sum.elim_inl, Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero,
-    Matrix.cons_val_one, realize_liftTerm]
-  exact ⟨fun h z hz ↦ h ⟨z, M.mem_trans hz hnM⟩ hz, fun h z ↦ h (z : ZFSet.{u})⟩
 
 /-- **The member-transitivity instance**: `N` is transitive. No parameters — the separated
 variable is `N` itself. The second named induction instance this module charges. -/
@@ -217,9 +201,10 @@ theorem omega_induction {k : ℕ} {φ : memLang.BoundedFormula (Fin k) 1}
 
 /-- **Members of `ω` are transitive.**
 
-`omegaValue_isTransitive` is not enough on its own. From `succ k ∈ N ∈ ω` it returns
-`succ k ∈ ω`, but the iteration's recurrence at bound `N` needs `k ∈ N` — a fact about `N`,
-not about `ω`. That is what this supplies.
+Transitivity of `ω` would not suffice: from `succ k ∈ N ∈ ω` it returns `succ k ∈ ω`, but
+the iteration's recurrence at bound `N` needs `k ∈ N` — a fact about `N`, not about `ω`.
+That is what this supplies, and it is why the transitivity-of-`ω` declaration was removed as
+unused.
 
 Strictly weaker than identifying members of `ω` as finite ordinals: no trichotomy, no
 `∈`-transitivity as an order, no ordinal arithmetic. Charged: one named induction instance,
@@ -241,34 +226,6 @@ theorem omegaValue_mem_isTransitive (hsep : separationSentence omegaMemTransForm
     rcases ZFSet.mem_insert_iff.1 hy with rfl | hy'
     · exact ZFSet.mem_insert_iff.2 (Or.inr hz)
     · exact ZFSet.mem_insert_iff.2 (Or.inr (hnT y hy' hz))
-
-/-- **`ω` is transitive.**
-
-This is the load-bearing `ω`-fact for the iteration: an approximation's indices satisfy
-`k ∈ n ∨ k = n` with `n ∈ ω`, and it is transitivity that returns `k` to `ω` so that the
-recurrence and the induction hypotheses apply to it. Without it the bounded indices would
-escape the set the induction is over.
-
-Charged: one named induction instance, `omegaTransFormula`. -/
-theorem omegaValue_isTransitive (hsep : separationSentence omegaTransFormula ∈ T)
-    {w : ZFSet.{u}} {omega : ↥M.toMaterialCarrier}
-    (hw : IsInductive w)
-    (hom : OmegaValue M.toMaterialCarrier w (omega : ZFSet.{u})) :
-    (omega : ZFSet.{u}).IsTransitive := by
-  have key : ∀ n : ↥M.toMaterialCarrier, (n : ZFSet.{u}) ∈ (omega : ZFSet.{u}) →
-      omegaTransFormula.Realize ![omega] ![n] := by
-    refine M.omega_induction hsep ![omega] hw hom (fun z hz ↦ ?_) (fun n hn hφ s hs ↦ ?_)
-    · rw [realize_omegaTransFormula, hz]
-      exact fun y hy ↦ absurd hy (ZFSet.notMem_empty _)
-    · rw [realize_omegaTransFormula, hs]
-      have hindΩ : IsInductive (omega : ZFSet.{u}) := omegaValue_isInductive hw hom
-      intro y hy
-      rcases ZFSet.mem_insert_iff.1 hy with rfl | hy'
-      · exact hn
-      · exact (realize_omegaTransFormula omega n).1 hφ y hy'
-  intro x hx
-  have hxM := M.toMaterialCarrier.mem_trans hx omega.2
-  exact (realize_omegaTransFormula omega ⟨x, hxM⟩).1 (key ⟨x, hxM⟩ hx)
 
 end MaterialGround
 
