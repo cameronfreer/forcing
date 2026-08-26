@@ -34,9 +34,9 @@ truth layer.
   carrier-quantifier bridge.
 * `Forcing.realize_unorderedPairDef`, `Forcing.realize_pairDef`, `Forcing.realize_pairMemDef`:
   the pair-builder laws.
-* `Forcing.realize_emptyDef`, `Forcing.realize_successorDef`, `Forcing.realize_sUnionDef`: the
-  set-operation laws. All are hypothesis-free and axiom-free — every quantifier bridge is
-  carrier transitivity.
+* `Forcing.realize_emptyDef`, `Forcing.realize_successorDef`, `Forcing.realize_sUnionDef`,
+  `Forcing.realize_transitiveDef`: the set-operation laws. All hypothesis-free and axiom-free
+  — every quantifier bridge is carrier transitivity.
 -/
 
 universe u v
@@ -163,6 +163,23 @@ theorem realize_successorDef {x s : memLang.Term (α ⊕ Fin n)} :
   · intro h z
     rw [h, ZFSet.mem_insert_iff]
     exact Or.comm
+
+/-- **The transitivity law.** No hypotheses and no theory axioms. -/
+theorem realize_transitiveDef {a : memLang.Term (α ⊕ Fin n)} :
+    (transitiveDef a).Realize v xs ↔
+      ((Language.Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}).IsTransitive := by
+  have haM : ((Language.Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) ∈ M :=
+    (Language.Term.realize (Sum.elim v xs) a : ↥M).2
+  simp only [transitiveDef, Language.BoundedFormula.realize_all,
+    Language.BoundedFormula.realize_imp, memFormula, Language.BoundedFormula.realize_rel₂,
+    relMap_mem, Language.Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
+    Fin.snoc_castSucc, Matrix.cons_val_zero, Matrix.cons_val_one, realize_liftTerm,
+    ZFSet.IsTransitive]
+  constructor
+  · intro h y hy z hz
+    exact h ⟨y, M.mem_trans hy haM⟩ hy ⟨z, M.mem_trans hz (M.mem_trans hy haM)⟩ hz
+  · intro h y hy z hz
+    exact h (y : ZFSet.{u}) hy hz
 
 /-- **The general-union law.** -/
 theorem realize_sUnionDef {a u : memLang.Term (α ⊕ Fin n)} :

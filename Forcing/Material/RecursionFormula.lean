@@ -7,12 +7,16 @@ import Forcing.Material.Recursion
 import Forcing.Material.Semantics
 
 /-!
-# The recursion formulas: entries
+# The recursion formulas: entries and clauses
 
 The formula layer of the atomic recursion, built bottom-up with a realization theorem at each
-step. This module owns the **entry** formulas; they are specific to the tagged graph
-representation, so unlike the pair builders they stay inside `AtomicRecursion` rather than
-enlarging the shared syntax API.
+step. This module owns the **entry and clause** formulas — entries, the three coherence
+clauses, stages, rows, graphs, and the recursion's own predicates. They are specific to the
+tagged graph representation, so unlike the pair builders they stay inside `AtomicRecursion`
+rather than enlarging the shared syntax API.
+
+The **atomic definitions** built on top of these live in
+`Forcing/Material/AtomicFormula.lean`.
 
 Realization comes in two stages. The **arbitrary-tag** law keeps the syntax reusable — it
 says only that the fifth term names the nested pair. The **specialization at a numeral tag**
@@ -42,6 +46,8 @@ supplies it.
   `Forcing.AtomicRecursion.realize_entryMemDef_natCode`: the graph-API specializations.
 * `Forcing.AtomicRecursion.realize_stageValueDef`: the stage law, the last realization
   theorem before the schemes are named.
+* `Forcing.AtomicRecursion.realize_atomicCoherentOnDef`, and the stage/row/graph and
+  descent-closed laws: the clause-level realization theorems the atomic definitions consume.
 -/
 
 universe u v
