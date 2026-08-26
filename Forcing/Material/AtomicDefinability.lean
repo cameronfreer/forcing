@@ -63,7 +63,8 @@ open FirstOrder Language AtomicRecursion
 
 The formulas at their eight parameters — the two tags, the condition set, the order code, the
 domain, the condition, and the two name codes. Naming them pins the bound-variable count at
-zero, so a reader sees sentences-in-parameters rather than open formulas. -/
+zero — these are closed in the bound-variable context, with eight parameters. (They are
+`BoundedFormula (Fin 8) 0`, not `memLang.Sentence`: the parameters are free.) -/
 
 /-- The parameter vector the atomic instances are read at. -/
 def atomicParams {M : MaterialCarrier.{u}} (tagMem tagEq condSet orderCode A p x y : ↥M) :
@@ -122,8 +123,9 @@ coherent over it, whose slices are the external atomic relations at those codes:
 * the equality slice is `ForcesEq`;
 * the *density* of the membership slice is `ForcesMem`.
 
-`A` and `R` are exposed rather than hidden behind an existential over the conclusion, because
-the internal formulas built next must name the domain. -/
+`A` and `R` are exposed rather than hidden behind an existential over the conclusion. That is
+what makes this a certificate: `exists_atomicDefinitionDomain` and `atomicDefinability` are
+built from it, and the first of them still hands the domain back. -/
 theorem exists_atomicCertificate
     -- the recursion instances
     (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
