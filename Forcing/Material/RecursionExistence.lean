@@ -191,8 +191,9 @@ exact `hpred` hypothesis `exists_approximation_step` demands. -/
 /-- Entries at any coded state of a carrier element lie in the carrier. The bridge is
 structural for the coordinates and `entry_mem` for the entry itself, so this is priced at
 finite closure and nothing more. -/
-theorem entry_mem_of_state (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
-    (hu : binaryUnionSentence ∈ T) (condSet D : ↥M.toMaterialCarrier) :
+theorem entry_mem_of_state (hp : pairingSentence ∈ T)
+    (htm : natCode memWitnessTag ∈ M.toMaterialCarrier)
+    (hte : natCode eqTag ∈ M.toMaterialCarrier) (condSet D : ↥M.toMaterialCarrier) :
     ∀ a b : ZFSet.{u}, ZFSet.pair a b ∈ (D : ZFSet.{u}) →
       ∀ q ∈ (condSet : ZFSet.{u}),
         entry memWitnessTag q a b ∈ M.toMaterialCarrier ∧
@@ -206,7 +207,7 @@ theorem entry_mem_of_state (he : emptySetSentence ∈ T) (hp : pairingSentence �
     M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl))
       (M.toMaterialCarrier.mem_trans (ZFSet.mem_pair.2 (Or.inr rfl)) hpM)
   have hqM : q ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans hq condSet.2
-  exact ⟨M.entry_mem he hp hu hqM haM hbM, M.entry_mem he hp hu hqM haM hbM⟩
+  exact ⟨M.entry_mem hp htm hqM haM hbM, M.entry_mem hp hte hqM haM hbM⟩
 
 section PackageRealization
 
@@ -218,8 +219,7 @@ obligation *uniformly in the bound domain*, which is possible precisely because 
 obligation is structural in `D` apart from the entry construction itself.
 
 Stated for an arbitrary assignment so that it can be used under the filter's binder. -/
-theorem realize_packageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
-    (hu : binaryUnionSentence ∈ T)
+theorem realize_packageAtDef (hp : pairingSentence ∈ T)
     {tagMem tagEq condSet orderCode A s a : memLang.Term (β ⊕ Fin k)}
     (hm : ((Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier) : ZFSet.{u}) =
       natCode memWitnessTag)
@@ -246,10 +246,14 @@ theorem realize_packageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence
             ((Term.realize (Sum.elim w xs) orderCode : ↥M.toMaterialCarrier) : ZFSet.{u})
             (D : ZFSet.{u}) (R : ZFSet.{u})) := by
     intro D R
+    have htm : natCode memWitnessTag ∈ M.toMaterialCarrier :=
+      hm ▸ (Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier).2
+    have hte : natCode eqTag ∈ M.toMaterialCarrier :=
+      hq ▸ (Term.realize (Sum.elim w xs) tagEq : ↥M.toMaterialCarrier).2
     rw [realize_approximationDef (by simpa [realize_liftTerm] using hm)
       (by simpa [realize_liftTerm] using hq)
       (by simpa [realize_liftTerm] using
-        M.entry_mem_of_state he hp hu (Term.realize (Sum.elim w xs) condSet) D)]
+        M.entry_mem_of_state hp htm hte (Term.realize (Sum.elim w xs) condSet) D)]
     simp [realize_liftTerm]
   simp only [packageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
     BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
@@ -280,8 +284,7 @@ becomes exactly the `hpred` hypothesis of `exists_approximation_step`. Filtering
 `Approximation` alone would not give it, because a retained package would carry no record of
 which predecessor it covers. -/
 theorem exists_packageFamily (hgat : packageGatherSentence ∈ T)
-    (hfil : packageFilterSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hfil : packageFilterSentence ∈ T) (hp : pairingSentence ∈ T)
     (tagMem tagEq condSet orderCode A P : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
@@ -301,7 +304,7 @@ theorem exists_packageFamily (hgat : packageGatherSentence ∈ T)
         PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
           (s : ZFSet.{u}) (a : ZFSet.{u})) := by
     intro s a
-    rw [packageGatherFormula, M.realize_packageAtDef he hp hu (by simpa using hm)
+    rw [packageGatherFormula, M.realize_packageAtDef hp (by simpa using hm)
       (by simpa using hq)]
     simp
   obtain ⟨B, hB⟩ := M.exists_collection (φ := packageGatherFormula) hgat
@@ -323,7 +326,7 @@ theorem exists_packageFamily (hgat : packageGatherSentence ∈ T)
           PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
             (t : ZFSet.{u}) (a : ZFSet.{u})) := by
       intro t
-      rw [M.realize_packageAtDef he hp hu (by simpa [liftTerm, Term.realize_relabel] using hm)
+      rw [M.realize_packageAtDef hp (by simpa [liftTerm, Term.realize_relabel] using hm)
         (by simpa [liftTerm, Term.realize_relabel] using hq)]
       simp [liftTerm]
     simp only [packageFilterFormula, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
@@ -505,7 +508,7 @@ pairing builds the coded state, pairing with binary union builds the extended do
 graph. No scheme instance beyond those `exists_stageValue` already uses. -/
 theorem exists_materialApproximation_step (hbnd : entryBoundSentence ∈ T)
     (hsep : stageSeparationSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag)
@@ -524,7 +527,7 @@ theorem exists_materialApproximation_step (hbnd : entryBoundSentence ∈ T)
   by_cases hmem : ZFSet.pair x y ∈ (D₀ : ZFSet.{u})
   · -- Already covered; nothing is constructed and nothing is charged.
     exact ⟨D₀, R₀, hmem, hDC₀, hCO₀⟩
-  · obtain ⟨stage, hst⟩ := M.exists_stageValue hbnd hsep he hp hu tagMem tagEq condSet
+  · obtain ⟨stage, hst⟩ := M.exists_stageValue hbnd hsep hp hu tagMem tagEq condSet
       orderCode R₀ ⟨x, hxM⟩ ⟨y, hyM⟩ hm hq
     have hext := approximation_extend (D₁ := insert (ZFSet.pair x y) (D₀ : ZFSet.{u}))
       (R₁ := (R₀ : ZFSet.{u}) ∪ (stage : ZFSet.{u})) hDC₀ hCO₀ hx hy hpred hmem hst
@@ -545,7 +548,7 @@ theorem exists_materialApproximation_at (hbnd : entryBoundSentence ∈ T)
     (hsep : stageSeparationSentence ∈ T) (hgat : packageGatherSentence ∈ T)
     (hfil : packageFilterSentence ∈ T) (hdom : domainFamilySentence ∈ T)
     (hgra : graphFamilySentence ∈ T) (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
     (hA : (A : ZFSet.{u}).IsTransitive)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
@@ -561,7 +564,7 @@ theorem exists_materialApproximation_at (hbnd : entryBoundSentence ∈ T)
   refine M.exists_materialApproximation condSet orderCode A hA fun x y hx hy ih ↦ ?_
   obtain ⟨P, hP⟩ := hPred x y hx hy
   -- gather → filter
-  obtain ⟨F, hvalid, hcover⟩ := M.exists_packageFamily hgat hfil he hp hu tagMem tagEq
+  obtain ⟨F, hvalid, hcover⟩ := M.exists_packageFamily hgat hfil hp tagMem tagEq
     condSet orderCode A P hm hq (M.exists_packageCoverage hp hP ih)
   -- project by provenance → flatten
   obtain ⟨D₀, R₀, hDc, hRc⟩ := M.exists_projections hdom hgra huni F
@@ -572,7 +575,7 @@ theorem exists_materialApproximation_at (hbnd : entryBoundSentence ∈ T)
     intro s hs
     obtain ⟨a, haF, D, R, rfl, -, -, hsD⟩ := hcover s ((hP s).2 hs)
     exact (hDc s).2 ⟨D, R, haF, hsD⟩
-  exact M.exists_materialApproximation_step hbnd hsep he hp hu tagMem tagEq condSet orderCode
+  exact M.exists_materialApproximation_step hbnd hsep hp hu tagMem tagEq condSet orderCode
     A hm hq hx hy hDC₀ hCO₀ hpred
 
 /-! ### The predecessor set
@@ -699,7 +702,7 @@ theorem exists_approximation_at_state (hbnd : entryBoundSentence ∈ T)
     (hgra : graphFamilySentence ∈ T) (hbr : predBoundRightSentence ∈ T)
     (hbl : predBoundLeftSentence ∈ T) (hpsep : predSepSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
     (hA : (A : ZFSet.{u}).IsTransitive)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
@@ -709,7 +712,7 @@ theorem exists_approximation_at_state (hbnd : entryBoundSentence ∈ T)
         DescentClosed (condSet : ZFSet.{u}) (A : ZFSet.{u}) (D : ZFSet.{u}) ∧
         CorrectOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (D : ZFSet.{u})
           (R : ZFSet.{u}) :=
-  M.exists_materialApproximation_at hbnd hsep hgat hfil hdom hgra huni he hp hu
+  M.exists_materialApproximation_at hbnd hsep hgat hfil hdom hgra huni hp hu
     tagMem tagEq condSet orderCode A hA hm hq
     (fun x y hx hy ↦ M.exists_predValue hbr hbl hpsep hp hu condSet
       ⟨x, M.toMaterialCarrier.mem_trans hx A.2⟩ ⟨y, M.toMaterialCarrier.mem_trans hy A.2⟩)
@@ -726,8 +729,7 @@ section RowAggregation
 variable {β : Type v} {k : ℕ} {w : β → ↥M.toMaterialCarrier} {xs : Fin k → ↥M.toMaterialCarrier}
 
 /-- The state-package law, at an arbitrary assignment. -/
-theorem realize_statePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
-    (hu : binaryUnionSentence ∈ T)
+theorem realize_statePackageAtDef (hp : pairingSentence ∈ T)
     {tagMem tagEq condSet orderCode A x y a : memLang.Term (β ⊕ Fin k)}
     (hm : ((Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier) : ZFSet.{u}) =
       natCode memWitnessTag)
@@ -750,7 +752,7 @@ theorem realize_statePackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSen
           (s : ZFSet.{u})
           ((Term.realize (Sum.elim w xs) a : ↥M.toMaterialCarrier) : ZFSet.{u}) := by
     intro s
-    rw [M.realize_packageAtDef he hp hu (by simpa [realize_liftTerm] using hm)
+    rw [M.realize_packageAtDef hp (by simpa [realize_liftTerm] using hm)
       (by simpa [realize_liftTerm] using hq)]
     simp [realize_liftTerm]
   simp only [statePackageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
@@ -784,7 +786,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
     (hbl : predBoundLeftSentence ∈ T) (hpsep : predSepSentence ∈ T)
     (hrgat : rowStateGatherSentence ∈ T) (hrfil : rowStateFilterSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
     (hA : (A : ZFSet.{u}).IsTransitive)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
@@ -801,7 +803,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
         PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
           (ZFSet.pair (x : ZFSet.{u}) (y : ZFSet.{u})) (a : ZFSet.{u})) := by
     intro y a
-    rw [rowStateGatherFormula, M.realize_statePackageAtDef he hp hu (by simpa using hm)
+    rw [rowStateGatherFormula, M.realize_statePackageAtDef hp (by simpa using hm)
       (by simpa using hq)]
     simp
   -- Step 1: gather a package for each `y ∈ A`.
@@ -809,7 +811,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
     ![tagMem, tagEq, condSet, orderCode, A, x] A
     (fun y hy ↦ by
       obtain ⟨D, R, hstate, hdc, hco⟩ := M.exists_approximation_at_state hbnd hsep hgat hfil
-        hdom hgra hbr hbl hpsep huni he hp hu tagMem tagEq condSet orderCode A hA hm hq
+        hdom hgra hbr hbl hpsep huni hp hu tagMem tagEq condSet orderCode A hA hm hq
         (x : ZFSet.{u}) (y : ZFSet.{u}) hx hy
       obtain ⟨a, ha⟩ := M.packageAt_mem hp hstate hdc hco
       exact ⟨a, (hgatherBody y a).2 ha⟩)
@@ -830,7 +832,7 @@ theorem exists_rowApproximation (hbnd : entryBoundSentence ∈ T)
           PackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
             (ZFSet.pair (x : ZFSet.{u}) (t : ZFSet.{u})) (a : ZFSet.{u})) := by
       intro t
-      rw [M.realize_statePackageAtDef he hp hu
+      rw [M.realize_statePackageAtDef hp
         (by simpa [liftTerm, Term.realize_relabel] using hm)
         (by simpa [liftTerm, Term.realize_relabel] using hq)]
       simp [liftTerm]
@@ -871,8 +873,7 @@ section FinalAggregation
 variable {β : Type v} {k : ℕ} {w : β → ↥M.toMaterialCarrier} {xs : Fin k → ↥M.toMaterialCarrier}
 
 /-- The row-package law, at an arbitrary assignment. -/
-theorem realize_rowPackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T)
-    (hu : binaryUnionSentence ∈ T)
+theorem realize_rowPackageAtDef (hp : pairingSentence ∈ T)
     {tagMem tagEq condSet orderCode A x a : memLang.Term (β ⊕ Fin k)}
     (hm : ((Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier) : ZFSet.{u}) =
       natCode memWitnessTag)
@@ -901,10 +902,14 @@ theorem realize_rowPackageAtDef (he : emptySetSentence ∈ T) (hp : pairingSente
             ((Term.realize (Sum.elim w xs) orderCode : ↥M.toMaterialCarrier) : ZFSet.{u})
             (D : ZFSet.{u}) (R : ZFSet.{u})) := by
     intro D R
+    have htm : natCode memWitnessTag ∈ M.toMaterialCarrier :=
+      hm ▸ (Term.realize (Sum.elim w xs) tagMem : ↥M.toMaterialCarrier).2
+    have hte : natCode eqTag ∈ M.toMaterialCarrier :=
+      hq ▸ (Term.realize (Sum.elim w xs) tagEq : ↥M.toMaterialCarrier).2
     rw [realize_approximationDef (by simpa [realize_liftTerm] using hm)
       (by simpa [realize_liftTerm] using hq)
       (by simpa [realize_liftTerm] using
-        M.entry_mem_of_state he hp hu (Term.realize (Sum.elim w xs) condSet) D)]
+        M.entry_mem_of_state hp htm hte (Term.realize (Sum.elim w xs) condSet) D)]
     simp [realize_liftTerm]
   simp only [rowPackageAtDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf,
     Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc,
@@ -962,7 +967,7 @@ theorem exists_atomicCoherentOn (hbnd : entryBoundSentence ∈ T)
     (hrgat : rowStateGatherSentence ∈ T) (hrfil : rowStateFilterSentence ∈ T)
     (hfgat : rowFinalGatherSentence ∈ T) (hffil : rowFinalFilterSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode A : ↥M.toMaterialCarrier)
     (hA : (A : ZFSet.{u}).IsTransitive)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
@@ -976,7 +981,7 @@ theorem exists_atomicCoherentOn (hbnd : entryBoundSentence ∈ T)
         RowPackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
           (x : ZFSet.{u}) (a : ZFSet.{u})) := by
     intro x a
-    rw [rowFinalGatherFormula, M.realize_rowPackageAtDef he hp hu (by simpa using hm)
+    rw [rowFinalGatherFormula, M.realize_rowPackageAtDef hp (by simpa using hm)
       (by simpa using hq)]
     simp
   -- Step 1: a row package for each `x ∈ A`.
@@ -984,7 +989,7 @@ theorem exists_atomicCoherentOn (hbnd : entryBoundSentence ∈ T)
     ![tagMem, tagEq, condSet, orderCode, A] A
     (fun x hx ↦ by
       obtain ⟨D, R, hdc, hco, hcov⟩ := M.exists_rowApproximation hbnd hsep hgat hfil hdom
-        hgra hbr hbl hpsep hrgat hrfil huni he hp hu tagMem tagEq condSet orderCode A hA
+        hgra hbr hbl hpsep hrgat hrfil huni hp hu tagMem tagEq condSet orderCode A hA
         hm hq x hx
       obtain ⟨a, ha⟩ := M.rowPackageAt_mem hp hdc hco hcov
       exact ⟨a, (hgatherBody x a).2 ha⟩)
@@ -1004,7 +1009,7 @@ theorem exists_atomicCoherentOn (hbnd : entryBoundSentence ∈ T)
           RowPackageAt (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
             (t : ZFSet.{u}) (a : ZFSet.{u})) := by
       intro t
-      rw [M.realize_rowPackageAtDef he hp hu
+      rw [M.realize_rowPackageAtDef hp
         (by simpa [liftTerm, Term.realize_relabel] using hm)
         (by simpa [liftTerm, Term.realize_relabel] using hq)]
       simp [liftTerm]

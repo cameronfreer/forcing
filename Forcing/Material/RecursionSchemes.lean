@@ -65,8 +65,10 @@ two-line argument with `ZFSet.sep` replaced by the instance.
 The full ledger for the constructions here, so that the per-theorem prices below are read
 against a stated whole:
 
-* the finite-closure axioms — `emptySetSentence`, `pairingSentence`, `binaryUnionSentence`
-  — for entries and for the two-tag bound;
+* `pairingSentence` and `binaryUnionSentence` — for entries and for the two-tag bound.
+  **Not `emptySetSentence`**: `entry_mem` takes each tag's numeral as a hypothesis, and every
+  consumer already holds the tag as a carrier element with its defining equation, so the
+  numeral is never built here;
 * `unionSentence`, general Union, at each of the two flattening steps;
 * the six scheme instances named above.
 
@@ -246,8 +248,7 @@ characterization rather than a containment. -/
 
 /-- The per-state entry bound at one tag, from the entry-bound instance. **No general
 Union**: the witnesses are individual entries. -/
-theorem exists_entryBound (hcol : entryBoundSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+theorem exists_entryBound (hcol : entryBoundSentence ∈ T) (hp : pairingSentence ∈ T)
     (tag : ℕ) (tagCode condSet x y : ↥M.toMaterialCarrier)
     (htag : (tagCode : ZFSet.{u}) = natCode tag) :
     ∃ E : ↥M.toMaterialCarrier, ∀ p ∈ (condSet : ZFSet.{u}),
@@ -259,8 +260,8 @@ theorem exists_entryBound (hcol : entryBoundSentence ∈ T)
     rw [entryBoundFormula, realize_entryDef_natCode (by simpa using htag)]
     simp
   obtain ⟨E, hE⟩ := M.exists_collection (φ := entryBoundFormula) hcol ![tagCode, x, y] condSet
-    (fun p hp' ↦ ⟨⟨_, M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' condSet.2)
-      x.2 y.2⟩, (hbody p _).2 rfl⟩)
+    (fun p hp' ↦ ⟨⟨_, M.entry_mem hp (htag ▸ tagCode.2)
+      (M.toMaterialCarrier.mem_trans hp' condSet.2) x.2 y.2⟩, (hbody p _).2 rfl⟩)
   refine ⟨E, fun p hp' ↦ ?_⟩
   obtain ⟨e, heE, hval⟩ := hE ⟨p, M.toMaterialCarrier.mem_trans hp' condSet.2⟩ hp'
   rw [(hbody _ e).1 hval] at heE
@@ -269,28 +270,28 @@ theorem exists_entryBound (hcol : entryBoundSentence ∈ T)
 /-- The per-state bound at both tags — the same instance twice, combined by **binary** union.
 This is what discharges the bound hypothesis of `exists_stageValue_of_bound`. -/
 theorem exists_stageBound (hcol : entryBoundSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet x y : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
     ∃ bound : ↥M.toMaterialCarrier, ∀ p ∈ (condSet : ZFSet.{u}),
       entry memWitnessTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∈ (bound : ZFSet.{u}) ∧
         entry eqTag p (x : ZFSet.{u}) (y : ZFSet.{u}) ∈ (bound : ZFSet.{u}) := by
-  obtain ⟨E₁, hE₁⟩ := M.exists_entryBound hcol he hp hu memWitnessTag tagMem condSet x y hm
-  obtain ⟨E₂, hE₂⟩ := M.exists_entryBound hcol he hp hu eqTag tagEq condSet x y hq
+  obtain ⟨E₁, hE₁⟩ := M.exists_entryBound hcol hp memWitnessTag tagMem condSet x y hm
+  obtain ⟨E₂, hE₂⟩ := M.exists_entryBound hcol hp eqTag tagEq condSet x y hq
   exact ⟨⟨(E₁ : ZFSet.{u}) ∪ (E₂ : ZFSet.{u}), M.union_mem hu E₁.2 E₂.2⟩, fun p hp' ↦
     ⟨ZFSet.mem_union.2 (Or.inl (hE₁ p hp')), ZFSet.mem_union.2 (Or.inr (hE₂ p hp'))⟩⟩
 
 /-- **The stage exists outright**, with the bound now constructed rather than assumed. -/
 theorem exists_stageValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode history x y : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
     ∃ value : ↥M.toMaterialCarrier,
       StageValue (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (history : ZFSet.{u})
         (x : ZFSet.{u}) (y : ZFSet.{u}) (value : ZFSet.{u}) := by
-  obtain ⟨bound, hbd⟩ := M.exists_stageBound hbnd he hp hu tagMem tagEq condSet x y hm hq
+  obtain ⟨bound, hbd⟩ := M.exists_stageBound hbnd hp hu tagMem tagEq condSet x y hm hq
   exact M.exists_stageValue_of_bound hsep tagMem tagEq condSet orderCode history x y bound
     hm hq hbd
 
@@ -338,7 +339,7 @@ entries the row has — not merely that it contains a stage for every `y`. -/
 theorem exists_rowValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
     (hgat : stageGatherSentence ∈ T) (hfil : stageFilterSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode history A x : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
@@ -352,9 +353,9 @@ theorem exists_rowValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparatio
       entry memWitnessTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier ∧
         entry eqTag p (x : ZFSet.{u}) y ∈ M.toMaterialCarrier := by
     intro y hy p hp'
-    exact ⟨M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' hcM) x.2
+    exact ⟨M.entry_mem hp (hm ▸ tagMem.2) (M.toMaterialCarrier.mem_trans hp' hcM) x.2
         (M.toMaterialCarrier.mem_trans hy hAM),
-      M.entry_mem he hp hu (M.toMaterialCarrier.mem_trans hp' hcM) x.2
+      M.entry_mem hp (hq ▸ tagEq.2) (M.toMaterialCarrier.mem_trans hp' hcM) x.2
         (M.toMaterialCarrier.mem_trans hy hAM)⟩
   -- Step 1: gather the stages along the row.
   have hstageR : ∀ y value : ↥M.toMaterialCarrier,
@@ -370,7 +371,7 @@ theorem exists_rowValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparatio
   obtain ⟨B, hB⟩ := M.exists_collection (φ := stageGatherFormula) hgat
     ![tagMem, tagEq, condSet, orderCode, history, x] A
     (fun y hy ↦ by
-      obtain ⟨value, hv⟩ := M.exists_stageValue hbnd hsep he hp hu tagMem tagEq condSet
+      obtain ⟨value, hv⟩ := M.exists_stageValue hbnd hsep hp hu tagMem tagEq condSet
         orderCode history x y hm hq
       exact ⟨value, (hstageR y value hy).2 hv⟩)
   -- Step 2: filter, BEFORE flattening.
@@ -444,7 +445,7 @@ theorem exists_graphValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparat
     (hgat : stageGatherSentence ∈ T) (hfil : stageFilterSentence ∈ T)
     (hrgat : rowGatherSentence ∈ T) (hrfil : rowFilterSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode history A : ↥M.toMaterialCarrier)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
     (hq : (tagEq : ZFSet.{u}) = natCode eqTag) :
@@ -460,7 +461,8 @@ theorem exists_graphValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparat
     have hpM := M.toMaterialCarrier.mem_trans hp' hcM
     have hxM := M.toMaterialCarrier.mem_trans hx hAM
     have hyM := M.toMaterialCarrier.mem_trans hy hAM
-    exact ⟨M.entry_mem he hp hu hpM hxM hyM, M.entry_mem he hp hu hpM hxM hyM⟩
+    exact ⟨M.entry_mem hp (hm ▸ tagMem.2) hpM hxM hyM,
+      M.entry_mem hp (hq ▸ tagEq.2) hpM hxM hyM⟩
   have hrowR : ∀ x row : ↥M.toMaterialCarrier, (x : ZFSet.{u}) ∈ (A : ZFSet.{u}) →
       (rowGatherFormula.Realize ![tagMem, tagEq, condSet, orderCode, history, A]
           ![x, row] ↔
@@ -474,7 +476,7 @@ theorem exists_graphValue (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparat
   obtain ⟨B, hB⟩ := M.exists_collection (φ := rowGatherFormula) hrgat
     ![tagMem, tagEq, condSet, orderCode, history, A] A
     (fun x hx ↦ by
-      obtain ⟨row, hrow⟩ := M.exists_rowValue hbnd hsep hgat hfil huni he hp hu
+      obtain ⟨row, hrow⟩ := M.exists_rowValue hbnd hsep hgat hfil huni hp hu
         tagMem tagEq condSet orderCode history A x hm hq
       exact ⟨row, (hrowR x row hx).2 hrow⟩)
   -- Step 2: filter, BEFORE flattening.
@@ -504,7 +506,7 @@ theorem exists_graphValue_coherent_of_agree
     (hgat : stageGatherSentence ∈ T) (hfil : stageFilterSentence ∈ T)
     (hrgat : rowGatherSentence ∈ T) (hrfil : rowFilterSentence ∈ T)
     (huni : unionSentence ∈ T)
-    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
     (tagMem tagEq condSet orderCode history A : ↥M.toMaterialCarrier)
     (hA : (A : ZFSet.{u}).IsTransitive)
     (hm : (tagMem : ZFSet.{u}) = natCode memWitnessTag)
@@ -516,7 +518,7 @@ theorem exists_graphValue_coherent_of_agree
             AgreeAt (condSet : ZFSet.{u}) (history : ZFSet.{u}) (graph : ZFSet.{u}) x y) →
           AtomicCoherentOn (condSet : ZFSet.{u}) (orderCode : ZFSet.{u}) (A : ZFSet.{u})
             (graph : ZFSet.{u})) := by
-  obtain ⟨graph, hgv⟩ := M.exists_graphValue hbnd hsep hgat hfil hrgat hrfil huni he hp hu
+  obtain ⟨graph, hgv⟩ := M.exists_graphValue hbnd hsep hgat hfil hrgat hrfil huni hp hu
     tagMem tagEq condSet orderCode history A hm hq
   exact ⟨graph, hgv, fun hagree ↦ atomicCoherentOn_of_graphValue hA hgv hagree⟩
 

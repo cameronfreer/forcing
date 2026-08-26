@@ -29,13 +29,14 @@ import Forcing.Material.Names
 import Forcing.Material.Recursion
 import Forcing.Material.RecursionEntry
 import Forcing.Material.RecursionFormula
+import Forcing.Material.RecursionSchemes
+import Forcing.Material.RecursionExistence
 import Forcing.Material.Omega
 import Forcing.Material.UnionIteration
 import Forcing.Material.UnionIterationFormula
 import Forcing.Material.UnionIterationInternal
 import Forcing.Material.UnionIterationFamily
-import Forcing.Material.RecursionSchemes
-import Forcing.Material.RecursionExistence
+import Forcing.Material.AtomicDefinability
 import Forcing.Material.Semantics
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
