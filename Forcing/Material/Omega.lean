@@ -125,25 +125,15 @@ theorem omegaValue_least {M : MaterialCarrier.{u}} {w omega : ZFSet.{u}}
 /-- **The member-transitivity instance**: `N` is transitive. No parameters — the separated
 variable is `N` itself. The second named induction instance this module charges. -/
 def omegaMemTransFormula : memLang.BoundedFormula (Fin 0) 1 :=
-  ∀' (memFormula (&(Fin.last 1)) (liftTerm (&(0 : Fin 1))) ⟹
-    ∀' (memFormula (&(Fin.last 2)) (&(Fin.castSucc (Fin.last 1))) ⟹
-      memFormula (&(Fin.last 2)) (liftTerm (liftTerm (&(0 : Fin 1))))))
+  transitiveDef (&(0 : Fin 1))
 
 /-- The member-transitivity instance reads as ambient transitivity. No hypotheses, no theory
 axioms. -/
 theorem realize_omegaMemTransFormula {M : MaterialCarrier.{u}} (N : ↥M) :
     omegaMemTransFormula.Realize (default : Fin 0 → ↥M) ![N] ↔
       (N : ZFSet.{u}).IsTransitive := by
-  have hNM : (N : ZFSet.{u}) ∈ M := N.2
-  simp only [omegaMemTransFormula, BoundedFormula.realize_all, BoundedFormula.realize_imp,
-    memFormula, BoundedFormula.realize_rel₂, relMap_mem, Term.realize_var, Sum.elim_inr,
-    Function.comp_apply, Fin.snoc_last, Fin.snoc_castSucc, Matrix.cons_val_zero,
-    Matrix.cons_val_one, realize_liftTerm, ZFSet.IsTransitive]
-  constructor
-  · intro h y hy z hz
-    exact h ⟨y, M.mem_trans hy hNM⟩ hy ⟨z, M.mem_trans hz (M.mem_trans hy hNM)⟩ hz
-  · intro h y hy z hz
-    exact h (y : ZFSet.{u}) hy hz
+  rw [omegaMemTransFormula, realize_transitiveDef]
+  simp
 
 namespace MaterialGround
 

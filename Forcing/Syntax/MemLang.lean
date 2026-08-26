@@ -24,7 +24,8 @@ depending on the other.
 * `Forcing.memFormula`: the atomic membership formula.
 * `Forcing.unorderedPairDef`, `Forcing.pairDef`, `Forcing.pairMemDef`: the pair relations, as
   builders over terms.
-* `Forcing.emptyDef`, `Forcing.successorDef`, `Forcing.sUnionDef`: the function-free
+* `Forcing.emptyDef`, `Forcing.successorDef`, `Forcing.sUnionDef`, `Forcing.transitiveDef`:
+  the function-free
   set-operation vocabulary. `memLang` has no function symbols, so each operation is
   *characterized* by a formula rather than denoted by a term; sharing these builders is what
   keeps the axioms and the recursion layers from drifting into separate notions.
@@ -104,6 +105,15 @@ def successorDef {α : Type v} {n : ℕ} (x s : memLang.Term (α ⊕ Fin n)) :
     memLang.BoundedFormula α n :=
   ∀' (memFormula (&(Fin.last n)) (liftTerm s) ⇔
     (memFormula (&(Fin.last n)) (liftTerm x) ⊔ (&(Fin.last n) =' liftTerm x)))
+
+/-- `a` is transitive: every member of a member is a member. Two consumers — the `ω`
+member-transitivity instance and the uniform atomic definitions, which must assert
+transitivity of the domain they hide. -/
+def transitiveDef {α : Type v} {n : ℕ} (a : memLang.Term (α ⊕ Fin n)) :
+    memLang.BoundedFormula α n :=
+  ∀' (memFormula (&(Fin.last n)) (liftTerm a) ⟹
+    ∀' (memFormula (&(Fin.last (n + 1))) (&(Fin.castSucc (Fin.last n))) ⟹
+      memFormula (&(Fin.last (n + 1))) (liftTerm (liftTerm a))))
 
 /-- `u` is the general union `⋃₀ a`. -/
 def sUnionDef {α : Type v} {n : ℕ} (a u : memLang.Term (α ⊕ Fin n)) :
