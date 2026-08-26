@@ -33,7 +33,8 @@ def axiomAllowlist : List Name :=
 audits its entire stack; listing components would duplicate coverage. -/
 def auditedHeadlines : List Name :=
   [``Forcing.Cohen.addsNewReal,
-    ``Forcing.InternalNamePresentation.truth_lemma_of_genericOver]
+    ``Forcing.InternalNamePresentation.truth_lemma_of_genericOver,
+    ``Forcing.MaterialGround.atomicDefinability]
 
 set_option linter.hashCommand false in
 open Elab Command in

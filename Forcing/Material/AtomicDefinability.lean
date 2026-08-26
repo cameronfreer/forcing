@@ -16,12 +16,13 @@ external atomic forcing relations.
 
 ## What this theorem is
 
-A **construction certificate**, deliberately explicit about both `A` and `R`. It says which
-domain was built and which graph lives over it, because everything downstream — the internal
-formulas, and eventually the compiler — needs to name them.
+`exists_atomicCertificate` is a **construction certificate**, deliberately explicit about
+both `A` and `R`: it says which domain was built and which graph lives over it. It is not a
+definability theorem, and keeping that boundary visible matters.
 
-It is *not yet* the packaged internal definitions promised by #157. Those come next, and take
-`A` as a material parameter.
+`atomicDefinability` is the definability theorem. Its formulas take `A` as a **material
+parameter** and **existentially hide** `R` — the certificate's graph is used to witness
+completeness, but no formula names it.
 
 ## The ledger
 
@@ -50,6 +51,31 @@ universe u
 namespace Forcing
 
 open FirstOrder Language AtomicRecursion
+
+/-! ### The three atomic instances
+
+The formulas at their eight parameters — the two tags, the condition set, the order code, the
+domain, the condition, and the two name codes. Naming them pins the bound-variable count at
+zero, so a reader sees sentences-in-parameters rather than open formulas. -/
+
+/-- The parameter vector the atomic instances are read at. -/
+def atomicParams {M : MaterialCarrier.{u}} (tagMem tagEq condSet orderCode A p x y : ↥M) :
+    Fin 8 → ↥M := ![tagMem, tagEq, condSet, orderCode, A, p, x, y]
+
+/-- Internal membership-witness, at its eight parameters. -/
+def memWitnessInstance : memLang.BoundedFormula (Fin 8) 0 :=
+  memWitnessDefOn (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+    (var (Sum.inl 4)) (var (Sum.inl 5)) (var (Sum.inl 6)) (var (Sum.inl 7))
+
+/-- Internal forced equality, at its eight parameters. -/
+def forcesEqInstance : memLang.BoundedFormula (Fin 8) 0 :=
+  forcesEqDefOn (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+    (var (Sum.inl 4)) (var (Sum.inl 5)) (var (Sum.inl 6)) (var (Sum.inl 7))
+
+/-- Internal forced membership, at its eight parameters. -/
+def forcesMemInstance : memLang.BoundedFormula (Fin 8) 0 :=
+  forcesMemDefOn (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (var (Sum.inl 3))
+    (var (Sum.inl 4)) (var (Sum.inl 5)) (var (Sum.inl 6)) (var (Sum.inl 7))
 
 namespace MaterialGround
 
@@ -114,6 +140,88 @@ theorem exists_atomicCertificate
     fun p ↦ memWitness_entry_iff hAtrans hR hc hiA hjA p,
     fun p ↦ forcesEq_entry_iff hAtrans hR hc hiA hjA p,
     fun q ↦ denseMem_iff_forcesMem hAtrans hR hc hiA hjA q⟩
+
+/-- **Atomic definability over the ground.**
+
+For any two name codes there is a transitive `A ∈ M` containing both, over which the three
+internal instances define the external atomic forcing relations.
+
+`A` is a **material parameter**; the graph is **existentially hidden** inside each formula.
+
+**Soundness** (formula → external) works for *whichever* coherent graph the formula supplies,
+since conditional correctness applies to every graph coherent over `A`. **Completeness**
+(external → formula) offers the certificate's graph. Neither direction consults uniqueness, so
+no graph framework leaks into the formula interface.
+
+This is the theorem 3b promised. -/
+theorem atomicDefinability
+    (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
+    (hgat : packageGatherSentence ∈ T) (hfil : packageFilterSentence ∈ T)
+    (hdom : domainFamilySentence ∈ T) (hgra : graphFamilySentence ∈ T)
+    (hbr : predBoundRightSentence ∈ T) (hbl : predBoundLeftSentence ∈ T)
+    (hpsep : predSepSentence ∈ T) (hrgat : rowStateGatherSentence ∈ T)
+    (hrfil : rowStateFilterSentence ∈ T) (hfgat : rowFinalGatherSentence ∈ T)
+    (hffil : rowFinalFilterSentence ∈ T)
+    (hinf : infinitySentence ∈ T) (hosep : omegaSepSentence ∈ T)
+    (higat : iterateGatherSentence ∈ T) (hifil : iterateFilterSentence ∈ T)
+    (hex : separationSentence approxExistsFormula ∈ T)
+    (hmemi : separationSentence omegaMemTransFormula ∈ T)
+    (hagree : separationSentence approxAgreeFormula ∈ T)
+    (he : emptySetSentence ∈ T) (hp : pairingSentence ∈ T) (hu : binaryUnionSentence ∈ T)
+    (huni : unionSentence ∈ T)
+    {P : Type u} [Preorder P] {Pres : InternalForcingPresentation M.toMaterialCarrier P}
+    {N : InternalNamePresentation M.toMaterialCarrier P}
+    (hc : InternalNameCoding Pres N) (i j : N.Code) :
+    ∃ A : ↥M.toMaterialCarrier,
+      (A : ZFSet.{u}).IsTransitive ∧
+        N.code i ∈ (A : ZFSet.{u}) ∧ N.code j ∈ (A : ZFSet.{u}) ∧
+        ∀ p : P,
+          (memWitnessInstance.Realize
+              (atomicParams ⟨natCode memWitnessTag, M.natCode_mem he hp hu memWitnessTag⟩
+                ⟨natCode eqTag, M.natCode_mem he hp hu eqTag⟩
+                Pres.conditionSet Pres.orderCode A
+                ⟨condCode Pres p, M.toMaterialCarrier.mem_trans (Pres.code_mem p)
+                  Pres.conditionSet.2⟩
+                ⟨N.code i, N.code_mem i⟩ ⟨N.code j, N.code_mem j⟩) default ↔
+            MemWitness p (N.decode i) (N.decode j)) ∧
+          (forcesEqInstance.Realize
+              (atomicParams ⟨natCode memWitnessTag, M.natCode_mem he hp hu memWitnessTag⟩
+                ⟨natCode eqTag, M.natCode_mem he hp hu eqTag⟩
+                Pres.conditionSet Pres.orderCode A
+                ⟨condCode Pres p, M.toMaterialCarrier.mem_trans (Pres.code_mem p)
+                  Pres.conditionSet.2⟩
+                ⟨N.code i, N.code_mem i⟩ ⟨N.code j, N.code_mem j⟩) default ↔
+            ForcesEq p (N.decode i) (N.decode j)) ∧
+          (forcesMemInstance.Realize
+              (atomicParams ⟨natCode memWitnessTag, M.natCode_mem he hp hu memWitnessTag⟩
+                ⟨natCode eqTag, M.natCode_mem he hp hu eqTag⟩
+                Pres.conditionSet Pres.orderCode A
+                ⟨condCode Pres p, M.toMaterialCarrier.mem_trans (Pres.code_mem p)
+                  Pres.conditionSet.2⟩
+                ⟨N.code i, N.code_mem i⟩ ⟨N.code j, N.code_mem j⟩) default ↔
+            ForcesMem p (N.decode i) (N.decode j)) := by
+  obtain ⟨A, R, hAtrans, hiA, hjA, hR, hmw, heq, hfm⟩ :=
+    M.exists_atomicCertificate hbnd hsep hgat hfil hdom hgra hbr hbl hpsep hrgat hrfil hfgat
+      hffil hinf hosep higat hifil hex hmemi hagree he hp hu huni hc i j
+  refine ⟨A, hAtrans, hiA, hjA, fun p ↦ ⟨?_, ?_, ?_⟩⟩
+  · rw [memWitnessInstance, realize_memWitnessDefOn (by simp [atomicParams])
+      (by simp [atomicParams])]
+    simp only [atomicParams, Term.realize_var, Sum.elim_inl, Matrix.cons_val_two,
+      Matrix.cons_val_three, Matrix.cons_val_four, Matrix.tail_cons, Matrix.head_cons]
+    exact ⟨fun ⟨R', hR', he'⟩ ↦ (memWitness_entry_iff hAtrans hR' hc hiA hjA p).1 he',
+      fun h ↦ ⟨R, hR, (hmw p).2 h⟩⟩
+  · rw [forcesEqInstance, realize_forcesEqDefOn (by simp [atomicParams])
+      (by simp [atomicParams])]
+    simp only [atomicParams, Term.realize_var, Sum.elim_inl, Matrix.cons_val_two,
+      Matrix.cons_val_three, Matrix.cons_val_four, Matrix.tail_cons, Matrix.head_cons]
+    exact ⟨fun ⟨R', hR', he'⟩ ↦ (forcesEq_entry_iff hAtrans hR' hc hiA hjA p).1 he',
+      fun h ↦ ⟨R, hR, (heq p).2 h⟩⟩
+  · rw [forcesMemInstance, realize_forcesMemDefOn (by simp [atomicParams])
+      (by simp [atomicParams])]
+    simp only [atomicParams, Term.realize_var, Sum.elim_inl, Matrix.cons_val_two,
+      Matrix.cons_val_three, Matrix.cons_val_four, Matrix.tail_cons, Matrix.head_cons]
+    exact ⟨fun ⟨R', hR', hd'⟩ ↦ (denseMem_iff_forcesMem hAtrans hR' hc hiA hjA p).1 hd',
+      fun h ↦ ⟨R, hR, (hfm p).2 h⟩⟩
 
 end MaterialGround
 

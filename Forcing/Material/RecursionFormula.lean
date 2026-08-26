@@ -354,6 +354,40 @@ def rowPackageAtDef (tagMem tagEq condSet orderCode A x a : memLang.Term (α ⊕
       rowCoverageDef (liftTerm (liftTerm A)) (liftTerm (liftTerm x))
         (&(Fin.castSucc (Fin.last n)))))
 
+/-! ### The atomic definitions over a supplied domain
+
+The three internal formulas 3b promises. Each takes the domain `A` as a **material
+parameter** and **existentially hides** the graph.
+
+Hiding `R` is what keeps the API honest. Soundness holds for *whichever* coherent graph the
+formula happens to supply, because conditional correctness applies to every one of them; and
+completeness has a graph to offer because the construction certificate produces one. Neither
+direction needs graph uniqueness, so no reusable graph framework leaks into the formula
+interface. -/
+
+/-- **Internal membership-witness**, over the domain `A`. -/
+def memWitnessDefOn (tagMem tagEq condSet orderCode A p x y :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+      (liftTerm orderCode) (liftTerm A) (&(Fin.last n)) ⊓
+    entryMemDef (liftTerm tagMem) (liftTerm p) (liftTerm x) (liftTerm y) (&(Fin.last n)))
+
+/-- **Internal forced equality**, over the domain `A`. -/
+def forcesEqDefOn (tagMem tagEq condSet orderCode A p x y :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+      (liftTerm orderCode) (liftTerm A) (&(Fin.last n)) ⊓
+    entryMemDef (liftTerm tagEq) (liftTerm p) (liftTerm x) (liftTerm y) (&(Fin.last n)))
+
+/-- **Internal forced membership**, over the domain `A`: the *density* of the membership
+slice, which is where forced membership lives. -/
+def forcesMemDefOn (tagMem tagEq condSet orderCode A p x y :
+    memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
+  ∃' (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+      (liftTerm orderCode) (liftTerm A) (&(Fin.last n)) ⊓
+    denseMemDef (liftTerm condSet) (liftTerm orderCode) (liftTerm tagMem) (&(Fin.last n))
+      (liftTerm p) (liftTerm x) (liftTerm y))
+
 section Realization
 
 variable {M : MaterialCarrier.{u}} {tag p x y e R S : memLang.Term (α ⊕ Fin n)}
@@ -1196,6 +1230,121 @@ theorem realize_rowCoverageDef {A D : memLang.Term (α ⊕ Fin n)} :
     Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
     realize_liftTerm, realize_pairMemDef]
   exact ⟨fun h y hy ↦ h ⟨y, M.mem_trans hy hAM⟩ hy, fun h y ↦ h (y : ZFSet.{u})⟩
+
+/-! ### Realization of the atomic definitions
+
+All three are **axiom-free apart from the two tag equations**. The existential over graphs is
+carrier-valued, which is the honest reading: the formula asserts a coherent graph *inside the
+ground*. -/
+
+/-- **The internal membership-witness law.** -/
+theorem realize_memWitnessDefOn
+    {tagMem tagEq condSet orderCode A p : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (memWitnessDefOn tagMem tagEq condSet orderCode A p x y).Realize v xs ↔
+      ∃ R : ↥M, AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) ∧
+        entry memWitnessTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈ ((R : ↥M) : ZFSet.{u}) := by
+  have hco : ∀ R : ↥M,
+      (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+          (liftTerm orderCode) (liftTerm A) (&(Fin.last n))).Realize v (Fin.snoc xs R) ↔
+        AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_atomicCoherentOnDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  have hent : ∀ R : ↥M,
+      (entryMemDef (liftTerm tagMem) (liftTerm p) (liftTerm x) (liftTerm y)
+          (&(Fin.last n))).Realize v (Fin.snoc xs R) ↔
+        entry memWitnessTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈ ((R : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using hm)]
+    simp [realize_liftTerm]
+  simp only [memWitnessDefOn, BoundedFormula.realize_ex, BoundedFormula.realize_inf]
+  exact ⟨fun ⟨R, hc, he⟩ ↦ ⟨R, (hco R).1 hc, (hent R).1 he⟩,
+    fun ⟨R, hc, he⟩ ↦ ⟨R, (hco R).2 hc, (hent R).2 he⟩⟩
+
+/-- **The internal forced-equality law.** -/
+theorem realize_forcesEqDefOn
+    {tagMem tagEq condSet orderCode A p : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (forcesEqDefOn tagMem tagEq condSet orderCode A p x y).Realize v xs ↔
+      ∃ R : ↥M, AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) ∧
+        entry eqTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈ ((R : ↥M) : ZFSet.{u}) := by
+  have hco : ∀ R : ↥M,
+      (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+          (liftTerm orderCode) (liftTerm A) (&(Fin.last n))).Realize v (Fin.snoc xs R) ↔
+        AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_atomicCoherentOnDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  have hent : ∀ R : ↥M,
+      (entryMemDef (liftTerm tagEq) (liftTerm p) (liftTerm x) (liftTerm y)
+          (&(Fin.last n))).Realize v (Fin.snoc xs R) ↔
+        entry eqTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) ∈ ((R : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_entryMemDef_natCode (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  simp only [forcesEqDefOn, BoundedFormula.realize_ex, BoundedFormula.realize_inf]
+  exact ⟨fun ⟨R, hc, he⟩ ↦ ⟨R, (hco R).1 hc, (hent R).1 he⟩,
+    fun ⟨R, hc, he⟩ ↦ ⟨R, (hco R).2 hc, (hent R).2 he⟩⟩
+
+/-- **The internal forced-membership law.** -/
+theorem realize_forcesMemDefOn
+    {tagMem tagEq condSet orderCode A p : memLang.Term (α ⊕ Fin n)}
+    (hm : ((Term.realize (Sum.elim v xs) tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag)
+    (hq : ((Term.realize (Sum.elim v xs) tagEq : ↥M) : ZFSet.{u}) = natCode eqTag) :
+    (forcesMemDefOn tagMem tagEq condSet orderCode A p x y).Realize v xs ↔
+      ∃ R : ↥M, AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) ∧
+        DenseMem ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+  have hco : ∀ R : ↥M,
+      (atomicCoherentOnDef (liftTerm tagMem) (liftTerm tagEq) (liftTerm condSet)
+          (liftTerm orderCode) (liftTerm A) (&(Fin.last n))).Realize v (Fin.snoc xs R) ↔
+        AtomicCoherentOn ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_atomicCoherentOnDef (by simpa [realize_liftTerm] using hm)
+      (by simpa [realize_liftTerm] using hq)]
+    simp [realize_liftTerm]
+  have hden : ∀ R : ↥M,
+      (denseMemDef (liftTerm condSet) (liftTerm orderCode) (liftTerm tagMem) (&(Fin.last n))
+          (liftTerm p) (liftTerm x) (liftTerm y)).Realize v (Fin.snoc xs R) ↔
+        DenseMem ((Term.realize (Sum.elim v xs) condSet : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) orderCode : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) x : ↥M) : ZFSet.{u})
+          ((Term.realize (Sum.elim v xs) y : ↥M) : ZFSet.{u}) := by
+    intro R
+    rw [realize_denseMemDef (by simpa [realize_liftTerm] using hm)]
+    simp [realize_liftTerm]
+  simp only [forcesMemDefOn, BoundedFormula.realize_ex, BoundedFormula.realize_inf]
+  exact ⟨fun ⟨R, hc, hd⟩ ↦ ⟨R, (hco R).1 hc, (hden R).1 hd⟩,
+    fun ⟨R, hc, hd⟩ ↦ ⟨R, (hco R).2 hc, (hden R).2 hd⟩⟩
 
 /-- **Tag placement pressure test**: no encoded entry satisfies both tagged relations with
 identical remaining components — so tag placement, not merely pair nesting, matches
