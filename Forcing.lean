@@ -30,6 +30,7 @@ import Forcing.Material.Recursion
 import Forcing.Material.RecursionEntry
 import Forcing.Material.RecursionFormula
 import Forcing.Material.Compiler
+import Forcing.Material.CompilerBridge
 import Forcing.Material.Lookup
 import Forcing.Material.NameRecognition
 import Forcing.Material.AtomicFormula
