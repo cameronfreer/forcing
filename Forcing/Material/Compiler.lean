@@ -49,8 +49,17 @@ Each is a relation the compiler asserts internally, and each would typecheck rev
 `.imp` and `.all` both introduce their bound object with `∀' (guard ⟹ …)` rather than
 `∃' (guard ⊓ …)`. The guards are functional — `pairDef` determines `a'` outright — so the two agree
 whenever the object exists in the carrier. The universal form is the one that asserts no existence,
-and therefore charges no Pairing sentence into the *syntax*. Correctness will need the object to
-exist and will pay for it there, where the cost is visible.
+and therefore charges no Pairing sentence into the *syntax*.
+
+The consequence for correctness is **asymmetric**, and should stay that way rather than being
+smoothed into a global hypothesis:
+
+* external forcing → compiled `.all` needs no Pairing. Any `a'` satisfying the guard is handed to
+  us, so there is nothing to construct.
+* compiled `.all` → external forcing needs Pairing, to build the extended assignment code that the
+  universal hypothesis is then applied to.
+
+So the price is paid in one direction only, at one site.
 
 ## Main results
 
@@ -61,7 +70,8 @@ exist and will pay for it there, where the cost is visible.
   range of `N.code`.
 * `Forcing.realize_forcesDef_equal_of_assignmentCode`, `…_rel_of_assignmentCode`: the orientation
   guard, against a genuine coded assignment.
-* `Forcing.realize_forcesDef_all_of_assignmentCode`: the extension guard, likewise.
+* `Forcing.realize_forcesDef_all_of_assignmentCode`: the extension guard, likewise, with
+  `…_arity` pinning the combined arity.
 -/
 
 universe u v
@@ -459,6 +469,31 @@ theorem realize_forcesDef_all_of_assignmentCode {ℓ : ℕ} (R : InternalNameRec
   · rintro h c ⟨i, hc⟩ a' hpair
     refine h i c a' hc ?_
     rw [InternalNamePresentation.assignmentCode_snoc, ← hc, ← ha, hpair]
+
+/-- **The combined arity, checked.** The same law with the assignment's arity pinned to `k + sn`,
+producing the extended assignment at the type the recursive call's own guards consume: source
+arity `sn + 1` means combined arity `k + (sn + 1)`.
+
+`Fin.snoc asg i` has type `Fin ((k + sn) + 1) → N.Code`, so the binder for `asg'` typechecks only
+because `k + (sn + 1)` and `(k + sn) + 1` are definitionally equal. That is the alignment the
+module docstring claims, now checked by Lean rather than asserted in prose. -/
+theorem realize_forcesDef_all_of_assignmentCode_arity (R : InternalNameRecognition N)
+    {Γ : CompilerParams α R.arity m} {φ : memLang.BoundedFormula (Fin k) (sn + 1)}
+    (asg : Fin (k + sn) → N.Code)
+    (ha : ((Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) = N.assignmentCode asg)
+    (hparams : ∀ i, Sum.elim v xs (Γ.recParams i) = R.params i) :
+    (forcesDef R.formula φ.all Γ p a).Realize v xs ↔
+      ∀ (i : N.Code) (asg' : Fin (k + (sn + 1)) → N.Code), asg' = Fin.snoc asg i →
+        ∀ c a' : ↥M, ((c : ↥M) : ZFSet.{u}) = N.code i →
+          ((a' : ↥M) : ZFSet.{u}) = N.assignmentCode asg' →
+            (forcesDef R.formula φ Γ.lift.lift (liftTerm (liftTerm p))
+              (&(Fin.last (m + 1)))).Realize v (Fin.snoc (Fin.snoc xs c) a') := by
+  rw [realize_forcesDef_all_of_assignmentCode R asg ha hparams]
+  constructor
+  · rintro h i asg' rfl c a' hc ha'
+    exact h i c a' hc ha'
+  · intro h i c a' hc ha'
+    exact h i (Fin.snoc asg i) rfl c a' hc ha'
 
 end Names
 
