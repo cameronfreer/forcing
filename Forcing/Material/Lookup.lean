@@ -38,6 +38,7 @@ every index. An off-by-one would make it unprovable rather than merely wrong dow
 
 * `Forcing.LookupAt`: peeling, semantically.
 * `Forcing.realize_lookupDef`: the formula realizes exactly that, at every peel.
+* `Forcing.lookupAt_assignmentCode_iff`: the orientation fact, as a biconditional.
 * `Forcing.realize_lookupDef_assignmentCode`: the orientation guard, against `assignmentCode`.
 -/
 
@@ -137,6 +138,12 @@ theorem lookupAt_assignmentCode : ∀ {ℓ : ℕ} (a : Fin ℓ → N.Code) (i : 
         rw [harith, hunfold]
         exact ⟨N.assignmentCode (Fin.init a), ⟨_, rfl⟩, hinit ▸ lookupAt_assignmentCode _ j⟩
 
+/-- The orientation fact as a biconditional: functionality upgrades it to *no junk*. -/
+theorem lookupAt_assignmentCode_iff {ℓ : ℕ} (a : Fin ℓ → N.Code) (i : Fin ℓ) (t : ZFSet.{u}) :
+    LookupAt (ℓ - 1 - (i : ℕ)) (N.assignmentCode a) t ↔ t = N.code (a i) :=
+  ⟨fun h ↦ LookupAt.unique h (lookupAt_assignmentCode a i),
+    fun h ↦ h ▸ lookupAt_assignmentCode a i⟩
+
 variable {α : Type v} {m : ℕ} {v : α → M} {xs : Fin m → M}
 
 /-- **The orientation guard.** Read at a term realizing to `N.assignmentCode a`, the lookup
@@ -147,8 +154,7 @@ theorem realize_lookupDef_assignmentCode {ℓ : ℕ} (a : Fin ℓ → N.Code) (i
     (lookupDef (ℓ - 1 - (i : ℕ)) code target).Realize v xs ↔
       ((Term.realize (Sum.elim v xs) target : ↥M) : ZFSet.{u}) = N.code (a i) := by
   rw [realize_lookupDef, hcode]
-  refine ⟨fun h ↦ LookupAt.unique h (lookupAt_assignmentCode a i), fun h ↦ ?_⟩
-  exact h ▸ lookupAt_assignmentCode a i
+  exact lookupAt_assignmentCode_iff a i _
 
 end Assignment
 
