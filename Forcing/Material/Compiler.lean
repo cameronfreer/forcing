@@ -40,7 +40,7 @@ Each is a relation the compiler asserts internally, and each would typecheck rev
 
 | site | guard | law |
 |---|---|---|
-| `.imp` | `q ≤ p` as `pairMemDef q p orderCode` | `realize_forcesDef_imp` |
+| `.imp` | `q ∈ condSet` **and** `⟨q, p⟩ ∈ orderCode` | `realize_forcesDef_imp` |
 | `.all` | `a' = ⟨c, a⟩` as `pairDef c a a'` | `realize_forcesDef_all` |
 | `.equal`, `.rel` | entry `i` at peel `k + sn - 1 - i` | `…_equal_of_assignmentCode` |
 
@@ -152,7 +152,8 @@ def forcesDef {α : Type v} {k arity : ℕ} (rec : memLang.BoundedFormula (Fin a
             Γ.lift.lift.orderCode (liftTerm (liftTerm p))
             (&(Fin.castSucc (Fin.last m))) (&(Fin.last (m + 1)))))
   | _, m, .imp φ ψ, Γ, p, a =>
-      ∀' (pairMemDef (&(Fin.last m)) (liftTerm p) Γ.lift.orderCode ⟹
+      ∀' ((memFormula (&(Fin.last m)) Γ.lift.condSet ⊓
+            pairMemDef (&(Fin.last m)) (liftTerm p) Γ.lift.orderCode) ⟹
         (forcesDef rec φ Γ.lift (&(Fin.last m)) (liftTerm a) ⟹
           forcesDef rec ψ Γ.lift (&(Fin.last m)) (liftTerm a)))
   | _, m, .all φ, Γ, p, a =>
@@ -194,7 +195,8 @@ theorem forcesDef_rel {ts : Fin 2 → memLang.Term (Fin k ⊕ Fin sn)} :
 
 theorem forcesDef_imp {φ ψ : memLang.BoundedFormula (Fin k) sn} :
     forcesDef rec (φ.imp ψ) Γ p a =
-      ∀' (pairMemDef (&(Fin.last m)) (liftTerm p) Γ.lift.orderCode ⟹
+      ∀' ((memFormula (&(Fin.last m)) Γ.lift.condSet ⊓
+            pairMemDef (&(Fin.last m)) (liftTerm p) Γ.lift.orderCode) ⟹
         (forcesDef rec φ Γ.lift (&(Fin.last m)) (liftTerm a) ⟹
           forcesDef rec ψ Γ.lift (&(Fin.last m)) (liftTerm a))) :=
   rfl
@@ -247,18 +249,30 @@ theorem realize_relabel_snoc (rec : memLang.BoundedFormula (Fin arity) 1)
     simp [hn]
   rw [BoundedFormula.realize_relabel, h1, h2]
 
-/-- **The implication guard.** The strengthening is certified as `⟨q, p⟩ ∈ orderCode` — the
-coded order, in that argument order. Reversing it would compile. -/
+/-- **The implication guard.** The strengthening is certified by **two** facts: `q` is a member of
+the coded condition set, and `⟨q, p⟩ ∈ orderCode` in that argument order.
+
+Both are needed, and the first is not implied by the second. `order_iff` characterizes pairs of
+already-typed condition codes; it is deliberately *not* an order-code no-junk field, so a legitimate
+presentation may carry an extra pair `⟨z, condCode p⟩ ∈ orderCode` with `z ∉ conditionSet`. Without
+the membership conjunct the compiled implication would impose an obligation at such a `z` that
+external `ForcesFormula`, quantifying only over `q : P`, does not have — and correctness would be
+false in that presentation. Membership is also exactly what `code_surjective` consumes to return a
+typed condition. -/
 theorem realize_forcesDef_imp {φ ψ : memLang.BoundedFormula (Fin k) sn} :
     (forcesDef rec (φ.imp ψ) Γ p a).Realize v xs ↔
-      ∀ q : ↥M, ZFSet.pair ((q : ↥M) : ZFSet.{u})
+      ∀ q : ↥M, ((q : ↥M) : ZFSet.{u}) ∈
+            ((Term.realize (Sum.elim v xs) Γ.condSet : ↥M) : ZFSet.{u}) →
+        ZFSet.pair ((q : ↥M) : ZFSet.{u})
             ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u}) ∈
           ((Term.realize (Sum.elim v xs) Γ.orderCode : ↥M) : ZFSet.{u}) →
         ((forcesDef rec φ Γ.lift (&(Fin.last m)) (liftTerm a)).Realize v (Fin.snoc xs q) →
           (forcesDef rec ψ Γ.lift (&(Fin.last m)) (liftTerm a)).Realize v (Fin.snoc xs q)) := by
   simp only [forcesDef_imp, BoundedFormula.realize_all, BoundedFormula.realize_imp,
+    BoundedFormula.realize_inf, memFormula, BoundedFormula.realize_rel₂, relMap_mem,
     realize_pairMemDef, CompilerParams.lift, Term.realize_var, Sum.elim_inr,
-    Function.comp_apply, Fin.snoc_last, realize_liftTerm]
+    Function.comp_apply, Fin.snoc_last, Matrix.cons_val_zero, Matrix.cons_val_one,
+    realize_liftTerm, and_imp]
 
 /-- **The universal guard.** The bound name code is recognized, and the extended assignment is
 certified as `⟨c, a⟩` — new entry outermost, matching `assignmentCode`'s reversed-snoc law.
