@@ -44,12 +44,18 @@ Each is a relation the compiler asserts internally, and each would typecheck rev
 | `.all` | `a' = ⟨c, a⟩` as `pairDef c a a'` | `realize_forcesDef_all` |
 | `.equal`, `.rel` | entry `i` at peel `k + sn - 1 - i` | `…_equal_of_assignmentCode` |
 
-## Universal, not existential, at the extension sites
+## Universal quantification: inherent at two binders, a design choice at one
 
-`.imp` and `.all` both introduce their bound object with `∀' (guard ⟹ …)` rather than
-`∃' (guard ⊓ …)`. The guards are functional — `pairDef` determines `a'` outright — so the two agree
-whenever the object exists in the carrier. The universal form is the one that asserts no existence,
-and therefore charges no Pairing sentence into the *syntax*.
+Three binders here are universal, for two different reasons. Only one of them is a choice.
+
+**Inherent.** `.imp` ranges over every strengthening because forcing an implication *is* a
+statement about all of them — an existential version would not be a weaker encoding, it would be
+the wrong relation. Likewise `.all`'s outer binder ranges over every recognized name code.
+
+**A choice.** Only `.all`'s *inner* binder, the extended assignment `a'`, could have gone either
+way. `pairDef` is functional, so `∀' (pairDef c a a' ⟹ …)` and `∃' (pairDef c a a' ⊓ …)` agree
+whenever that pair exists in the carrier. The universal form is chosen because it asserts no
+existence, and therefore charges no Pairing sentence into the *syntax*.
 
 The consequence for correctness is **asymmetric**, and should stay that way rather than being
 smoothed into a global hypothesis:

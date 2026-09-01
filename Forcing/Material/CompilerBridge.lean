@@ -257,8 +257,10 @@ end Cases
 
 /-! ### The implication guard routes both ways
 
-The two facts the `.imp` case needs, in each direction. Together they are why the amended guard
-is exactly right: neither conjunct is redundant and neither direction needs more.
+The two facts the `.imp` case needs, one per direction of the correctness proof. Together they are
+why the amended guard is exactly right: neither conjunct is redundant and neither direction needs
+more. Note which is used where — decoding is what *proving* the compiled formula needs, encoding is
+what *using* it needs.
 
 `code_surjective` consumes condition-set membership, and `order_iff` speaks only of pairs of
 already-typed codes — so the membership conjunct is what turns an internally quantified carrier
@@ -270,8 +272,9 @@ section ImpRouting
 
 variable {M : MaterialCarrier.{u}} {P : Type u} [Preorder P]
 
-/-- **Compiled → external.** An internally quantified `q` meeting both conjuncts is a genuine
-condition, and it is a strengthening. -/
+/-- **Used in external forcing → compiled realization.** The compiled goal hands us an arbitrary
+internal `q` meeting both conjuncts; this decodes it to a genuine condition and a strengthening,
+which is what lets the external hypothesis be applied to it. -/
 theorem exists_typed_of_imp_guard (Pres : InternalForcingPresentation M P) {q : ZFSet.{u}} {p : P}
     (hmem : q ∈ (Pres.conditionSet : ZFSet.{u}))
     (horder : ZFSet.pair q (condCode Pres p) ∈ (Pres.orderCode : ZFSet.{u})) :
@@ -279,8 +282,9 @@ theorem exists_typed_of_imp_guard (Pres : InternalForcingPresentation M P) {q : 
   obtain ⟨q', rfl⟩ := Pres.code_surjective q hmem
   exact ⟨q', rfl, (Pres.order_iff p q').1 horder⟩
 
-/-- **External → compiled.** A typed strengthening satisfies both conjuncts, so instantiating the
-compiled universal clause costs nothing beyond the presentation's own fields. -/
+/-- **Used in compiled realization → external forcing.** The external goal hands us a typed
+strengthening; this encodes it to both conjuncts, which is what lets the compiled universal
+hypothesis be instantiated at it. Costs nothing beyond the presentation's own fields. -/
 theorem imp_guard_of_typed (Pres : InternalForcingPresentation M P) {q p : P} (h : q ≤ p) :
     condCode Pres q ∈ (Pres.conditionSet : ZFSet.{u}) ∧
       ZFSet.pair (condCode Pres q) (condCode Pres p) ∈ (Pres.orderCode : ZFSet.{u}) :=
