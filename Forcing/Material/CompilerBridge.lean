@@ -51,8 +51,10 @@ not in an invariant carried through it.
 * `Forcing.combinedCodes`, `Forcing.combinedCodes_finSumFinEquiv`: the combined assignment.
 * `Forcing.combinedCodes_snoc`, `Forcing.decode_combinedCodes_srcIndex`: the two computation laws.
 * `Forcing.CompilerParams.Realizes`, `Forcing.CompilerParams.Realizes.lift`: the invariant.
-* `Forcing.realize_forcesDef_equal_bridge`, `…_rel_bridge`, `…_all_bridge`: the guards, in the
-  shape the induction's cases call them.
+* `Forcing.realize_forcesDef_equal_bridge`, `…_rel_bridge`, `…_imp_bridge`, `…_all_bridge`: the
+  guards, in the shape the induction's cases call them.
+* `Forcing.exists_typed_of_imp_guard`, `Forcing.imp_guard_of_typed`: the implication guard routes
+  both ways.
 -/
 
 universe u v
@@ -215,6 +217,20 @@ theorem realize_forcesDef_rel_bridge {ts : Fin 2 → memLang.Term (Fin k ⊕ Fin
   rw [realize_forcesDef_rel_of_assignmentCode (combinedCodes free bound) ha
     hΓ.tagMem_eq hΓ.tagEq_eq, hΓ.condSet_eq, hΓ.orderCode_eq]
 
+/-- **The implication case.** Both conjuncts come from the invariant: condition-set membership
+and the coded order. -/
+theorem realize_forcesDef_imp_bridge {φ ψ : memLang.BoundedFormula (Fin k) sn}
+    (hΓ : Γ.Realizes Rec condSet orderCode v xs) :
+    (forcesDef Rec.formula (φ.imp ψ) Γ p a).Realize v xs ↔
+      ∀ q : ↥M, ((q : ↥M) : ZFSet.{u}) ∈ condSet →
+        ZFSet.pair ((q : ↥M) : ZFSet.{u})
+            ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u}) ∈ orderCode →
+        ((forcesDef Rec.formula φ Γ.lift (&(Fin.last m)) (liftTerm a)).Realize v
+            (Fin.snoc xs q) →
+          (forcesDef Rec.formula ψ Γ.lift (&(Fin.last m)) (liftTerm a)).Realize v
+            (Fin.snoc xs q)) := by
+  rw [realize_forcesDef_imp, hΓ.condSet_eq, hΓ.orderCode_eq]
+
 /-- **The universal case.** The admitted extension is exactly the code of the combined assignment
 with the bound valuation extended — `combinedCodes_snoc` composed with the extension guard.
 
@@ -238,5 +254,42 @@ theorem realize_forcesDef_all_bridge {φ : memLang.BoundedFormula (Fin k) (sn + 
     exact h i c a' hc (by rwa [combinedCodes_snoc])
 
 end Cases
+
+/-! ### The implication guard routes both ways
+
+The two facts the `.imp` case needs, one per direction of the correctness proof. Together they are
+why the amended guard is exactly right: neither conjunct is redundant and neither direction needs
+more. Note which is used where — decoding is what *proving* the compiled formula needs, encoding is
+what *using* it needs.
+
+`code_surjective` consumes condition-set membership, and `order_iff` speaks only of pairs of
+already-typed codes — so the membership conjunct is what turns an internally quantified carrier
+element into a `q : P` at all. Without it the compiled implication would range over junk elements
+of `orderCode`'s first coordinate, and correctness would be false in any presentation carrying
+such a pair. -/
+
+section ImpRouting
+
+variable {M : MaterialCarrier.{u}} {P : Type u} [Preorder P]
+
+/-- **Used in external forcing → compiled realization.** The compiled goal hands us an arbitrary
+internal `q` meeting both conjuncts; this decodes it to a genuine condition and a strengthening,
+which is what lets the external hypothesis be applied to it. -/
+theorem exists_typed_of_imp_guard (Pres : InternalForcingPresentation M P) {q : ZFSet.{u}} {p : P}
+    (hmem : q ∈ (Pres.conditionSet : ZFSet.{u}))
+    (horder : ZFSet.pair q (condCode Pres p) ∈ (Pres.orderCode : ZFSet.{u})) :
+    ∃ q' : P, q = condCode Pres q' ∧ q' ≤ p := by
+  obtain ⟨q', rfl⟩ := Pres.code_surjective q hmem
+  exact ⟨q', rfl, (Pres.order_iff p q').1 horder⟩
+
+/-- **Used in compiled realization → external forcing.** The external goal hands us a typed
+strengthening; this encodes it to both conjuncts, which is what lets the compiled universal
+hypothesis be instantiated at it. Costs nothing beyond the presentation's own fields. -/
+theorem imp_guard_of_typed (Pres : InternalForcingPresentation M P) {q p : P} (h : q ≤ p) :
+    condCode Pres q ∈ (Pres.conditionSet : ZFSet.{u}) ∧
+      ZFSet.pair (condCode Pres q) (condCode Pres p) ∈ (Pres.orderCode : ZFSet.{u}) :=
+  ⟨Pres.code_mem q, (Pres.order_iff p q).2 h⟩
+
+end ImpRouting
 
 end Forcing
