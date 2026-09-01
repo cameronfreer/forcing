@@ -38,9 +38,9 @@ bound, matching the convention `srcIndex` and `srcPeel` already fix.
 
 ## The invariant
 
-`CompilerParams.Realizes` records what the **fixed** block must denote: the two tags, the two
-condition codes, and the recognizer's parameters. `Realizes.lift` is its preservation law, the
-one fact every binder-crossing case needs.
+`CompilerParams.Realizes` records what the **fixed** block must denote: the two tags, the coded
+condition set and coded order, and the recognizer's parameters. `Realizes.lift` is its
+preservation law, the one fact every binder-crossing case needs.
 
 The condition `p` and the assignment `a` are deliberately **not** in it, exactly as they are not
 in `CompilerParams`: they vary down the recursion, so their equations belong at each use site,
@@ -120,30 +120,31 @@ namespace CompilerParams
 variable {α : Type v} {m : ℕ} {M : MaterialCarrier.{u}} {P : Type u}
 variable {N : InternalNamePresentation M P}
 
-/-- What the compiler's **fixed** parameters must denote: the two tags at their numerals, the two
-condition codes at supplied targets, and the recognizer's parameters at the recognizer's own.
+/-- What the compiler's **fixed** parameters must denote: the two tags at their numerals, the
+coded condition set and coded order at supplied targets, and the recognizer's parameters at the
+recognizer's own.
 
 The condition `p` and the assignment `a` are absent by design — they vary down the recursion, so
 their equations belong at each use site rather than in an invariant carried across it. -/
-structure Realizes (R : InternalNameRecognition N) (condCode orderCd : ZFSet.{u})
+structure Realizes (R : InternalNameRecognition N) (condSet orderCode : ZFSet.{u})
     (Γ : CompilerParams α R.arity m) (v : α → M) (xs : Fin m → M) : Prop where
   /-- The membership-witness tag is its numeral. -/
   tagMem_eq : ((Term.realize (Sum.elim v xs) Γ.tagMem : ↥M) : ZFSet.{u}) = natCode memWitnessTag
   /-- The forced-equality tag is its numeral. -/
   tagEq_eq : ((Term.realize (Sum.elim v xs) Γ.tagEq : ↥M) : ZFSet.{u}) = natCode eqTag
   /-- The coded condition set is the supplied one. -/
-  condSet_eq : ((Term.realize (Sum.elim v xs) Γ.condSet : ↥M) : ZFSet.{u}) = condCode
+  condSet_eq : ((Term.realize (Sum.elim v xs) Γ.condSet : ↥M) : ZFSet.{u}) = condSet
   /-- The coded order is the supplied one. -/
-  orderCode_eq : ((Term.realize (Sum.elim v xs) Γ.orderCode : ↥M) : ZFSet.{u}) = orderCd
+  orderCode_eq : ((Term.realize (Sum.elim v xs) Γ.orderCode : ↥M) : ZFSet.{u}) = orderCode
   /-- The recognizer sits at its own parameters. -/
   recParams_eq : ∀ i, Sum.elim v xs (Γ.recParams i) = R.params i
 
 /-- **Preservation.** The invariant survives every binder the compiler introduces. This is the
 single fact each binder-crossing case needs, and the reason the fixed block is bundled. -/
-theorem Realizes.lift {R : InternalNameRecognition N} {condCode orderCd : ZFSet.{u}}
+theorem Realizes.lift {R : InternalNameRecognition N} {condSet orderCode : ZFSet.{u}}
     {Γ : CompilerParams α R.arity m} {v : α → M} {xs : Fin m → M}
-    (h : Realizes R condCode orderCd Γ v xs) (w : ↥M) :
-    Realizes R condCode orderCd Γ.lift v (Fin.snoc xs w) where
+    (h : Realizes R condSet orderCode Γ v xs) (w : ↥M) :
+    Realizes R condSet orderCode Γ.lift v (Fin.snoc xs w) where
   tagMem_eq := by simpa [CompilerParams.lift, realize_liftTerm] using h.tagMem_eq
   tagEq_eq := by simpa [CompilerParams.lift, realize_liftTerm] using h.tagEq_eq
   condSet_eq := by simpa [CompilerParams.lift, realize_liftTerm] using h.condSet_eq
@@ -169,17 +170,17 @@ section Cases
 
 variable {α : Type v} {k sn m : ℕ} {M : MaterialCarrier.{u}} {P : Type u}
 variable {N : InternalNamePresentation M P} {Rec : InternalNameRecognition N}
-variable {condCode orderCd : ZFSet.{u}}
+variable {condSet orderCode : ZFSet.{u}}
 variable {Γ : CompilerParams α Rec.arity m} {p a : memLang.Term (α ⊕ Fin m)}
 variable {v : α → M} {xs : Fin m → M}
 variable {free : Fin k → N.Code} {bound : Fin sn → N.Code}
 
 /-- **The equality case.** Both codes are pinned to the combined assignment at `srcIndex`, and the
-condition codes come from the invariant rather than from the terms. -/
+coded condition set and order come from the invariant rather than from the terms. -/
 theorem realize_forcesDef_equal_bridge {t₁ t₂ : memLang.Term (Fin k ⊕ Fin sn)}
     (ha : ((Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) =
       N.assignmentCode (combinedCodes free bound))
-    (hΓ : Γ.Realizes Rec condCode orderCd v xs) :
+    (hΓ : Γ.Realizes Rec condSet orderCode v xs) :
     (forcesDef Rec.formula (.equal t₁ t₂) Γ p a).Realize v xs ↔
       ∃ x y : ↥M,
         ((x : ↥M) : ZFSet.{u}) = N.code (combinedCodes free bound (srcIndex t₁)) ∧
@@ -187,7 +188,7 @@ theorem realize_forcesDef_equal_bridge {t₁ t₂ : memLang.Term (Fin k ⊕ Fin 
         ∃ A : ↥M, ((A : ↥M) : ZFSet.{u}).IsTransitive ∧
           ((x : ↥M) : ZFSet.{u}) ∈ ((A : ↥M) : ZFSet.{u}) ∧
           ((y : ↥M) : ZFSet.{u}) ∈ ((A : ↥M) : ZFSet.{u}) ∧
-          ∃ R : ↥M, AtomicCoherentOn condCode orderCd ((A : ↥M) : ZFSet.{u})
+          ∃ R : ↥M, AtomicCoherentOn condSet orderCode ((A : ↥M) : ZFSet.{u})
               ((R : ↥M) : ZFSet.{u}) ∧
             entry eqTag ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
               ((x : ↥M) : ZFSet.{u}) ((y : ↥M) : ZFSet.{u}) ∈ ((R : ↥M) : ZFSet.{u}) := by
@@ -198,7 +199,7 @@ theorem realize_forcesDef_equal_bridge {t₁ t₂ : memLang.Term (Fin k ⊕ Fin 
 theorem realize_forcesDef_rel_bridge {ts : Fin 2 → memLang.Term (Fin k ⊕ Fin sn)}
     (ha : ((Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) =
       N.assignmentCode (combinedCodes free bound))
-    (hΓ : Γ.Realizes Rec condCode orderCd v xs) :
+    (hΓ : Γ.Realizes Rec condSet orderCode v xs) :
     (forcesDef Rec.formula (.rel .mem ts) Γ p a).Realize v xs ↔
       ∃ x y : ↥M,
         ((x : ↥M) : ZFSet.{u}) = N.code (combinedCodes free bound (srcIndex (ts 0))) ∧
@@ -206,9 +207,9 @@ theorem realize_forcesDef_rel_bridge {ts : Fin 2 → memLang.Term (Fin k ⊕ Fin
         ∃ A : ↥M, ((A : ↥M) : ZFSet.{u}).IsTransitive ∧
           ((x : ↥M) : ZFSet.{u}) ∈ ((A : ↥M) : ZFSet.{u}) ∧
           ((y : ↥M) : ZFSet.{u}) ∈ ((A : ↥M) : ZFSet.{u}) ∧
-          ∃ R : ↥M, AtomicCoherentOn condCode orderCd ((A : ↥M) : ZFSet.{u})
+          ∃ R : ↥M, AtomicCoherentOn condSet orderCode ((A : ↥M) : ZFSet.{u})
               ((R : ↥M) : ZFSet.{u}) ∧
-            DenseMem condCode orderCd ((R : ↥M) : ZFSet.{u})
+            DenseMem condSet orderCode ((R : ↥M) : ZFSet.{u})
               ((Term.realize (Sum.elim v xs) p : ↥M) : ZFSet.{u})
               ((x : ↥M) : ZFSet.{u}) ((y : ↥M) : ZFSet.{u}) := by
   rw [realize_forcesDef_rel_of_assignmentCode (combinedCodes free bound) ha
@@ -222,7 +223,7 @@ one, so the recursive call's own `combinedCodes` is the assignment now in hand. 
 theorem realize_forcesDef_all_bridge {φ : memLang.BoundedFormula (Fin k) (sn + 1)}
     (ha : ((Term.realize (Sum.elim v xs) a : ↥M) : ZFSet.{u}) =
       N.assignmentCode (combinedCodes free bound))
-    (hΓ : Γ.Realizes Rec condCode orderCd v xs) :
+    (hΓ : Γ.Realizes Rec condSet orderCode v xs) :
     (forcesDef Rec.formula φ.all Γ p a).Realize v xs ↔
       ∀ (i : N.Code) (c a' : ↥M), ((c : ↥M) : ZFSet.{u}) = N.code i →
         ((a' : ↥M) : ZFSet.{u}) = N.assignmentCode (combinedCodes free (Fin.snoc bound i)) →
