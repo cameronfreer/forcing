@@ -170,6 +170,29 @@ the two atomic definitions; implication quantifies over coded strengthenings; un
 quantification ranges over internally recognized name codes and extends the coded assignment
 by pairing.
 
+### Amendment: 3c's implemented shape
+
+3c landed as `forcesDef` with `forcesDef_correct` (#224; tracker #158). Two findings that the
+spike did not predict, recorded here so the ADR matches the code:
+
+* **Correctness is one simultaneous induction, not two directional ones.** `ForcesFormula`'s
+  implication clause is contravariant, so proving external forcing → compiled realization at
+  `φ.imp ψ` needs compiled → external at `φ`, and conversely. The theorem proves the
+  conjunction in a single structural induction, crossing projections at `.imp`; the two
+  directional theorems are its components.
+* **Pairing is reused at one site and charged to both directions.** The universal case
+  introduces the extended assignment by a *guarded universal* (`∀' (pairDef c a a' ⟹ …)`), so
+  the syntax asserts no existence. Compiled → external at `.all` must then build that
+  assignment, as a single pair of two elements already in hand: pair closure is used exactly
+  there, Empty Set is not charged, and — through the mutual recursion — pair closure is a
+  hypothesis of both directions.
+
+Two further points confirmed rather than amended: the `.imp` guard must assert condition-set
+membership alongside the coded order (`order_iff` permits junk pairs; #223), and the universal
+case is **parametric in an internally supplied name recognizer** (`InternalNameRecognition`),
+which #218 showed is not derivable from the name-coding fields. The material corollary adds
+**no theory cost beyond 3b's ledger**: Pairing was already there.
+
 ## Consequences
 
 3a formalizes the schemes as *named, instance-indexed* sentence families, consistent with the
