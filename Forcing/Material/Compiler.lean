@@ -57,15 +57,16 @@ way. `pairDef` is functional, so `∀' (pairDef c a a' ⟹ …)` and `∃' (pair
 whenever that pair exists in the carrier. The universal form is chosen because it asserts no
 existence, and therefore charges no Pairing sentence into the *syntax*.
 
-The consequence for correctness is **asymmetric**, and should stay that way rather than being
-smoothed into a global hypothesis:
+The consequence for correctness is **asymmetric at the site**:
 
 * external forcing → compiled `.all` needs no Pairing. Any `a'` satisfying the guard is handed to
   us, so there is nothing to construct.
 * compiled `.all` → external forcing needs Pairing, to build the extended assignment code that the
   universal hypothesis is then applied to.
 
-So the price is paid in one direction only, at one site.
+So the price is paid at one site. It is nonetheless a hypothesis of *both* directions of
+`forcesDef_correct`: `.imp` is contravariant, so each direction's induction calls the other on
+the antecedent, and the two cannot be proved separately. See `CompilerCorrectness.lean`.
 
 ## Main results
 
