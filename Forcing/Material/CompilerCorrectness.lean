@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Material.AtomicDefinability
+import Forcing.Material.AtomicRealized
 import Forcing.Material.CompilerBridge
 
 /-!
@@ -49,30 +49,6 @@ universe u v
 namespace Forcing
 
 open FirstOrder Language AtomicRecursion
-
-/-! ### The atomic equivalences, as the induction consumes them -/
-
-section Atomic
-
-variable (M : MaterialCarrier.{u})
-
-/-- The semantic content of `forcesEqDef` at given codes: some transitive carrier element contains
-both names' codes, and some coherent relation on it records the forced equality. -/
-def AtomicEqRealized (condSet orderCode p x y : ZFSet.{u}) : Prop :=
-  ∃ A : ↥M, ((A : ↥M) : ZFSet.{u}).IsTransitive ∧ x ∈ ((A : ↥M) : ZFSet.{u}) ∧
-    y ∈ ((A : ↥M) : ZFSet.{u}) ∧
-    ∃ R : ↥M, AtomicCoherentOn condSet orderCode ((A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) ∧
-      entry eqTag p x y ∈ ((R : ↥M) : ZFSet.{u})
-
-/-- The semantic content of `forcesMemDef` at given codes: likewise, with density of the
-membership slice below `p`. -/
-def AtomicMemRealized (condSet orderCode p x y : ZFSet.{u}) : Prop :=
-  ∃ A : ↥M, ((A : ↥M) : ZFSet.{u}).IsTransitive ∧ x ∈ ((A : ↥M) : ZFSet.{u}) ∧
-    y ∈ ((A : ↥M) : ZFSet.{u}) ∧
-    ∃ R : ↥M, AtomicCoherentOn condSet orderCode ((A : ↥M) : ZFSet.{u}) ((R : ↥M) : ZFSet.{u}) ∧
-      DenseMem condSet orderCode ((R : ↥M) : ZFSet.{u}) p x y
-
-end Atomic
 
 /-! ### The induction -/
 
@@ -262,35 +238,6 @@ end Correctness
 
 /-! ### The material corollary -/
 
-section Uniform
-
-variable {M : MaterialCarrier.{u}}
-
-/-- The uniform forced-equality formula, read at its parameter vector, is `AtomicEqRealized`. -/
-theorem realize_forcesEqUniform_iff {condSet orderCode p x y : ↥M}
-    (hm : (natCode memWitnessTag : ZFSet.{u}) ∈ M) (hq : (natCode eqTag : ZFSet.{u}) ∈ M) :
-    forcesEqUniform.Realize (uniformParams ⟨natCode memWitnessTag, hm⟩ ⟨natCode eqTag, hq⟩
-        condSet orderCode p x y) default ↔
-      AtomicEqRealized M condSet orderCode p x y := by
-  rw [forcesEqUniform, realize_forcesEqDef (by simp [uniformParams]) (by simp [uniformParams])]
-  simp only [uniformParams, Term.realize_var, Sum.elim_inl, Matrix.cons_val_two,
-    Matrix.cons_val_three, Matrix.cons_val_four, Matrix.tail_cons, Matrix.head_cons]
-  rfl
-
-/-- The uniform forced-membership formula, read at its parameter vector, is
-`AtomicMemRealized`. -/
-theorem realize_forcesMemUniform_iff {condSet orderCode p x y : ↥M}
-    (hm : (natCode memWitnessTag : ZFSet.{u}) ∈ M) (hq : (natCode eqTag : ZFSet.{u}) ∈ M) :
-    forcesMemUniform.Realize (uniformParams ⟨natCode memWitnessTag, hm⟩ ⟨natCode eqTag, hq⟩
-        condSet orderCode p x y) default ↔
-      AtomicMemRealized M condSet orderCode p x y := by
-  rw [forcesMemUniform, realize_forcesMemDef (by simp [uniformParams]) (by simp [uniformParams])]
-  simp only [uniformParams, Term.realize_var, Sum.elim_inl, Matrix.cons_val_two,
-    Matrix.cons_val_three, Matrix.cons_val_four, Matrix.tail_cons, Matrix.head_cons]
-  rfl
-
-end Uniform
-
 namespace MaterialGround
 
 variable {T : memLang.Theory} (M : MaterialGround.{u} T)
@@ -327,14 +274,12 @@ theorem realize_forcesDef_iff_forcesFormula
       N.assignmentCode (combinedCodes free bound)) :
     (forcesDef Rec.formula φ Γ pt aTm).Realize v xs ↔
       ForcesFormula N.names (N.decode ∘ free) r φ (N.decode ∘ bound) := by
-  refine Forcing.realize_forcesDef_iff_forcesFormula (fun hx hy ↦ M.pair_mem hp hx hy)
-    (fun r i j ↦ ?_) (fun r i j ↦ ?_) hΓ hpt ha
-  · have h := (M.atomicDefinability hbnd hsep hgat hfil hdom hgra hbr hbl hpsep hrgat hrfil hfgat
-      hffil hinf hosep higat hifil hex hmemi hagree he hp hu huni hc i j r).2.1
-    rwa [realize_forcesEqUniform_iff] at h
-  · have h := (M.atomicDefinability hbnd hsep hgat hfil hdom hgra hbr hbl hpsep hrgat hrfil hfgat
-      hffil hinf hosep higat hifil hex hmemi hagree he hp hu huni hc i j r).2.2
-    rwa [realize_forcesMemUniform_iff] at h
+  exact Forcing.realize_forcesDef_iff_forcesFormula (fun hx hy ↦ M.pair_mem hp hx hy)
+    (fun r i j ↦ (M.atomicRealized_iff hbnd hsep hgat hfil hdom hgra hbr hbl hpsep hrgat hrfil
+      hfgat hffil hinf hosep higat hifil hex hmemi hagree he hp hu huni hc i j r).2.1)
+    (fun r i j ↦ (M.atomicRealized_iff hbnd hsep hgat hfil hdom hgra hbr hbl hpsep hrgat hrfil
+      hfgat hffil hinf hosep higat hifil hex hmemi hagree he hp hu huni hc i j r).2.2)
+    hΓ hpt ha
 
 end MaterialGround
 
