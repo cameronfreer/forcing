@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Material.ForcingPresentation
+import Forcing.Material.DerivedVisibility
 import Forcing.Cohen.Visibility
 import Forcing.Cohen.RealName
 
@@ -76,8 +76,14 @@ variable (C : CohenMaterialPresentation M)
 internal subsets; designated reals are exactly the materially coded reals. Derived, not
 stored — the observer vocabularies as projections of one material presentation. -/
 def derivedContext : CohenVisibilityContext where
-  visible := Set.range fun d : C.forcing.InternalSubset ↦ d.externalize
+  toVisibilityContext := C.forcing.derivedContext
   designatedReals := {c | realCode c ∈ M}
+
+/-- The underlying context **is** the presentation's general derived context — one derived
+context in the library, not two extensionally identical ones. -/
+theorem derivedContext_toVisibilityContext :
+    C.derivedContext.toVisibilityContext = C.forcing.derivedContext :=
+  rfl
 
 /-- Visibility in the derived context is exactly internal-subset externalization. -/
 theorem visible_derivedContext_iff {D : Set Cond} :
@@ -104,16 +110,14 @@ theorem sees_derivedContext : C.derivedContext.Sees :=
 /-- Stage one of countability: a countable carrier admits only countably many visible sets,
 since every visible set is the externalization of a carrier element. -/
 theorem countable_visible_derivedContext (hM : (M : Set ZFSet.{0}).Countable) :
-    C.derivedContext.visible.Countable := by
-  refine Set.Countable.mono ?_ (hM.image C.forcing.externalizeSubset)
-  rintro D ⟨d, rfl⟩
-  exact ⟨(d.1 : ZFSet.{0}), d.1.2, rfl⟩
+    C.derivedContext.visible.Countable :=
+  C.forcing.countable_visible_derivedContext hM
 
 /-- Stage two: the visible dense-open family is countable — the hypothesis Rasiowa–Sikorski
 existence consumes, from external countability of the carrier alone. -/
 theorem countable_visibleDenseOpen_derivedContext (hM : (M : Set ZFSet.{0}).Countable) :
     C.derivedContext.visibleDenseOpen.Countable :=
-  (C.countable_visible_derivedContext hM).mono (Set.sep_subset _ _)
+  C.forcing.countable_visibleDenseOpen_derivedContext hM
 
 /-!
 ### Sanity example
