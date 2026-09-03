@@ -23,6 +23,9 @@ domain, the relation, or coherence. This module is that black box's interface.
 
 ## Main results
 
+* `Forcing.MaterialGround.atomicRealized_iff`: **the interface** — the three typed
+  equivalences against `MemWitness`, `ForcesEq`, `ForcesMem`, on `atomicDefinability`'s ledger.
+  Both consumers take exactly this.
 * `Forcing.realize_memWitnessUniform_iff`, `…forcesEqUniform_iff`, `…forcesMemUniform_iff`: each
   uniform formula at its parameter vector is the corresponding predicate.
 -/
