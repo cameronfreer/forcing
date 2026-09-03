@@ -34,6 +34,7 @@ import Forcing.Material.CompilerBridge
 import Forcing.Material.AtomicRealized
 import Forcing.Material.AtomicTests
 import Forcing.Material.CompilerCorrectness
+import Forcing.Material.ConnectiveTests
 import Forcing.Material.Lookup
 import Forcing.Material.NameRecognition
 import Forcing.Material.AtomicFormula
