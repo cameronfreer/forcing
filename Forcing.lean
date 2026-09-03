@@ -47,6 +47,7 @@ import Forcing.Material.UnionIterationInternal
 import Forcing.Material.UnionIterationFamily
 import Forcing.Material.AtomicDefinability
 import Forcing.Material.Semantics
+import Forcing.Material.TestCoding
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless

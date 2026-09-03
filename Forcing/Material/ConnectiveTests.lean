@@ -3,8 +3,8 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Material.AtomicTests
 import Forcing.Material.CompilerCorrectness
+import Forcing.Material.TestCoding
 import Forcing.Name.FormulaTests
 
 /-!
@@ -38,19 +38,23 @@ blocker in `allObstruction` — carries condition-set membership alongside its o
 `allTestDef` introduces the extended assignment by a guarded universal, as the compiler does, so
 the syntax asserts no existence. Reading the obstruction externally must then build that
 assignment — one `pair` of two elements in hand — and that is the single site pair closure is
-used. Empty Set is charged only where a **root** assignment is genuinely constructed: the
-material code theorems, which must exhibit the parameter `a` as a carrier element.
+used. A **root** assignment is constructed only in the material code theorems, which must
+exhibit the parameter `a` as a carrier element; that consumes Empty Set and Pairing, both
+already on the 3b ledger, so no assumption is added.
 
 ## The compiled list of costs
 
 `formulaTestSentences Rec φ` is the set of Separation instances the family for `φ` needs: one
-per implication and per universal subformula, independent of the assignment (the assignment is a
-*parameter* of each test, not part of its formula). `exists_code_of_mem_formulaTests` takes
+for each **distinct** compiled implication or universal test sentence among `φ`'s subformulas
+(repeated identical subformulas share an instance), independent of the assignment (the assignment
+is a *parameter* of each test, not part of its formula). `exists_code_of_mem_formulaTests` takes
 exactly `formulaTestSentences Rec φ ⊆ T`.
 
-**For #219**: no closure operation on the name family beyond the presentation's own fields is
-demanded here. The universal case consumes `Rec.realize_iff`, `N.subname_closed` through the
-bound-assignment extension, and pair closure. That is the whole list.
+**For #219**: no closure operation on the name family is demanded here. The universal case
+consumes `Rec.realize_iff` to name the bound code, the decode-range witness `⟨i, rfl⟩` to place
+`N.decode i` in `N.names`, `combinedCodes_snoc` with `assignmentCode_snoc` to extend the
+assignment, and pair closure to build it. That is the whole list; `N.subname_closed` is not
+used.
 
 ## Main results
 
@@ -349,9 +353,10 @@ theorem realize_testAssignment (tagMem tagEq condSet orderCode a : ↥M) (xs : F
       (testAssignment Rec) = a := by
   simp [testAssignment, testVector, Fin.append_left]
 
-/-- **The compiled list of Separation instances** the formula-test family for `φ` needs: one
-per implication subformula, one per universal subformula, none at the atomics. Independent of
-the assignment, which is a parameter of each test rather than part of its formula. -/
+/-- **The compiled list of Separation instances** the formula-test family for `φ` needs: one for
+each distinct compiled implication or universal test sentence among the subformulas, none at
+the atomics. A set, so repeated identical subformulas share an instance. Independent of the
+assignment, which is a parameter of each test rather than part of its formula. -/
 def formulaTestSentences : ∀ {n : ℕ}, memLang.BoundedFormula (Fin k) n → Set memLang.Sentence
   | _, .falsum => ∅
   | _, .equal _ _ => ∅
@@ -373,8 +378,8 @@ variable {N : InternalNamePresentation M.toMaterialCarrier P} {Rec : InternalNam
 variable {k sn : ℕ} {free : Fin k → N.Code}
 
 /-- The shared material step: the typed atomic equivalences, pair closure, and a root
-assignment as a carrier element. Empty Set is charged **here**, for the root assignment, and
-nowhere else in this file. -/
+assignment as a carrier element. The root assignment consumes Empty Set and Pairing, both
+already on the 3b ledger — no additional assumption beyond it. -/
 private theorem test_context
     (hbnd : entryBoundSentence ∈ T) (hsep : stageSeparationSentence ∈ T)
     (hgat : packageGatherSentence ∈ T) (hfil : packageFilterSentence ∈ T)
