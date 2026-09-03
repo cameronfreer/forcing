@@ -34,6 +34,7 @@ import Forcing.Material.CompilerBridge
 import Forcing.Material.AtomicRealized
 import Forcing.Material.AtomicTests
 import Forcing.Material.CompilerCorrectness
+import Forcing.Material.ConnectiveTests
 import Forcing.Material.Lookup
 import Forcing.Material.NameRecognition
 import Forcing.Material.AtomicFormula
@@ -46,6 +47,7 @@ import Forcing.Material.UnionIterationInternal
 import Forcing.Material.UnionIterationFamily
 import Forcing.Material.AtomicDefinability
 import Forcing.Material.Semantics
+import Forcing.Material.TestCoding
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
 import Forcing.Property.Atomless
