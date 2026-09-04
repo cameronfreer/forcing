@@ -49,6 +49,7 @@ import Forcing.Material.AtomicDefinability
 import Forcing.Material.Semantics
 import Forcing.Material.DerivedVisibility
 import Forcing.Material.MaterialTruthLemma
+import Forcing.Material.MaximalNames
 import Forcing.Material.TestCoding
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
