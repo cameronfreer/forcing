@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Mathlib.Order.GameAdd
-import Mathlib.SetTheory.ZFC.Rank
+import Forcing.Material.PairRank
 import Forcing.Material.RecursionEntry
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.NameCoding
@@ -85,16 +85,6 @@ namespace Forcing
 namespace AtomicRecursion
 
 /-! ### The two descent facts -/
-
-/-- A branch code sits three Kuratowski levels above the subname code it carries, so the
-subname code has strictly smaller rank. *Rank only* — nothing about the domain. -/
-private theorem rank_lt_of_pair_mem {c z w : ZFSet.{u}} (h : ZFSet.pair c z ∈ w) :
-    z.rank < w.rank := by
-  have h₁ : z.rank < ({c, z} : ZFSet.{u}).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  have h₂ : ({c, z} : ZFSet.{u}).rank < (ZFSet.pair c z).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  exact (h₁.trans h₂).trans (ZFSet.rank_lt_of_mem h)
 
 /-- In a transitive domain, the subname code carried by a branch of a member is itself a
 member. *Domain closure only* — nothing about rank. -/

@@ -41,6 +41,7 @@ import Forcing.Material.AtomicFormula
 import Forcing.Material.RecursionSchemes
 import Forcing.Material.RecursionExistence
 import Forcing.Material.Omega
+import Forcing.Material.PairRank
 import Forcing.Material.UnionIteration
 import Forcing.Material.UnionIterationFormula
 import Forcing.Material.UnionIterationInternal

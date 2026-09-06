@@ -3,8 +3,8 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Mathlib.SetTheory.ZFC.Rank
 import Forcing.Material.NameCoding
+import Forcing.Material.PairRank
 
 /-!
 # The maximal name presentation
@@ -36,9 +36,9 @@ Everything here is **axiom-free**: no theory sentence is charged. What is proved
 
 `PName`'s branch index lives in `Type u`; carrier elements live in `Type (u + 1)`. So `Code` is
 `Shrink.{u}` of the valid carrier subtype, and a code's branch index is `Shrink.{u}` of its member
-type (mathlib's `ZFSet.small_coe`). Per ADR 0006 this representation **must not leak**: consumers
-see `Code`, `code`, `decode`, and the theorems below, and no module outside this one mentions
-`Shrink` or `equivShrink`.
+type (mathlib's `ZFSet.small_coe`; the carrier's own smallness is a *local* instance). Per
+ADR 0006 this representation **must not leak**: consumers see `Code`, `code`, `decode`, and the
+theorems below, and no module outside this one mentions `Shrink` or `equivShrink`.
 
 ## Main definitions
 
@@ -79,14 +79,6 @@ theorem sub (h : IsNameCode cs x) : ∀ y ∈ x, ∀ c e, y = ZFSet.pair c e →
   cases h; assumption
 
 end IsNameCode
-
-/-- A branch code sits three Kuratowski levels above the subname code it carries. -/
-theorem rank_lt_of_pair_mem {c z w : ZFSet.{u}} (h : ZFSet.pair c z ∈ w) : z.rank < w.rank := by
-  have h₁ : z.rank < ({c, z} : ZFSet.{u}).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  have h₂ : ({c, z} : ZFSet.{u}).rank < (ZFSet.pair c z).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  exact (h₁.trans h₂).trans (ZFSet.rank_lt_of_mem h)
 
 /-! ### The certificate's soundness half -/
 
@@ -234,8 +226,9 @@ decreasing_by all_goals apply branchSub_rank_lt
 
 /-! ### The presentation -/
 
-/-- A material carrier is small: it is the member type of a set. -/
-instance smallCarrier : Small.{u} ↥M :=
+/-- A material carrier is small: it is the member type of a set. Local, per ADR 0006 clause 2:
+it exists only to discharge the `Shrink` construction below. -/
+local instance smallCarrier : Small.{u} ↥M :=
   small_of_injective (f := fun x : ↥M ↦ (⟨x.1, x.2⟩ : ↥M.carrier))
     (fun _ _ h ↦ Subtype.ext (congrArg Subtype.val h))
 
@@ -244,12 +237,8 @@ abbrev MaxCode : Type u := Shrink.{u} {x : ↥M // IsNameCode (Pres.conditionSet
 
 theorem branchSub_mem_carrier {x y : ZFSet.{u}}
     (hx : IsNameCode (Pres.conditionSet : ZFSet.{u}) x) (hxM : x ∈ M) (hy : y ∈ x) :
-    branchSub hx hy ∈ M := by
-  have h1 : branchSub hx hy ∈ ({branchCond hx hy, branchSub hx hy} : ZFSet.{u}) :=
-    ZFSet.mem_pair.2 (Or.inr rfl)
-  have h2 : ({branchCond hx hy, branchSub hx hy} : ZFSet.{u}) ∈
-      ZFSet.pair (branchCond hx hy) (branchSub hx hy) := ZFSet.mem_pair.2 (Or.inr rfl)
-  exact M.mem_trans h1 (M.mem_trans h2 (M.mem_trans (branch_eq hx hy ▸ hy) hxM))
+    branchSub hx hy ∈ M :=
+  (MaterialCarrier.pair_components_mem_of_mem hxM (branch_eq hx hy ▸ hy)).2
 
 /-- The code of a branch's subname. -/
 noncomputable def subCode {x y : ZFSet.{u}} (hx : IsNameCode (Pres.conditionSet : ZFSet.{u}) x)
