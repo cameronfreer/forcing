@@ -41,6 +41,7 @@ import Forcing.Material.AtomicFormula
 import Forcing.Material.RecursionSchemes
 import Forcing.Material.RecursionExistence
 import Forcing.Material.Omega
+import Forcing.Material.PairRank
 import Forcing.Material.UnionIteration
 import Forcing.Material.UnionIterationFormula
 import Forcing.Material.UnionIterationInternal
@@ -49,6 +50,7 @@ import Forcing.Material.AtomicDefinability
 import Forcing.Material.Semantics
 import Forcing.Material.DerivedVisibility
 import Forcing.Material.MaterialTruthLemma
+import Forcing.Material.MaximalNames
 import Forcing.Material.TestCoding
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver

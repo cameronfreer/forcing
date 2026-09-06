@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Mathlib.Order.GameAdd
-import Mathlib.SetTheory.ZFC.Rank
+import Forcing.Material.PairRank
 import Forcing.Material.RecursionEntry
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.NameCoding
@@ -49,9 +49,12 @@ Four constraints govern its use, and this module observes all of them:
   formula and is never charged to a ground theory;
 * the well-founded measure stays **local**, like the `Sym2` termination instance of the
   external kernel;
-* rank is kept **out of the public uniqueness and locality statements** (which is why
-  everything here is `private`);
-* **no general rank-descent API is factored** until a second consumer appears.
+* rank is kept **out of the public uniqueness and locality statements** (the well-founded
+  measure itself stays `private`);
+* the one shared rank fact, `rank_lt_of_pair_mem` (branch components sit strictly below the
+  pair), lives in the neutral module `Forcing.Material.PairRank`; its second consumer is the
+  maximal name presentation (`Forcing.Material.MaximalNames`), and no broader rank-descent
+  API is factored beyond it.
 
 The two descent facts are kept apart deliberately: the first is about *rank*, the second
 about *closure of the recursion domain*, and conflating them would let rank descent stand in
@@ -85,16 +88,6 @@ namespace Forcing
 namespace AtomicRecursion
 
 /-! ### The two descent facts -/
-
-/-- A branch code sits three Kuratowski levels above the subname code it carries, so the
-subname code has strictly smaller rank. *Rank only* — nothing about the domain. -/
-private theorem rank_lt_of_pair_mem {c z w : ZFSet.{u}} (h : ZFSet.pair c z ∈ w) :
-    z.rank < w.rank := by
-  have h₁ : z.rank < ({c, z} : ZFSet.{u}).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  have h₂ : ({c, z} : ZFSet.{u}).rank < (ZFSet.pair c z).rank :=
-    ZFSet.rank_lt_of_mem (ZFSet.mem_pair.2 (Or.inr rfl))
-  exact (h₁.trans h₂).trans (ZFSet.rank_lt_of_mem h)
 
 /-- In a transitive domain, the subname code carried by a branch of a member is itself a
 member. *Domain closure only* — nothing about rank. -/
