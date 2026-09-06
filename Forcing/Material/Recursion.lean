@@ -49,9 +49,12 @@ Four constraints govern its use, and this module observes all of them:
   formula and is never charged to a ground theory;
 * the well-founded measure stays **local**, like the `Sym2` termination instance of the
   external kernel;
-* rank is kept **out of the public uniqueness and locality statements** (which is why
-  everything here is `private`);
-* **no general rank-descent API is factored** until a second consumer appears.
+* rank is kept **out of the public uniqueness and locality statements** (the well-founded
+  measure itself stays `private`);
+* the one shared rank fact, `rank_lt_of_pair_mem` (branch components sit strictly below the
+  pair), lives in the neutral module `Forcing.Material.PairRank`; its second consumer is the
+  maximal name presentation (`Forcing.Material.MaximalNames`), and no broader rank-descent
+  API is factored beyond it.
 
 The two descent facts are kept apart deliberately: the first is about *rank*, the second
 about *closure of the recursion domain*, and conflating them would let rank descent stand in
