@@ -51,6 +51,7 @@ import Forcing.Material.Semantics
 import Forcing.Material.DerivedVisibility
 import Forcing.Material.MaterialTruthLemma
 import Forcing.Material.MaximalNames
+import Forcing.Material.NameCertificate
 import Forcing.Material.TestCoding
 import Forcing.Material.TruthLemma
 import Forcing.Model.GenericOver
