@@ -1,6 +1,8 @@
 # ADR 0006 — the internal name family is the maximal hereditarily valid one
 
-**Status: decided** (spike 2026-09-04 on #219; gates M7 item 5, tracker #142).
+**Status: decided** (spike 2026-09-04 on #219; gates M7 item 5, tracker #142). **Amended
+2026-09-08**: certificate completeness is a direct induction on `IsNameCode` (#234, #235); the
+ω-iteration route and the claimed ω/Power Set dichotomy are retracted. See *Amendment*.
 
 ## Context
 
@@ -51,12 +53,11 @@ constructed, rather than being built into it.
    `ZFSet.small_coe`). That representation must not leak into downstream APIs: consumers see
    only `Code`, `code`, and `decode`, and no theorem outside the presentation's own module
    mentions `Shrink` or `equivShrink`.
-3. **Do not yet generalize `UnionIteration`.** Certificate completeness (below) is a second
-   consumer of ω-iteration, so the consumer-gating trigger has fired. But the decision is
-   deferred to a bounded tranche-2 signature audit: generalize to a definable step **only if**
-   the abstraction keeps every scheme cost formula-indexed and visible, and leaves the existing
-   union iteration as a clean specialization. Otherwise implement a parallel descendant
-   iteration and accept the duplication.
+3. **Do not generalize `UnionIteration` for this consumer.** As originally written, this clause
+   deferred a bounded signature audit because certificate completeness was expected to be a
+   second consumer of ω-iteration. The amendment below removes that consumer: completeness
+   needs no iteration at all. The consumer-gating trigger has therefore **not** fired, and
+   `UnionIteration` stays as it is until a genuine second consumer appears.
 
 ## The split
 
@@ -64,8 +65,8 @@ constructed, rather than being built into it.
   presentation, `subname_closed`, `InternalNameCoding`, the maximality theorem, and the
   certificate's soundness half. **Axiom-free**: no theory sentence is charged.
 * **Tranche 2 — internal recognition.** The certificate as a formula, completeness, and the
-  concrete `InternalNameRecognition`, with the descendant-closure ledger mined from the compiled
-  proof.
+  concrete `InternalNameRecognition`, with the ledger mined from the compiled proof. Completeness
+  is by direct induction on `IsNameCode` (see *Amendment*), not by descendant closure.
 * **Tranche 3 — richness pressure tests.** The empty name and a branch constructor are
   represented. Check, generic, and Cohen-real representatives are **item 7**, and must not enter
   #219 by accident.
@@ -90,17 +91,54 @@ an existential, set-sized domain containing the candidate, closed under decoded 
 every node locally branch-shaped. It is per-candidate, so there is no master name set.
 
 * *Soundness* (certificate → `IsNameCode`) is rank induction. Compiled, axiom-free.
-* *Completeness* (`IsNameCode x` → some `D` in the carrier) is where the cost is. The witness is
-  the set of branch-descendants of `x`, `D = ⋃ₙ Dₙ` with `D₀ = {x}` and
-  `Dₙ₊₁ = {e | ∃ z ∈ Dₙ, ∃ c, ⟨c, e⟩ ∈ z}`. Every descendant sits at finite depth, so an
-  **ω-iteration suffices — of the descendant step, not `⋃₀`**. A transitive `A ∋ x` from
-  `exists_transitiveDomain` bounds every `Dₙ`, so each step is a Separation over `A`. Expected
-  ledger: the shape of `exists_transitiveDomain` — Infinity, `omegaSep`, one Collection instance,
-  Separation instances for filter and approximation existence/uniqueness, Pairing, Binary Union,
-  General Union.
-* **No Power Set.** The routes that avoid ω — the greatest fixed point, or quantifying over
-  subsets of `A` — are exactly the ones that need it, and are rejected. Power Set anywhere in
-  tranche 2 is a stop-and-review signal.
+* *Completeness* (`IsNameCode x` → some `D` in the carrier) is where the cost is. The spike
+  proposed the set of branch-descendants of `x` as the witness, built by an **ω-iteration of the
+  descendant step** bounded by a transitive `A ∋ x`, with the ledger of `exists_transitiveDomain`
+  (Infinity, `omegaSep`, one Collection instance, several Separation instances, Pairing, Binary
+  Union, General Union). **Superseded by the amendment below**: the witness is assembled
+  recursively, and none of Infinity, `omegaSep`, or the approximation machinery is needed.
+* **No Power Set.** The spike claimed that the routes avoiding ω — the greatest fixed point, or
+  quantifying over subsets of `A` — are exactly the ones needing Power Set. **That dichotomy was
+  too strong** (see *Amendment*); what remains binding is only that Power Set anywhere in
+  tranche 2 is a stop-and-review signal, and the compiled proof charges none.
+
+## Amendment (2026-09-08): completeness by direct induction
+
+Reading the merged tranche-1 interfaces showed that `IsNameDomain cs D` accepts **any** domain
+closed under branch second components — not the least descendant closure — and that closed
+domains are preserved by union. So a certificate for `x` can be assembled from certificates for
+the subnames of its branches, and completeness is an **external induction on `IsNameCode`**
+whose recursive witnesses are gathered by the named schemes:
+
+1. `Forcing/Material/NameCertificate.lean` (#234) internalizes the vocabulary — `nameDomainDef`
+   with an exact law against `IsNameDomain`, and the branch-witness relation
+   `BranchCertificate cs b D := ∃ c e, b = ⟨c, e⟩ ∧ c ∈ cs ∧ e ∈ D ∧ IsNameDomain cs D` with its
+   own law — and proves the assembly step `isNameDomain_assemble`: if `F` consists of name
+   domains and covers every branch of `x`, then `{x} ∪ ⋃₀ F` is a name domain containing `x`.
+2. `Forcing/Material/NameCertificateCompleteness.lean` (#235) proves
+
+   ```text
+   IsNameCode cs x → x ∈ M → ∃ D ∈ M, x ∈ D ∧ IsNameDomain cs D
+   ```
+
+   with one Collection instance (`certificateGatherSentence`, indexed by the branches of `x`)
+   and one Separation instance (`certificateFilterSentence`, filtering Collection's bound to
+   `D ∈ F ↔ D ∈ B ∧ ∃ b ∈ x, BranchCertificate cs b D`). Coverage only: `F` is not claimed to
+   contain every certificate, since certificates are not unique. The parent certificate enters
+   the ground through `singleton_mem`, `sUnion_mem`, and `union_mem_of_sUnion`.
+
+**Ledger of certificate completeness, established through the actual realization laws:** one
+Collection instance, one Separation instance, Pairing, General Union. No Infinity, Empty Set,
+Power Set, or Binary Union. This cheaper ledger is **scoped to certificate completeness**: the
+Infinity-priced atomic-definability work retains its existing costs, and the recognition cost is
+an *addition* to that ledger, not a replacement.
+
+Consequences for the clauses above: clause 3's audit is moot, since there is no second consumer
+of ω-iteration; the ω/Power Set dichotomy in the spike findings is retracted; the remaining
+tranche-2 work is the concrete `InternalNameRecognition` (soundness from
+`isNameCode_of_mem_nameDomain`, completeness from `exists_nameDomain_of_isNameCode`, exactness
+through `mem_range_code_iff`) and its consumer, the instantiation of
+`MaterialGround.truth_lemma_of_genericOver` at `maximal_coding`.
 
 ## Consequences
 
