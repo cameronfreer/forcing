@@ -26,9 +26,12 @@ hvT    ←  exists_code_of_mem_formulaTests   (formulaTestSentences Rec φ)
 
 `MaterialGround.truth_lemma_of_genericOver` mentions **no** hand-supplied visibility obligation
 and **no** test code: genericity over `Pres.derivedContext` is the only observer-side hypothesis.
-It remains visibly parametric in two things: the recognizer `Rec` (no concrete instance exists
-yet, #219) and the theory, whose instances are explicit — `atomicDefinability`'s ledger, the
-two atomic test instances, and `formulaTestSentences Rec φ ⊆ T`.
+It remains visibly parametric in two things: the recognizer `Rec` and the theory, whose
+instances are explicit — `atomicDefinability`'s ledger, the two atomic test instances, and
+`formulaTestSentences Rec φ ⊆ T`. The parametric form is the general theorem; its instantiation
+at the maximal name family, with `Rec := maximalRecognition` and the coding laws
+`maximal_coding`, is `MaterialGround.truth_lemma_maximal`
+(`Forcing/Material/MaximalTruthLemma.lean`).
 
 Dense-openness stays external (`isDenseOpen_of_mem_formulaTests` and its atomic companions are
 consumed inside `truth_lemma_of_genericOver`, never here), and no capability bundle is added to
