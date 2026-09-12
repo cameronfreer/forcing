@@ -4,8 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Cohen.NewReal
-import Forcing.Material.AtomicDefinability
-import Forcing.Material.TruthLemma
+import Forcing.Material.MaximalTruthLemma
 
 /-!
 # The headline axiom audit
@@ -31,11 +30,12 @@ def axiomAllowlist : List Name :=
 
 /-- The audited headline declarations. Extend at each milestone close. Each entry is the
 *composed* milestone theorem — the axiom collector follows dependencies, so auditing it
-audits its entire stack; listing components would duplicate coverage. -/
+audits its entire stack; listing components would duplicate coverage. `truth_lemma_maximal`
+(M7 item 5) reaches both `InternalNamePresentation.truth_lemma_of_genericOver` and
+`MaterialGround.atomicDefinability`, so those earlier entries are covered transitively. -/
 def auditedHeadlines : List Name :=
   [``Forcing.Cohen.addsNewReal,
-    ``Forcing.InternalNamePresentation.truth_lemma_of_genericOver,
-    ``Forcing.MaterialGround.atomicDefinability]
+    ``Forcing.MaterialGround.truth_lemma_maximal]
 
 set_option linter.hashCommand false in
 open Elab Command in

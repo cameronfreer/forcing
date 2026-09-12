@@ -102,6 +102,16 @@ of the forcing relation over the ground, the material truth lemma discharging
 M6's visibility obligations, and verification of the ZFC axioms in `M[G]`
 axiom by axiom with each ground-theory cost visible.
 
+**Boundary reached (item 5):** the material truth lemma is instantiated at the
+maximal hereditarily valid name family
+(`MaterialGround.truth_lemma_maximal`, ADR 0006) — the name recognizer and
+the coding laws are constructed, not assumed. Still hypotheses: the ground,
+the forcing presentation, the explicit theory instances, and genericity.
+Ahead: ZFC preservation in `M[G]` axiom by axiom (item 6) and the Cohen
+specialization, including that the Cohen names lie in the maximal family
+(item 7). Current theorem strength and assumptions:
+[#161](https://github.com/cameronfreer/forcing/issues/161).
+
 ## M8 — Preservation
 
 **Status: planned.**
