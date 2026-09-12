@@ -41,9 +41,13 @@ universal case's correctness proof must extract an `i : N.Code` to apply `N.deco
 
 ## Not instantiated here
 
-Consistency of the interface is cheap; applicability to an intended family is not. Building a
-usable recognizer is **#219**, and it blocks the material truth lemma. Nothing in this file or
-its consumers proves one exists.
+Consistency of the interface is cheap; applicability to an intended family is not. This file
+only states the capability. The concrete instance is `MaterialGround.maximalRecognition`
+(`Forcing/Material/MaximalRecognition.lean`): the certificate formula for the maximal
+hereditarily valid family (ADR 0006), exact by certificate soundness, certificate completeness,
+and maximality, and priced at one Collection instance, one Separation instance, Pairing, and
+General Union. Consumers that want a recognizer for that family take it from there; consumers
+parametric in a recognizer keep taking this structure as a hypothesis.
 -/
 
 universe u v
