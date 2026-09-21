@@ -51,6 +51,9 @@ theorems below, and no module outside this one mentions `Shrink` or `equivShrink
 * `Forcing.MaximalNames.exists_code_of_isNameCode`: maximality.
 * `Forcing.MaximalNames.maximal_coding`: the coding laws.
 * `Forcing.isNameCode_of_mem_nameDomain`: certificate soundness.
+* `Forcing.isNameCode_empty`, `Forcing.isNameCode_insert_pair`: the empty name and the branch
+  constructor are valid (tranche 3), with `MaximalNames.isEmpty_idx_decode_empty` and
+  `MaximalNames.decode_singleton_pair` saying what they decode to.
 -/
 
 universe u
@@ -101,6 +104,37 @@ theorem isNameCode_of_mem_nameDomain {cs D : ZFSet.{u}} (hD : IsNameDomain cs D)
     · obtain ⟨c', e', hye', -, he'⟩ := hD x hx y hy
       obtain ⟨rfl, rfl⟩ := ZFSet.pair_inj.1 (hye.symm.trans hye')
       exact ih e (rank_lt_of_pair_mem (hye ▸ hy)) he'
+
+/-! ### Validity, on sets -/
+
+section Sets
+
+variable {cs c e x : ZFSet.{u}}
+
+/-- The empty set is a name code, vacuously. -/
+theorem isNameCode_empty (cs : ZFSet.{u}) : IsNameCode cs ∅ :=
+  IsNameCode.mk ∅ (fun y hy ↦ absurd hy (ZFSet.notMem_empty y))
+    (fun y hy ↦ absurd hy (ZFSet.notMem_empty y))
+
+/-- **The branch constructor**: adjoining a branch with a valid condition and a valid subname
+keeps a code valid. -/
+theorem isNameCode_insert_pair (hc : c ∈ cs) (he : IsNameCode cs e) (hx : IsNameCode cs x) :
+    IsNameCode cs (insert (ZFSet.pair c e) x) := by
+  refine IsNameCode.mk _ (fun y hy ↦ ?_) (fun y hy c' e' hy' ↦ ?_)
+  · rcases ZFSet.mem_insert_iff.1 hy with rfl | hy
+    · exact ⟨c, e, rfl, hc⟩
+    · exact hx.branch y hy
+  · rcases ZFSet.mem_insert_iff.1 hy with rfl | hy
+    · obtain ⟨-, rfl⟩ := ZFSet.pair_inj.1 hy'
+      exact he
+    · exact hx.sub y hy c' e' hy'
+
+/-- The single-branch name code. -/
+theorem isNameCode_singleton_pair (hc : c ∈ cs) (he : IsNameCode cs e) :
+    IsNameCode cs {ZFSet.pair c e} :=
+  isNameCode_insert_pair hc he (isNameCode_empty cs)
+
+end Sets
 
 namespace MaximalNames
 
@@ -306,6 +340,42 @@ theorem maximal_coding : InternalNameCoding Pres (maximal Pres) where
   branch_mem_code_iff i y := branch_mem_iff Pres _ ((equivShrink _).symm i).1.2
     ((equivShrink _).symm i).2 y
   decode_eq_of_code_eq i j h := by rw [maximal_code_injective Pres h]
+
+/-! ### Richness pressure tests (ADR 0006, tranche 3): what the decodings are -/
+
+/-- Decoding is determined by the code alone. -/
+theorem decode_congr {x x' : ZFSet.{u}} (h : IsNameCode (Pres.conditionSet : ZFSet.{u}) x)
+    (h' : IsNameCode (Pres.conditionSet : ZFSet.{u}) x') (hxx : x = x') :
+    decode Pres x h = decode Pres x' h' := by
+  subst hxx
+  rfl
+
+/-- **The empty name decodes to a name with no branches.** -/
+theorem isEmpty_idx_decode_empty :
+    IsEmpty (decode Pres ∅ (isNameCode_empty _)).Idx := by
+  rw [decode_eq]
+  exact ⟨fun i ↦ ZFSet.notMem_empty _ ((equivShrink (∅ : ZFSet.{u})).symm i).2⟩
+
+/-- **The singleton name decodes to a name with a branch reading `e` at `q`.** -/
+theorem decode_singleton_pair (q : P) {e : ZFSet.{u}}
+    (he : IsNameCode (Pres.conditionSet : ZFSet.{u}) e) :
+    ∃ k : (decode Pres _ (isNameCode_singleton_pair (Pres.code_mem q) he)).Idx,
+      (decode Pres _ (isNameCode_singleton_pair (Pres.code_mem q) he)).elems k =
+          decode Pres e he ∧
+        (decode Pres _ (isNameCode_singleton_pair (Pres.code_mem q) he)).conds k = q := by
+  set h := isNameCode_singleton_pair (Pres.code_mem q) he
+  have hy : ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr q)) e ∈
+      ({ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr q)) e} : ZFSet.{u}) :=
+    ZFSet.mem_singleton.2 rfl
+  obtain ⟨hcond, hsub⟩ := ZFSet.pair_inj.1 (branch_eq h hy)
+  rw [decode_eq]
+  refine ⟨equivShrink _ ⟨_, hy⟩, ?_, ?_⟩
+  · simp only [PName.elems_mk, Equiv.symm_apply_apply]
+    exact decode_congr Pres _ _ hsub.symm
+  · simp only [PName.conds_mk, Equiv.symm_apply_apply]
+    apply Pres.conditionCode.injective_mk
+    change ZFSet.mk (Pres.conditionCode.repr (condOf Pres _)) = ZFSet.mk (Pres.conditionCode.repr q)
+    rw [← condCode_condOf, ← hcond]
 
 end MaximalNames
 
