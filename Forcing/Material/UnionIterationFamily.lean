@@ -33,7 +33,8 @@ witness at the same index.
 
 ## Where Infinity enters, and where it stops
 
-Infinity is charged here and only here, to obtain internal `ω`. It reaches
+Within the atomic-definability construction, Infinity is charged here and only here, to obtain
+internal `ω`. It reaches
 `exists_atomicCoherentOn` only as the *supplied* domain — that theorem remains priced without
 it, which is the separation ADR 0005 predicted and this module preserves.
 

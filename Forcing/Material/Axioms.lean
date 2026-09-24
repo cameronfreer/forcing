@@ -34,11 +34,14 @@ prototype found no bound on the members-of-members of the collected family reach
 That is a dependency finding about the construction being formalized, not a claim that no
 alternative construction could avoid Union.
 
-**On Infinity.** It is charged for exactly one job: supplying a transitive ambient domain
-containing an arbitrary pair of name codes. The atomic recursion takes that domain as a
-*parameter*, and its endpoint (`MaterialGround.exists_atomicCoherentOn`) is priced without
-Infinity. That separation is the point of stating the parameterized version first, and it
-should stay visible in the signatures rather than being collapsed into one theorem.
+**On Infinity.** In the atomic-definability construction it is charged for exactly one job:
+supplying a transitive ambient domain containing an arbitrary pair of name codes. The atomic
+recursion takes that domain as a *parameter*, and its endpoint
+(`MaterialGround.exists_atomicCoherentOn`) is priced without Infinity. That separation is the
+point of stating the parameterized version first, and it should stay visible in the signatures
+rather than being collapsed into one theorem. Other consumers charge Infinity for their own
+reasons: Infinity in the extension (`Forcing/Material/ExtensionInfinity.lean`) charges it for
+the inductive set whose check name witnesses the axiom in `M[G]`.
 
 Empty set and pairing close a ground under `∅`, singletons, unordered pairs, and hence
 Kuratowski pairs (`pair_mem`). Binary union is what `insert` costs — and therefore what the
@@ -137,11 +140,12 @@ theorem realize_inductiveDef {α : Type v} {n : ℕ} {M : MaterialCarrier.{u}}
 
 /-- **Infinity**: some set contains the empty set and is closed under successor.
 
-Charged **only** for the ambient domain of the atomic recursion — supplying a transitive set
-containing an arbitrary pair of name codes. The recursion itself takes that set as a
-parameter and never needs Infinity; see `Forcing/Material/RecursionExistence.lean`, whose
-endpoint is priced without it. Keeping the two apart is the point of the parameterized
-statement. -/
+In the atomic-definability construction, charged **only** for the ambient domain of the atomic
+recursion — supplying a transitive set containing an arbitrary pair of name codes. The
+recursion itself takes that set as a parameter and never needs Infinity; see
+`Forcing/Material/RecursionExistence.lean`, whose endpoint is priced without it. Keeping the two
+apart is the point of the parameterized statement. Infinity in the extension is a separate
+consumer (`MaterialGround.extension_models_infinity`). -/
 def infinitySentence : memLang.Sentence :=
   ∃' (inductiveDef (&(Fin.last 0)))
 
@@ -232,8 +236,9 @@ theorem union_mem_of_sUnion (hu : unionSentence ∈ T) (hp : pairingSentence ∈
         · exact ⟨y, Or.inr rfl, hz⟩
   exact hxy ▸ M.sUnion_mem hu (M.insert_pair_mem hp hx hy)
 
-/-- **An inductive set lies in the ground** — the consequence of Infinity, and the only place
-it is used. Stated against the shared `IsInductive`, so it cannot drift from the sentence. -/
+/-- **An inductive set lies in the ground** — the consequence of Infinity, and the only way
+consumers reach it. Stated against the shared `IsInductive`, so it cannot drift from the
+sentence. -/
 theorem exists_inductive (h : infinitySentence ∈ T) :
     ∃ w : ZFSet.{u}, w ∈ M ∧ IsInductive w := by
   have hr := M.realize_of_mem h

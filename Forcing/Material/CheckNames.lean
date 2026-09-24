@@ -62,7 +62,7 @@ Infinity, no Empty Set, no Binary Union (unions go through `union_mem_of_sUnion`
 * `Forcing.isNameCode_checkCode`: check codes at a valid condition code are valid.
 * `Forcing.MaterialGround.exists_checkGraph`: internal certificate existence.
 * `Forcing.MaterialGround.checkCode_mem`: check codes of ground elements are in the ground.
-* `Forcing.MaterialGround.zval_decode_checkCode`: valuation correctness.
+* `Forcing.MaximalNames.zval_decode_checkCode`: valuation correctness.
 * `Forcing.MaterialGround.check_represented`: representation at a supplied condition.
 -/
 
