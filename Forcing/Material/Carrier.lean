@@ -136,4 +136,14 @@ example (hx : x ∈ y) (hy : y ∈ z) (hz : z ∈ M) : x ∈ M :=
 
 end MaterialCarrier
 
+/-- Both components of a pair in `F` lie in `⋃⋃F`: the bound from which a family's coordinates
+are separated. Structural, carrier-free. Consumers: the recursion layer's projections and the
+check-graph value image. -/
+theorem components_mem_sUnion_sUnion {F a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ F) :
+    a ∈ ZFSet.sUnion (ZFSet.sUnion F) ∧ b ∈ ZFSet.sUnion (ZFSet.sUnion F) := by
+  have hmid : ({a, b} : ZFSet.{u}) ∈ ZFSet.sUnion F :=
+    ZFSet.mem_sUnion.2 ⟨ZFSet.pair a b, h, ZFSet.mem_pair.2 (Or.inr rfl)⟩
+  exact ⟨ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inl rfl)⟩,
+    ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inr rfl)⟩⟩
+
 end Forcing
