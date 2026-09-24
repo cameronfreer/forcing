@@ -46,7 +46,9 @@ members. The semantic laws are therefore proved in this order, all axiom-free:
    functionality clause in the formula;
 3. **closure under union** — the new obligations are discharged by agreement;
 4. **extension** — adjoining `⟨x, Pₓ⟩` when every member of `x` already has an entry, **with no
-   freshness assumption**: if `x` already has an entry, agreement identifies it with `Pₓ`.
+   freshness assumption**: every value of the extended graph is the check code of its key
+   (soundness for the old entries, the characterization of `Pₓ` for the new one), so old and
+   new entries are handled alike, whether or not `x` already occurs.
 
 `isCheckGraph_union` is the two-graph join pressure test.
 
@@ -54,7 +56,8 @@ members. The semantic laws are therefore proved in this order, all axiom-free:
 
 Term-parameterized, membership and pairing only; `checkCode` never appears inside a formula.
 Every quantifier bridge in the realization laws is carrier transitivity or pair-component
-membership. The five instance formulas are the ones the internal construction will cite.
+membership. The five instance formulas are the ones the internal construction
+(`CheckNames.lean`) cites.
 
 ## Main definitions
 

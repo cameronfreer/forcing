@@ -427,15 +427,6 @@ Select each component family by provenance, then flatten. The results are litera
 assumed**: packages may share a domain, or a domain may occur with several graphs, and the
 laws are unaffected because they quantify over the *pair* being in `F`. -/
 
-/-- Both components of a package in `F` lie in `⋃⋃F`, which is the bound the two Separation
-instances carve from. Structural. -/
-private theorem components_mem_sUnion_sUnion {F a b : ZFSet.{u}} (h : ZFSet.pair a b ∈ F) :
-    a ∈ ZFSet.sUnion (ZFSet.sUnion F) ∧ b ∈ ZFSet.sUnion (ZFSet.sUnion F) := by
-  have hmid : ({a, b} : ZFSet.{u}) ∈ ZFSet.sUnion F :=
-    ZFSet.mem_sUnion.2 ⟨ZFSet.pair a b, h, ZFSet.mem_pair.2 (Or.inr rfl)⟩
-  exact ⟨ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inl rfl)⟩,
-    ZFSet.mem_sUnion.2 ⟨_, hmid, ZFSet.mem_pair.2 (Or.inr rfl)⟩⟩
-
 /-- **The projections exist inside the ground, with exactly the laws the merge needs.**
 
 Charged: two Separation instances and general Union. The bound `⋃⋃F` is where the packages'

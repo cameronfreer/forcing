@@ -54,6 +54,8 @@ theorems below, and no module outside this one mentions `Shrink` or `equivShrink
 * `Forcing.isNameCode_empty`, `Forcing.isNameCode_insert_pair`: the empty name and the branch
   constructor are valid (tranche 3), with `MaximalNames.isEmpty_idx_decode_empty` and
   `MaximalNames.decode_singleton_pair` saying what they decode to.
+* `Forcing.MaximalNames.mem_zval_decode_iff`: the decode-valuation reader, stated without
+  `Shrink`, for consumers that compute a maximal name's value from its code.
 -/
 
 universe u
@@ -376,6 +378,30 @@ theorem decode_singleton_pair (q : P) {e : ZFSet.{u}}
     apply Pres.conditionCode.injective_mk
     change ZFSet.mk (Pres.conditionCode.repr (condOf Pres _)) = ZFSet.mk (Pres.conditionCode.repr q)
     rw [← condCode_condOf, ← hcond]
+
+/-! ### Reading valuations off codes -/
+
+/-- **The decode-valuation reader**: the value of a maximal name along `S` consists of the
+values of the names whose codes are paired, inside its code, with the code of an admitted
+condition. Stated with `code`, `decode`, and `zval` only; proved from the coding laws, subname
+closure, and injectivity of condition codes. -/
+theorem mem_zval_decode_iff {S : Set P} (i : (maximal Pres).Code) {y : ZFSet.{u}} :
+    y ∈ zval S ((maximal Pres).decode i) ↔
+      ∃ p ∈ S, ∃ j : (maximal Pres).Code,
+        ZFSet.pair (ZFSet.mk (Pres.conditionCode.repr p)) ((maximal Pres).code j) ∈
+            (maximal Pres).code i ∧
+          y = zval S ((maximal Pres).decode j) := by
+  have hcod := maximal_coding Pres
+  rw [mem_zval_iff]
+  constructor
+  · rintro ⟨k, hk, rfl⟩
+    obtain ⟨j, hj⟩ := (maximal Pres).subname_closed i k
+    exact ⟨_, hk, j, (hcod.branch_mem_code_iff i _).2 ⟨k, j, hj, rfl⟩, by rw [hj]⟩
+  · rintro ⟨p, hp, j, hpj, rfl⟩
+    obtain ⟨k, j', hj', hy⟩ := (hcod.branch_mem_code_iff i _).1 hpj
+    obtain ⟨hpk, hjj'⟩ := ZFSet.pair_inj.1 hy
+    refine ⟨k, Pres.conditionCode.injective_mk hpk ▸ hp, ?_⟩
+    rw [hcod.decode_eq_of_code_eq j j' hjj', hj']
 
 end MaximalNames
 
