@@ -23,6 +23,7 @@ import Forcing.Material.Carrier
 import Forcing.Material.ForcingPresentation
 import Forcing.Material.Extension
 import Forcing.Material.FreeAxioms
+import Forcing.Material.CheckGraph
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
