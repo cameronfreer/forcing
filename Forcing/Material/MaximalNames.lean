@@ -51,9 +51,10 @@ theorems below, and no module outside this one mentions `Shrink` or `equivShrink
 * `Forcing.MaximalNames.exists_code_of_isNameCode`: maximality.
 * `Forcing.MaximalNames.maximal_coding`: the coding laws.
 * `Forcing.isNameCode_of_mem_nameDomain`: certificate soundness.
-* `Forcing.isNameCode_empty`, `Forcing.isNameCode_insert_pair`: the empty name and the branch
-  constructor are valid (tranche 3), with `MaximalNames.isEmpty_idx_decode_empty` and
-  `MaximalNames.decode_singleton_pair` saying what they decode to.
+* `Forcing.isNameCode_empty`, `Forcing.isNameCode_insert_pair`, `Forcing.isNameCode_union`: the
+  empty name, the branch constructor, and unions of codes are valid (tranche 3; item 6), with
+  `MaximalNames.isEmpty_idx_decode_empty` and `MaximalNames.decode_singleton_pair` saying what
+  the first two decode to.
 * `Forcing.MaximalNames.mem_zval_decode_iff`: the decode-valuation reader, stated without
   `Shrink`, for consumers that compute a maximal name's value from its code.
 -/
@@ -135,6 +136,17 @@ theorem isNameCode_insert_pair (hc : c ∈ cs) (he : IsNameCode cs e) (hx : IsNa
 theorem isNameCode_singleton_pair (hc : c ∈ cs) (he : IsNameCode cs e) :
     IsNameCode cs {ZFSet.pair c e} :=
   isNameCode_insert_pair hc he (isNameCode_empty cs)
+
+/-- **Union of codes**: the union of two valid codes is valid. -/
+theorem isNameCode_union {y : ZFSet.{u}} (hx : IsNameCode cs x) (hy : IsNameCode cs y) :
+    IsNameCode cs (x ∪ y) := by
+  refine IsNameCode.mk _ (fun b hb ↦ ?_) (fun b hb c' e' hb' ↦ ?_)
+  · rcases ZFSet.mem_union.1 hb with hb | hb
+    · exact hx.branch b hb
+    · exact hy.branch b hb
+  · rcases ZFSet.mem_union.1 hb with hb | hb
+    · exact hx.sub b hb c' e' hb'
+    · exact hy.sub b hb c' e' hb'
 
 end Sets
 
