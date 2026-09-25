@@ -25,6 +25,7 @@ import Forcing.Material.Extension
 import Forcing.Material.FreeAxioms
 import Forcing.Material.CheckGraph
 import Forcing.Material.CheckNames
+import Forcing.Material.ExtensionFiniteClosure
 import Forcing.Material.ExtensionInfinity
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
