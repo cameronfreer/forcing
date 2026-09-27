@@ -28,6 +28,8 @@ import Forcing.Material.CheckNames
 import Forcing.Material.ExtensionFiniteClosure
 import Forcing.Material.ExtensionInfinity
 import Forcing.Material.UnionName
+import Forcing.Material.PairImageGather
+import Forcing.Material.ExtensionUnion
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
