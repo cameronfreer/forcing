@@ -119,12 +119,6 @@ theorem realize_valueImageFormula (x U g : ↥M.toMaterialCarrier) :
   rw [valueImageFormula, realize_valueImageDef]
   simp
 
-theorem realize_pairImageGatherFormula (c g p : ↥M.toMaterialCarrier) :
-    pairImageGatherFormula.Realize ![c] ![g, p] ↔
-      (p : ZFSet.{u}) = ZFSet.pair (c : ZFSet.{u}) (g : ZFSet.{u}) := by
-  rw [pairImageGatherFormula, realize_pairDef]
-  simp
-
 theorem realize_pairImageFilterFormula (c V p : ↥M.toMaterialCarrier) :
     pairImageFilterFormula.Realize ![c, V] ![p] ↔
       ∃ g ∈ (V : ZFSet.{u}), (p : ZFSet.{u}) = ZFSet.pair (c : ZFSet.{u}) g := by

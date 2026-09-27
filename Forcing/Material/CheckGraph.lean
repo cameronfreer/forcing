@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Forcing.Material.AxiomSchemes
+import Forcing.Material.PairImageGather
 import Forcing.Material.Semantics
 
 /-!
@@ -56,7 +56,8 @@ members. The semantic laws are therefore proved in this order, all axiom-free:
 
 Term-parameterized, membership and pairing only; `checkCode` never appears inside a formula.
 Every quantifier bridge in the realization laws is carrier transitivity or pair-component
-membership. The five instance formulas are the ones the internal construction
+membership. These four instance formulas, and the pair-image gather shared with the union
+construction (`Forcing/Material/PairImageGather.lean`), are the ones the internal construction
 (`CheckNames.lean`) cites.
 
 ## Main definitions
@@ -64,7 +65,8 @@ membership. The five instance formulas are the ones the internal construction
 * `Forcing.checkCode`, `Forcing.IsCheckGraph`, `Forcing.CheckGraphAt`.
 * `Forcing.checkGraphDef`, `Forcing.checkGraphAtDef`, `Forcing.valueImageDef`,
   `Forcing.pairImageDef`: the formulas; `checkGatherFormula`, `checkFilterFormula`,
-  `valueImageFormula`, `pairImageGatherFormula`, `pairImageFilterFormula`: the instances.
+  `valueImageFormula`, `pairImageFilterFormula`: the instances. The pair-image gather lives in
+  `Forcing/Material/PairImageGather.lean`.
 
 ## Main results
 
@@ -281,10 +283,6 @@ def checkFilterFormula : memLang.BoundedFormula (Fin 2) 1 :=
 def valueImageFormula : memLang.BoundedFormula (Fin 2) 1 :=
   valueImageDef (var (Sum.inl 0)) (var (Sum.inl 1)) (&0)
 
-/-- **Pair-image gather** (Collection; parameter `c`; index `g`, witness `p = ⟨c, g⟩`). -/
-def pairImageGatherFormula : memLang.BoundedFormula (Fin 1) 2 :=
-  pairDef (var (Sum.inl 0)) (&0) (&1)
-
 /-- **Pair-image filter** (Separation; parameters `c`, `V`). -/
 def pairImageFilterFormula : memLang.BoundedFormula (Fin 2) 1 :=
   pairImageDef (var (Sum.inl 0)) (var (Sum.inl 1)) (&0)
@@ -292,7 +290,6 @@ def pairImageFilterFormula : memLang.BoundedFormula (Fin 2) 1 :=
 def checkGatherSentence : memLang.Sentence := collectionSentence checkGatherFormula
 def checkFilterSentence : memLang.Sentence := separationSentence checkFilterFormula
 def valueImageSentence : memLang.Sentence := separationSentence valueImageFormula
-def pairImageGatherSentence : memLang.Sentence := collectionSentence pairImageGatherFormula
 def pairImageFilterSentence : memLang.Sentence := separationSentence pairImageFilterFormula
 
 theorem checkGatherSentence_mem_scheme : checkGatherSentence ∈ collectionScheme :=
@@ -301,8 +298,6 @@ theorem checkFilterSentence_mem_scheme : checkFilterSentence ∈ separationSchem
   separationSentence_mem_scheme checkFilterFormula
 theorem valueImageSentence_mem_scheme : valueImageSentence ∈ separationScheme :=
   separationSentence_mem_scheme valueImageFormula
-theorem pairImageGatherSentence_mem_scheme : pairImageGatherSentence ∈ collectionScheme :=
-  collectionSentence_mem_scheme pairImageGatherFormula
 theorem pairImageFilterSentence_mem_scheme : pairImageFilterSentence ∈ separationScheme :=
   separationSentence_mem_scheme pairImageFilterFormula
 

@@ -28,7 +28,7 @@ but keep the formula's meaning independent of validity.
 
 Validity and valuation are stated against a **supplied exact characterization**
 `∀ m, m ∈ U ↔ IsUnionBranch cs ord t m`, so they do not depend on how the internal bound is
-built (the second PR):
+built (`Forcing/Material/ExtensionUnion.lean`):
 
 * `isNameCode_of_isUnionBranch`: `U` is a valid code when `t` is;
 * `MaximalNames.zval_decode_of_isUnionBranch`: `U` values to `⋃₀` of `t`'s value along every
@@ -43,7 +43,7 @@ built (the second PR):
 `mem_sUnion_five_of_pair_mem`: the structural chain
 `ρ ∈ {r, ρ} ∈ ⟨r, ρ⟩ ∈ σ ∈ {p, σ} ∈ ⟨p, σ⟩ ∈ t` puts every right coordinate in `⋃⁵ t`, with no
 validity, order, or material membership. So a union code lies inside `cs × ⋃⁵ t`
-(`IsUnionBranch.exists_mem_bound`), which the second PR covers by nested Collection:
+(`IsUnionBranch.exists_mem_bound`), which `ExtensionUnion.lean` covers by nested Collection:
 `FiberCovers R s y := ∀ ρ ∈ R, ⟨s, ρ⟩ ∈ y` is the outer relation. It promises coverage only,
 never that `y` contains only those pairs; exactness comes from the final Separation.
 
