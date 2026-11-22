@@ -34,6 +34,7 @@ import Forcing.Material.PairImageGather
 import Forcing.Material.ExtensionUnion
 import Forcing.Material.SeparationName
 import Forcing.Material.ExtensionSeparation
+import Forcing.Material.CollectionName
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
@@ -46,6 +47,7 @@ import Forcing.Material.CompilerBridge
 import Forcing.Material.AtomicRealized
 import Forcing.Material.AtomicTests
 import Forcing.Material.CompilerCorrectness
+import Forcing.Material.TestLayout
 import Forcing.Material.ConnectiveTests
 import Forcing.Material.Lookup
 import Forcing.Material.NameRecognition

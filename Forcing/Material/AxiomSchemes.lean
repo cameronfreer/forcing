@@ -48,8 +48,9 @@ instance stays local to the proof that needs it.
 
 ## Main results
 
-* `Forcing.MaterialCarrier.realize_separationSentence_iff`: a Separation instance unfolded on an
-  arbitrary carrier; shared by the ground and the extension.
+* `Forcing.MaterialCarrier.realize_separationSentence_iff`,
+  `Forcing.MaterialCarrier.realize_collectionSentence_iff`: a Separation or Collection instance
+  unfolded on an arbitrary carrier; shared by the ground and the extension.
 * `Forcing.MaterialGround.exists_separation`, `Forcing.MaterialGround.exists_collection`,
   `Forcing.MaterialGround.exists_minimal`: the semantic consequences.
 -/
@@ -215,6 +216,23 @@ theorem realize_separationSentence_iff (C : MaterialCarrier.{u})
     BoundedFormula.realize_liftAt, BoundedFormula.realize_relabel,
     comp_shift_castAdd, comp_shift_natAdd]
 
+/-- **The Collection instance, unfolded on a carrier**: a carrier satisfies
+`collectionSentence φ` exactly when, for all parameters and every `a` each of whose elements has
+a `φ`-witness in the carrier, some element of the carrier contains a witness for each. No
+functionality and no reverse clause. Shared by the ground (`MaterialGround.exists_collection`)
+and the extension. -/
+theorem realize_collectionSentence_iff (C : MaterialCarrier.{u})
+    (φ : memLang.BoundedFormula (Fin k) 2) :
+    ↥C ⊨ collectionSentence φ ↔
+      ∀ (ps : Fin k → ↥C) (a : ↥C),
+        (∀ x : ↥C, (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) → ∃ y : ↥C, φ.Realize ps ![x, y]) →
+        ∃ b : ↥C, ∀ x : ↥C, (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) →
+          ∃ y : ↥C, (y : ZFSet.{u}) ∈ (b : ZFSet.{u}) ∧ φ.Realize ps ![x, y] := by
+  simp [collectionSentence, toBound₂, memFormula, Sentence.Realize,
+    BoundedFormula.realize_liftAt, BoundedFormula.realize_relabel,
+    comp_shift₁_castAdd, comp_shift₁_natAdd, comp_shift₂_castAdd, comp_shift₂_natAdd,
+    snoc₂_at]
+
 end MaterialCarrier
 
 namespace MaterialGround
@@ -233,7 +251,8 @@ theorem exists_separation {φ : memLang.BoundedFormula (Fin k) 1}
   (MaterialCarrier.realize_separationSentence_iff _ φ).1 (M.realize_of_mem hφ) params a
 
 /-- **Collection, semantically**: if every element of `a` has a `φ`-witness, some member of
-the ground contains a witness for each. No functionality, no reverse clause. -/
+the ground contains a witness for each. No functionality, no reverse clause. The unfolding is
+`MaterialCarrier.realize_collectionSentence_iff`. -/
 theorem exists_collection {φ : memLang.BoundedFormula (Fin k) 2}
     (hφ : collectionSentence φ ∈ T) (params : Fin k → ↥M.toMaterialCarrier)
     (a : ↥M.toMaterialCarrier)
@@ -242,20 +261,8 @@ theorem exists_collection {φ : memLang.BoundedFormula (Fin k) 2}
     ∃ b : ↥M.toMaterialCarrier, ∀ x : ↥M.toMaterialCarrier,
       (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) →
         ∃ y : ↥M.toMaterialCarrier, (y : ZFSet.{u}) ∈ (b : ZFSet.{u}) ∧
-          φ.Realize params ![x, y] := by
-  have hr := M.realize_of_mem hφ
-  have key : ∀ ps : Fin k → ↥M.toMaterialCarrier, ∀ c : ↥M.toMaterialCarrier,
-      (∀ x : ↥M.toMaterialCarrier, (x : ZFSet.{u}) ∈ (c : ZFSet.{u}) →
-          ∃ y : ↥M.toMaterialCarrier, φ.Realize ps ![x, y]) →
-      ∃ b : ↥M.toMaterialCarrier, ∀ x : ↥M.toMaterialCarrier,
-        (x : ZFSet.{u}) ∈ (c : ZFSet.{u}) →
-          ∃ y : ↥M.toMaterialCarrier, (y : ZFSet.{u}) ∈ (b : ZFSet.{u}) ∧
-            φ.Realize ps ![x, y] := by
-    simpa [collectionSentence, toBound₂, memFormula, Sentence.Realize,
-      BoundedFormula.realize_liftAt, BoundedFormula.realize_relabel,
-      comp_shift₁_castAdd, comp_shift₁_natAdd, comp_shift₂_castAdd, comp_shift₂_natAdd,
-      snoc₂_at, snoc₄_at] using hr
-  exact key params a hwit
+          φ.Realize params ![x, y] :=
+  (MaterialCarrier.realize_collectionSentence_iff _ φ).1 (M.realize_of_mem hφ) params a hwit
 
 /-- **Foundation is free here** — no hypothesis on `T`. A material carrier is a transitive
 collection of ambient well-founded sets, so the minimal-element consequence the recursion
