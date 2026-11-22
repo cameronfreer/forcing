@@ -5,7 +5,9 @@ Authors: Cameron Freer
 -/
 import Forcing.Material.CompilerCorrectness
 import Forcing.Material.TestCoding
-import Forcing.Material.UnionName
+import Forcing.Material.GuardedBranch
+import Forcing.Material.AxiomSchemes
+import Forcing.Material.MaximalNames
 
 /-!
 # The separation name: semantic laws and exact formula laws
@@ -22,8 +24,8 @@ sepBranchDef Rec φ Γ A t m :=
 ```
 
 The orientation is `order_iff`'s: `⟨⌜q⌝, ⌜p⌝⟩ ∈ ord ↔ q ≤ p`. **Both internally quantified
-conditions carry their `condSet` guard** (#223). The middle conjunct is `unionInnerDef`, reused
-with its realization law.
+conditions carry their `condSet` guard** (#223). The middle conjunct is `unionInnerDef`
+(`Forcing/Material/GuardedBranch.lean`), shared with the union name.
 
 ## The parameter layout
 
@@ -46,9 +48,10 @@ and `recParams_eq` in `sepParams_realizes`). `A` codes the parameters alone,
    **guarded universal over internal `a'`**, so the syntax asserts no existence.
 2. **The typed characterization** (`MaximalNames.realize_sepBranchDef_iff`) reads it as
    `MaximalNames.IsSepBranch`, a full biconditional with `∃ p : P`. It takes compiler
-   correctness's inputs (pair closure and the two atomic equivalences) and `t = code i`. Pair
-   closure is used at exactly one site: the forward direction must construct `⟨code j, A⟩` to
-   instantiate the guarded universal; without it the guard could hold vacuously.
+   correctness's inputs (pair closure and the two atomic equivalences) and `t = code i`.
+   Compiler correctness consumes pair closure in both directions; beyond that, there is **one
+   additional direct construction site**: the forward direction must construct `⟨code j, A⟩` to
+   instantiate the guarded universal, without which the guard could hold vacuously.
 
 ## Contract
 
@@ -344,8 +347,9 @@ local notation "⟪" t "⟫" => ((Term.realize (Sum.elim v xs) t : ↥M) : ZFSet
 /-- **The typed characterization**: at `t = code i` and `A` coding the parameters alone, the
 separation-branch formula holds of `m` exactly when `m` is a typed separation branch. Compiler
 correctness reads the forcing; `code_surjective` types `q` and `p`, validity of `code i` and
-`mem_range_code_iff` make `σ` a code, and `order_iff` reads the order fact. Pair closure is used
-once, forward, to construct `⟨code j, A⟩` for the guarded universal. -/
+`mem_range_code_iff` make `σ` a code, and `order_iff` reads the order fact. Besides compiler
+correctness's own use of pair closure, there is one additional direct construction site: the
+forward direction builds `⟨code j, A⟩` for the guarded universal. -/
 theorem realize_sepBranchDef_iff {φ : memLang.BoundedFormula (Fin k) 1}
     {Γ : CompilerParams α Rec.arity n} {A t m : memLang.Term (α ⊕ Fin n)}
     {i : (maximal Pres).Code} (hΓ : Γ.Realizes Rec Pres.conditionSet Pres.orderCode v xs)

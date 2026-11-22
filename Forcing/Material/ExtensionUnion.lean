@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
 import Forcing.Material.UnionName
-import Forcing.Material.PairImageGather
+import Forcing.Material.ProductCover
 
 /-!
 # General Union in the extension
@@ -22,12 +22,10 @@ unused. No genericity, no `OrderTop`, no truth lemma.
 
 ## The construction
 
-1. **Product cover** (`exists_productCover`): for internal sets `A` and `R`, a ground set
-   containing `⟨s, ρ⟩` for every `s ∈ A` and `ρ ∈ R`. About arbitrary internal sets and
-   coverage only: no name validity, order, or filter. Inner Collection
-   (`pairImageGatherSentence`, parameter `s`, Pairing witnesses) gives a set covering the fiber
-   `{s} × R`; outer Collection (`fiberCoverGatherSentence`, parameter `R`) collects one covering
-   set per `s`; General Union flattens. Neither Collection output is filtered.
+1. **Product cover** (`exists_productCover`, in `Forcing/Material/ProductCover.lean`, shared
+   with Separation): for internal sets `A` and `R`, a ground set containing `⟨s, ρ⟩` for every
+   `s ∈ A` and `ρ ∈ R`. Coverage only: no name validity, order, or filter. Two Collection
+   instances, Pairing, General Union; neither Collection output is filtered.
 2. **The union code** (`exists_unionCode`): with `A := cs` and `R := ⋃⁵ t` (General Union five
    times), Separation by `unionFilterSentence` gives `U`, and `IsUnionBranch.exists_mem_bound`
    shows the cover contains every union branch, so `∀ m, m ∈ U ↔ IsUnionBranch cs ord t m`.
@@ -48,7 +46,7 @@ the check-name construction's pair-image gather, shared through
 
 ## Main results
 
-* `Forcing.MaterialGround.exists_productCover`, `Forcing.MaterialGround.exists_unionCode`.
+* `Forcing.MaterialGround.exists_unionCode`.
 * `Forcing.MaterialCarrier.realize_unionSentence_of`: the carrier converse.
 * `Forcing.MaterialGround.extension_models_union`.
 -/
@@ -76,50 +74,11 @@ variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 
 /-! ### The instances, at concrete parameters -/
 
-theorem realize_fiberCoverGatherFormula (R s y : ↥M.toMaterialCarrier) :
-    fiberCoverGatherFormula.Realize ![R] ![s, y] ↔
-      FiberCovers (R : ZFSet.{u}) (s : ZFSet.{u}) (y : ZFSet.{u}) := by
-  rw [fiberCoverGatherFormula, realize_fiberCoversDef]
-  simp
-
 theorem realize_unionFilterFormula (cs ord t m : ↥M.toMaterialCarrier) :
     unionFilterFormula.Realize ![cs, ord, t] ![m] ↔
       IsUnionBranch (cs : ZFSet.{u}) (ord : ZFSet.{u}) (t : ZFSet.{u}) (m : ZFSet.{u}) := by
   rw [unionFilterFormula, realize_unionBranchDef]
   simp
-
-/-! ### The product cover -/
-
-/-- **The product cover**: for internal `A` and `R`, some ground set contains `⟨s, ρ⟩` for every
-`s ∈ A`, `ρ ∈ R`. Coverage only — the set may contain anything else. Arbitrary internal sets:
-no name validity, order, or filter. Ledger: two Collection instances, Pairing, General Union. -/
-theorem exists_productCover (hpg : pairImageGatherSentence ∈ T)
-    (hfc : fiberCoverGatherSentence ∈ T) (hp : pairingSentence ∈ T) (huni : unionSentence ∈ T)
-    {A R : ZFSet.{u}} (hA : A ∈ M) (hR : R ∈ M) :
-    ∃ Bd ∈ M, ∀ s ∈ A, ∀ ρ ∈ R, ZFSet.pair s ρ ∈ Bd := by
-  -- inner: for each `s ∈ M`, a ground set covering the fiber `{s} × R`
-  have hfiber : ∀ s : ↥M.toMaterialCarrier, ∃ y : ↥M.toMaterialCarrier,
-      FiberCovers R (s : ZFSet.{u}) (y : ZFSet.{u}) := by
-    intro s
-    obtain ⟨y, hy⟩ := M.exists_collection (φ := pairImageGatherFormula) hpg ![s] ⟨R, hR⟩
-      (fun ρ _ ↦ ⟨⟨_, M.pair_mem hp s.2 ρ.2⟩,
-        (M.realize_pairImageGatherFormula s ρ ⟨_, M.pair_mem hp s.2 ρ.2⟩).2 rfl⟩)
-    refine ⟨y, fun ρ hρ ↦ ?_⟩
-    obtain ⟨⟨p, hpM⟩, hpy, hp'⟩ := hy ⟨ρ, M.mem_trans hρ hR⟩ hρ
-    rw [M.realize_pairImageGatherFormula] at hp'
-    change p = ZFSet.pair (s : ZFSet.{u}) ρ at hp'
-    subst hp'
-    exact hpy
-  -- outer: one covering set per `s ∈ A`
-  obtain ⟨C, hC⟩ := M.exists_collection (φ := fiberCoverGatherFormula) hfc ![⟨R, hR⟩] ⟨A, hA⟩
-    (fun s _ ↦ by
-      obtain ⟨y, hy⟩ := hfiber s
-      exact ⟨y, (M.realize_fiberCoverGatherFormula ⟨R, hR⟩ s y).2 hy⟩)
-  -- flatten
-  refine ⟨ZFSet.sUnion (C : ZFSet.{u}), M.sUnion_mem huni C.2, fun s hs ρ hρ ↦ ?_⟩
-  obtain ⟨y, hyC, hy⟩ := hC ⟨s, M.mem_trans hs hA⟩ hs
-  rw [M.realize_fiberCoverGatherFormula] at hy
-  exact ZFSet.mem_sUnion.2 ⟨y, hyC, hy ρ hρ⟩
 
 /-! ### The union code -/
 
