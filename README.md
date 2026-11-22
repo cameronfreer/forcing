@@ -68,7 +68,7 @@ lake build
   or explicitly marked planned.
 - [docs/architecture.md](docs/architecture.md) — stable design constraints and
   layer boundaries.
-- [docs/mathlib-v4.32.2.md](docs/mathlib-v4.32.2.md) — verified inventory of what
+- [docs/mathlib-v4.36.0.md](docs/mathlib-v4.36.0.md) — verified inventory of what
   the pinned mathlib provides (and lacks) for forcing.
 - [docs/why-genericity.md](docs/why-genericity.md) — genericity derived in discovery order,
   each definition introduced by the failure it repairs.

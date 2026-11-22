@@ -53,8 +53,8 @@ theorem exists_internalSubset_of_separation {k : ℕ} {φ : memLang.BoundedFormu
   refine ⟨⟨b, fun z hz ↦ ?_⟩, fun q ↦ ?_⟩
   · have hzM : z ∈ M.toMaterialCarrier := M.toMaterialCarrier.mem_trans hz b.2
     exact ((hb ⟨z, hzM⟩).1 hz).1
-  · rw [InternalForcingPresentation.InternalSubset.mem_externalize]
-    exact (hb (condElem Pres q)).trans (and_iff_right (Pres.code_mem q))
+  · exact InternalForcingPresentation.InternalSubset.mem_externalize.trans
+      ((hb (condElem Pres q)).trans (and_iff_right (Pres.code_mem q)))
 
 end MaterialGround
 

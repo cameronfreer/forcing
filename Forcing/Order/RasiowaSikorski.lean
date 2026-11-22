@@ -35,7 +35,7 @@ filter containing `p` and meeting every member of a countable family of dense se
 theorem exists_pfilter_genericFor (p : P) {ι : Type*} [Countable ι] (𝒟 : ι → Set P)
     (h : ∀ i, IsDense (𝒟 i)) : ∃ G : PFilter P, p ∈ G ∧ ∀ i, Meets G (𝒟 i) := by
   obtain ⟨enc⟩ := nonempty_encodable ι
-  letI := enc
+  let := enc
   exact ⟨pfilterOfDense p h, self_mem_pfilterOfDense h,
     fun i ↦ meets_iff_exists.2 (exists_mem_pfilterOfDense h i)⟩
 
@@ -43,7 +43,7 @@ theorem exists_pfilter_genericFor (p : P) {ι : Type*} [Countable ι] (𝒟 : ι
 containing `p` and generic for a countable family of dense sets. -/
 theorem exists_pfilter_genericFor' (p : P) {𝒟 : Set (Set P)} (h𝒟 : 𝒟.Countable)
     (h : ∀ D ∈ 𝒟, IsDense D) : ∃ G : PFilter P, p ∈ G ∧ GenericFor 𝒟 G := by
-  haveI := h𝒟.to_subtype
+  have := h𝒟.to_subtype
   obtain ⟨G, hpG, hG⟩ := exists_pfilter_genericFor p (fun D : 𝒟 ↦ (D : Set P)) fun D ↦ h D D.2
   exact ⟨G, hpG, fun D hD ↦ hG ⟨D, hD⟩⟩
 
