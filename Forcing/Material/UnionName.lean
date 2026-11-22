@@ -3,6 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
+import Forcing.Material.GuardedBranch
 import Forcing.Material.AxiomSchemes
 import Forcing.Material.MaximalNames
 
@@ -43,24 +44,24 @@ built (`Forcing/Material/ExtensionUnion.lean`):
 `mem_sUnion_five_of_pair_mem`: the structural chain
 `ρ ∈ {r, ρ} ∈ ⟨r, ρ⟩ ∈ σ ∈ {p, σ} ∈ ⟨p, σ⟩ ∈ t` puts every right coordinate in `⋃⁵ t`, with no
 validity, order, or material membership. So a union code lies inside `cs × ⋃⁵ t`
-(`IsUnionBranch.exists_mem_bound`), which `ExtensionUnion.lean` covers by nested Collection:
-`FiberCovers R s y := ∀ ρ ∈ R, ⟨s, ρ⟩ ∈ y` is the outer relation. It promises coverage only,
-never that `y` contains only those pairs; exactness comes from the final Separation.
+(`IsUnionBranch.exists_mem_bound`), which `ExtensionUnion.lean` covers by the product cover
+(`Forcing/Material/ProductCover.lean`, nested Collection). Coverage only; exactness comes from
+the final Separation.
 
 ## The formulas
 
 Term-parameterized, membership and pairing only, each with an exact realization law carrying no
 name-validity and no theory hypothesis. Every quantifier bridge is carrier transitivity or a
-pair-component step. Instances: `unionFilterFormula : BoundedFormula (Fin 3) 1` (Separation;
-parameters `cs`, `ord`, `t`) and `fiberCoverGatherFormula : BoundedFormula (Fin 1) 2`
-(Collection; parameter `R`, index `s`, witness `y`).
+pair-component step. Instance: `unionFilterFormula : BoundedFormula (Fin 3) 1` (Separation;
+parameters `cs`, `ord`, `t`). The inner branch is `unionInnerDef`
+(`Forcing/Material/GuardedBranch.lean`), shared with the separation name.
 
 ## Main results
 
-* `Forcing.IsUnionBranch`, `Forcing.FiberCovers`; `Forcing.mem_sUnion_five_of_pair_mem`,
+* `Forcing.IsUnionBranch`; `Forcing.mem_sUnion_five_of_pair_mem`,
   `Forcing.IsUnionBranch.exists_mem_bound`.
 * `Forcing.isNameCode_of_isUnionBranch`, `Forcing.MaximalNames.zval_decode_of_isUnionBranch`.
-* `Forcing.realize_unionBranchDef`, `Forcing.realize_fiberCoversDef`.
+* `Forcing.realize_unionBranchDef`.
 -/
 
 universe u v
@@ -77,11 +78,6 @@ def IsUnionBranch (cs ord t m : ZFSet.{u}) : Prop :=
   ∃ s ρ, m = ZFSet.pair s ρ ∧ s ∈ cs ∧
     ∃ p σ, ZFSet.pair p σ ∈ t ∧ p ∈ cs ∧ ZFSet.pair s p ∈ ord ∧
       ∃ r, ZFSet.pair r ρ ∈ σ ∧ r ∈ cs ∧ ZFSet.pair s r ∈ ord
-
-/-- **Fiber coverage**: `y` contains `⟨s, ρ⟩` for every `ρ ∈ R`. Coverage only; `y` may contain
-anything else. The outer Collection relation of the bound construction. -/
-def FiberCovers (R s y : ZFSet.{u}) : Prop :=
-  ∀ ρ ∈ R, ZFSet.pair s ρ ∈ y
 
 /-- **The depth of the bound**: a branch of a branch of `t` has its right coordinate in `⋃⁵ t`,
 along `ρ ∈ {r, ρ} ∈ ⟨r, ρ⟩ ∈ σ ∈ {p, σ} ∈ ⟨p, σ⟩ ∈ t`. Structural: no validity, order, or
@@ -160,12 +156,6 @@ section Syntax
 
 variable {α : Type v} {n : ℕ}
 
-/-- `∃ r, ⟨r, ρ⟩ ∈ σ ∧ r ∈ cs ∧ ⟨s, r⟩ ∈ ord`. -/
-def unionInnerDef (cs ord s ρ σ : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
-  ∃' (pairMemDef (&(Fin.last n)) (liftTerm ρ) (liftTerm σ) ⊓
-    (memFormula (&(Fin.last n)) (liftTerm cs) ⊓
-      pairMemDef (liftTerm s) (&(Fin.last n)) (liftTerm ord)))
-
 /-- `∃ p σ, ⟨p, σ⟩ ∈ t ∧ p ∈ cs ∧ ⟨s, p⟩ ∈ ord ∧ ∃ r, ⟨r, ρ⟩ ∈ σ ∧ r ∈ cs ∧ ⟨s, r⟩ ∈ ord`. -/
 def unionMiddleDef (cs ord t s ρ : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
   ∃' ∃' (pairMemDef (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))
@@ -183,26 +173,14 @@ def unionBranchDef (cs ord t m : memLang.Term (α ⊕ Fin n)) : memLang.BoundedF
       unionMiddleDef (liftTerm (liftTerm cs)) (liftTerm (liftTerm ord)) (liftTerm (liftTerm t))
         (&(Fin.castSucc (Fin.last n))) (&(Fin.last (n + 1)))))
 
-/-- **Fiber coverage**: `∀ ρ ∈ R, ⟨s, ρ⟩ ∈ y`. -/
-def fiberCoversDef (R s y : memLang.Term (α ⊕ Fin n)) : memLang.BoundedFormula α n :=
-  ∀' (memFormula (&(Fin.last n)) (liftTerm R) ⟹
-    pairMemDef (liftTerm s) (&(Fin.last n)) (liftTerm y))
-
 /-- **The union filter** (Separation; parameters `cs`, `ord`, `t`). -/
 def unionFilterFormula : memLang.BoundedFormula (Fin 3) 1 :=
   unionBranchDef (var (Sum.inl 0)) (var (Sum.inl 1)) (var (Sum.inl 2)) (&0)
 
-/-- **The outer fiber gather** (Collection; parameter `R`; index `s`, witness `y`). -/
-def fiberCoverGatherFormula : memLang.BoundedFormula (Fin 1) 2 :=
-  fiberCoversDef (var (Sum.inl 0)) (&0) (&1)
-
 def unionFilterSentence : memLang.Sentence := separationSentence unionFilterFormula
-def fiberCoverGatherSentence : memLang.Sentence := collectionSentence fiberCoverGatherFormula
 
 theorem unionFilterSentence_mem_scheme : unionFilterSentence ∈ separationScheme :=
   separationSentence_mem_scheme unionFilterFormula
-theorem fiberCoverGatherSentence_mem_scheme : fiberCoverGatherSentence ∈ collectionScheme :=
-  collectionSentence_mem_scheme fiberCoverGatherFormula
 
 end Syntax
 
@@ -215,17 +193,6 @@ variable {α : Type v} {n : ℕ} {M : MaterialCarrier.{u}} {v : α → M} {xs : 
 set_option quotPrecheck false in
 /-- The set a term realizes to; local to this section. -/
 local notation "⟪" t "⟫" => ((Term.realize (Sum.elim v xs) t : ↥M) : ZFSet)
-
-theorem realize_unionInnerDef {cs ord s ρ σ : memLang.Term (α ⊕ Fin n)} :
-    (unionInnerDef cs ord s ρ σ).Realize v xs ↔
-      ∃ r, ZFSet.pair r ⟪ρ⟫ ∈ ⟪σ⟫ ∧ r ∈ ⟪cs⟫ ∧ ZFSet.pair ⟪s⟫ r ∈ ⟪ord⟫ := by
-  have hσM : ⟪σ⟫ ∈ M := (Term.realize (Sum.elim v xs) σ : ↥M).2
-  simp only [unionInnerDef, BoundedFormula.realize_ex, BoundedFormula.realize_inf, memFormula,
-    BoundedFormula.realize_rel₂, relMap_mem, Matrix.cons_val_zero, Matrix.cons_val_one,
-    realize_pairMemDef, Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
-    realize_liftTerm]
-  exact ⟨fun ⟨r, h⟩ ↦ ⟨r, h⟩,
-    fun ⟨r, h⟩ ↦ ⟨⟨r, (M.pair_components_mem_of_mem hσM h.1).1⟩, h⟩⟩
 
 theorem realize_unionMiddleDef {cs ord t s ρ : memLang.Term (α ⊕ Fin n)} :
     (unionMiddleDef cs ord t s ρ).Realize v xs ↔
@@ -258,16 +225,6 @@ theorem realize_unionBranchDef {cs ord t m : memLang.Term (α ⊕ Fin n)} :
   · rintro ⟨s, ρ, h⟩
     obtain ⟨hsM, hρM⟩ := M.pair_components_mem (h.1 ▸ hmM)
     exact ⟨⟨s, hsM⟩, ⟨ρ, hρM⟩, h⟩
-
-/-- **The fiber-coverage law**: exact against `FiberCovers`. -/
-theorem realize_fiberCoversDef {R s y : memLang.Term (α ⊕ Fin n)} :
-    (fiberCoversDef R s y).Realize v xs ↔ FiberCovers ⟪R⟫ ⟪s⟫ ⟪y⟫ := by
-  have hRM : ⟪R⟫ ∈ M := (Term.realize (Sum.elim v xs) R : ↥M).2
-  simp only [fiberCoversDef, BoundedFormula.realize_all, BoundedFormula.realize_imp, memFormula,
-    BoundedFormula.realize_rel₂, relMap_mem, Matrix.cons_val_zero, Matrix.cons_val_one,
-    realize_pairMemDef, Term.realize_var, Sum.elim_inr, Function.comp_apply, Fin.snoc_last,
-    realize_liftTerm, FiberCovers]
-  exact ⟨fun h ρ hρ ↦ h ⟨ρ, M.mem_trans hρ hRM⟩ hρ, fun h ρ hρ ↦ h ρ hρ⟩
 
 end Realization
 

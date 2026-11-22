@@ -27,10 +27,13 @@ import Forcing.Material.CheckGraph
 import Forcing.Material.CheckNames
 import Forcing.Material.ExtensionFiniteClosure
 import Forcing.Material.ExtensionInfinity
+import Forcing.Material.GuardedBranch
+import Forcing.Material.ProductCover
 import Forcing.Material.UnionName
 import Forcing.Material.PairImageGather
 import Forcing.Material.ExtensionUnion
 import Forcing.Material.SeparationName
+import Forcing.Material.ExtensionSeparation
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
