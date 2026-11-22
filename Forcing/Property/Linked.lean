@@ -3,7 +3,7 @@ Copyright (c) 2026 Cameron Freer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Cameron Freer
 -/
-import Mathlib.Data.Countable.Defs
+import Mathlib.Basic.Countable.Defs
 import Mathlib.Data.Finset.Insert
 import Forcing.Order.Basic
 

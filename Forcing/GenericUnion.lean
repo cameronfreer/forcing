@@ -90,17 +90,17 @@ noncomputable def unionFun (G : PFilter (FinitePartialFunction β)) (i : ι) : O
   if h : ∃ b, UnionGraph G i b then some h.choose else none
 
 theorem unionFun_eq_some_iff : unionFun G i = some b ↔ UnionGraph G i b := by
-  letI := Classical.dec (∃ b, UnionGraph G i b)
+  let := Classical.dec (∃ b, UnionGraph G i b)
   constructor
   · intro h
     by_cases hex : ∃ b, UnionGraph G i b
-    · rw [unionFun, dif_pos hex] at h
+    · rw [unionFun, dite_eq_left hex] at h
       exact Option.some.inj h ▸ hex.choose_spec
-    · rw [unionFun, dif_neg hex] at h
+    · rw [unionFun, dite_eq_right hex] at h
       simp at h
   · intro h
     have hex : ∃ b, UnionGraph G i b := ⟨b, h⟩
-    rw [unionFun, dif_pos hex]
+    rw [unionFun, dite_eq_left hex]
     exact congrArg some (unionGraph_unique hex.choose_spec h)
 
 /-- **Partiality actually occurs.** The principal filter at the weakest condition decides

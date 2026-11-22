@@ -1,8 +1,8 @@
 # Mathlib inventory at the pinned revision
 
 Verified against the pin in [`lakefile.toml`](../lakefile.toml):
-mathlib revision `905b95818eb32af7874a58b427f50c1711a5e96c` (the `v4.32.2` tag),
-toolchain `leanprover/lean4:v4.32.2`.
+mathlib revision `fc4f59e577feb1a4956671bc04ac18aaaf8cd842` (the `v4.36.0` tag),
+toolchain `leanprover/lean4:v4.36.0`. Re-audited on the bump from `v4.32.2` (2026-11-22).
 
 **Staleness warning:** every claim below is specific to this revision and must be
 re-audited on any toolchain/mathlib bump.
@@ -27,10 +27,10 @@ re-audited on any toolchain/mathlib bump.
   upstream candidate; it instantiates at `LowerSet P` to give the forcing
   completion with no topology.
 - **No `RegularOpens` API anywhere at this pin.** Mathlib PR
-  [#10332](https://github.com/leanprover-community/mathlib4/pull/10332) remains
-  open (as of 2026-07-30).
-- **No separative preorders or separative quotients.** (The only "separative" hit
-  in the source is an unrelated Scott-topology comment.)
+  [#10332](https://github.com/leanprover-community/mathlib4/pull/10332) was closed
+  without merging (checked 2026-11-22).
+- **No separative preorders or separative quotients.** (The word "separative" does not
+  occur in the source.)
 - **No chain-condition (ccc) machinery** in a forcing-usable form.
 - **No forcing-specific vocabulary**: compatibility, predensity, dense open sets,
   maximal antichains as predense sets, dense embeddings of forcing notions.

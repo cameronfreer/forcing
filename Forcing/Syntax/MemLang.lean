@@ -42,7 +42,7 @@ inductive memRel : ℕ → Type
   | mem : memRel 2
 
 /-- The function-free membership language, graph-pattern. -/
-def memLang : FirstOrder.Language :=
+abbrev memLang : FirstOrder.Language :=
   ⟨fun _ ↦ Empty, memRel⟩
 
 /-- The membership relation applied to two terms — the only atomic formula shape of the
