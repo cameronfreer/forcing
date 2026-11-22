@@ -34,9 +34,9 @@ built (`Forcing/Material/ExtensionUnion.lean`):
 * `MaximalNames.zval_decode_of_isUnionBranch`: `U` values to `⋃₀` of `t`'s value along every
   `S` that is **upward closed** and **downward directed**. Upward closure takes an admitted
   common strengthening back to both branch conditions; directedness supplies one from two
-  admitted conditions. A `PFilter` supplies both; nonemptiness, genericity, and the truth lemma
-  are not needed. Unlike Empty Set, Pairing, and Binary Union, this does **not** hold along an
-  arbitrary `S`.
+  admitted conditions. A `PFilter` supplies both, and its nonemptiness is unused; genericity
+  and the truth lemma are not needed. Unlike Empty Set, Pairing, and Binary Union, this does
+  **not** hold along an arbitrary `S`.
 
 ## The bound
 
@@ -123,7 +123,8 @@ variable (Pres : InternalForcingPresentation M P)
 
 /-- **Valuation of the union name**: a maximal name whose code is exactly the union code of
 `code i` values to `⋃₀` of the value of `i`, along every upward-closed, downward-directed `S`.
-Upward closure gives `⊆`, directedness `⊇`. Axiom-free; no genericity, no nonemptiness. -/
+Upward closure gives `⊆`, directedness `⊇`. Axiom-free; no genericity, and no nonemptiness
+hypothesis on `S`. -/
 theorem zval_decode_of_isUnionBranch {S : Set P} (hup : IsUpperSet S)
     (hdir : DirectedOn (· ≥ ·) S) {i k : (maximal Pres).Code}
     (hk : ∀ m, m ∈ (maximal Pres).code k ↔
