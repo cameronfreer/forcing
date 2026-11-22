@@ -48,6 +48,8 @@ instance stays local to the proof that needs it.
 
 ## Main results
 
+* `Forcing.MaterialCarrier.realize_separationSentence_iff`: a Separation instance unfolded on an
+  arbitrary carrier; shared by the ground and the extension.
 * `Forcing.MaterialGround.exists_separation`, `Forcing.MaterialGround.exists_collection`,
   `Forcing.MaterialGround.exists_minimal`: the semantic consequences.
 -/
@@ -196,27 +198,39 @@ private theorem comp_shift₂_natAdd {k : ℕ} {M : Type u} (xs : Fin k → M) (
   | 0 => simp [Fin.natAdd, Fin.addNat, Fin.snoc]
   | 1 => simp [Fin.natAdd, Fin.addNat, Fin.snoc]
 
+namespace MaterialCarrier
+
+/-- **The Separation instance, unfolded on a carrier**: a carrier satisfies `separationSentence φ`
+exactly when, for all parameters and every `a`, the elements of `a` satisfying `φ` form an
+element of the carrier. No theory, genericity, or nonemptiness hypothesis: this is the bare
+unfolding of the sentence, shared by the ground (`MaterialGround.exists_separation`) and the
+extension. -/
+theorem realize_separationSentence_iff (C : MaterialCarrier.{u})
+    (φ : memLang.BoundedFormula (Fin k) 1) :
+    ↥C ⊨ separationSentence φ ↔
+      ∀ (ps : Fin k → ↥C) (a : ↥C), ∃ b : ↥C, ∀ x : ↥C,
+        (x : ZFSet.{u}) ∈ (b : ZFSet.{u}) ↔
+          (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧ φ.Realize ps ![x] := by
+  simp [separationSentence, toBound, memFormula, Sentence.Realize,
+    BoundedFormula.realize_liftAt, BoundedFormula.realize_relabel,
+    comp_shift_castAdd, comp_shift_natAdd]
+
+end MaterialCarrier
+
 namespace MaterialGround
 
 variable {T : memLang.Theory} (M : MaterialGround.{u} T)
 
 /-- **Separation, semantically**: the elements of `a` satisfying `φ` at the given parameters
-form a member of the ground. Requires only the individual sentence's membership in `T`. -/
+form a member of the ground. Requires only the individual sentence's membership in `T`; the
+unfolding is `MaterialCarrier.realize_separationSentence_iff`. -/
 theorem exists_separation {φ : memLang.BoundedFormula (Fin k) 1}
     (hφ : separationSentence φ ∈ T) (params : Fin k → ↥M.toMaterialCarrier)
     (a : ↥M.toMaterialCarrier) :
     ∃ b : ↥M.toMaterialCarrier, ∀ x : ↥M.toMaterialCarrier,
       (x : ZFSet.{u}) ∈ (b : ZFSet.{u}) ↔
-        (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧ φ.Realize params ![x] := by
-  have hr := M.realize_of_mem hφ
-  have key : ∀ ps : Fin k → ↥M.toMaterialCarrier, ∀ c : ↥M.toMaterialCarrier,
-      ∃ b : ↥M.toMaterialCarrier, ∀ x : ↥M.toMaterialCarrier,
-        (x : ZFSet.{u}) ∈ (b : ZFSet.{u}) ↔
-          (x : ZFSet.{u}) ∈ (c : ZFSet.{u}) ∧ φ.Realize ps ![x] := by
-    simpa [separationSentence, toBound, memFormula, Sentence.Realize,
-      BoundedFormula.realize_liftAt, BoundedFormula.realize_relabel,
-      comp_shift_castAdd, comp_shift_natAdd] using hr
-  exact key params a
+        (x : ZFSet.{u}) ∈ (a : ZFSet.{u}) ∧ φ.Realize params ![x] :=
+  (MaterialCarrier.realize_separationSentence_iff _ φ).1 (M.realize_of_mem hφ) params a
 
 /-- **Collection, semantically**: if every element of `a` has a `φ`-witness, some member of
 the ground contains a witness for each. No functionality, no reverse clause. -/

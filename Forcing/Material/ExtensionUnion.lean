@@ -16,8 +16,9 @@ the preservation theorem
 ↥((maximal Pres).extensionCarrier (G : Set P)) ⊨ unionSentence      (G : Order.PFilter P)
 ```
 
-The admitted conditions must form a filter: the valuation law (`UnionName.lean`) uses upward
-closure and downward directedness. No genericity, no `OrderTop`, no truth lemma.
+The preservation theorem is stated for a filter; its proof uses only upward closure and
+downward directedness, through the valuation law (`UnionName.lean`), and filter nonemptiness is
+unused. No genericity, no `OrderTop`, no truth lemma.
 
 ## The construction
 
@@ -152,8 +153,9 @@ variable {P : Type u} [Preorder P] (Pres : InternalForcingPresentation M.toMater
 open MaximalNames
 
 /-- **General Union holds in the extension along a filter.** The union code of each name is
-built in the ground and values to the union of its value, by upward closure and downward
-directedness of `G`. No genericity, no `OrderTop`, no truth lemma. Ledger: two Collection
+built in the ground and values to the union of its value. The proof uses only upward closure
+and downward directedness of `G`; filter nonemptiness is unused. No genericity, no `OrderTop`, no
+truth lemma. Ledger: two Collection
 instances (`pairImageGatherSentence`, `fiberCoverGatherSentence`), one Separation instance
 (`unionFilterSentence`), Pairing, General Union. -/
 theorem extension_models_union (hpg : pairImageGatherSentence ∈ T)
