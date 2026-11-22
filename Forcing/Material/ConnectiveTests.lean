@@ -5,6 +5,7 @@ Authors: Cameron Freer
 -/
 import Forcing.Material.CompilerCorrectness
 import Forcing.Material.TestCoding
+import Forcing.Material.TestLayout
 import Forcing.Name.FormulaTests
 
 /-!
@@ -301,26 +302,14 @@ end Externalize
 
 /-! ### The Separation instances
 
-A fixed parameter layout for every test: the four fixed codes, the assignment, then the
-recognizer's parameters; the tested condition is the single bound variable. -/
+Every test is read at the test layout (`Forcing/Material/TestLayout.lean`): the four fixed
+codes, the assignment, then the recognizer's parameters; the tested condition is the single
+bound variable. -/
 
 section Tests
 
 variable {k sn : ℕ} {M : MaterialCarrier.{u}} {P : Type u}
 variable {N : InternalNamePresentation M P} (Rec : InternalNameRecognition N)
-
-/-- The parameter block at the test layout: `tagMem, tagEq, condSet, orderCode, a` at positions
-`0`–`4`, the recognizer's parameters after. -/
-def testParams : CompilerParams (Fin (5 + Rec.arity)) Rec.arity 1 where
-  tagMem := var (Sum.inl (Fin.castAdd Rec.arity 0))
-  tagEq := var (Sum.inl (Fin.castAdd Rec.arity 1))
-  condSet := var (Sum.inl (Fin.castAdd Rec.arity 2))
-  orderCode := var (Sum.inl (Fin.castAdd Rec.arity 3))
-  recParams := fun i ↦ Sum.inl (Fin.natAdd 5 i)
-
-/-- The assignment parameter at the test layout. -/
-def testAssignment : memLang.Term (Fin (5 + Rec.arity) ⊕ Fin 1) :=
-  var (Sum.inl (Fin.castAdd Rec.arity 4))
 
 /-- The implication decision test, as a Separation instance. -/
 def impTest (φ ψ : memLang.BoundedFormula (Fin k) sn) :
@@ -331,27 +320,6 @@ def impTest (φ ψ : memLang.BoundedFormula (Fin k) sn) :
 def allTest (φ : memLang.BoundedFormula (Fin k) (sn + 1)) :
     memLang.BoundedFormula (Fin (5 + Rec.arity)) 1 :=
   allTestDef Rec φ (testParams Rec) &0 (testAssignment Rec)
-
-/-- The parameter vector the tests are read at. -/
-def testVector (tagMem tagEq condSet orderCode a : ↥M) : Fin (5 + Rec.arity) → ↥M :=
-  Fin.append ![tagMem, tagEq, condSet, orderCode, a] Rec.params
-
-/-- The layout realizes the invariant at its vector. -/
-theorem testParams_realizes (hm : (natCode memWitnessTag : ZFSet.{u}) ∈ M)
-    (hq : (natCode eqTag : ZFSet.{u}) ∈ M) (condSet orderCode a : ↥M) (xs : Fin 1 → M) :
-    (testParams Rec).Realizes Rec condSet orderCode
-      (testVector Rec ⟨natCode memWitnessTag, hm⟩ ⟨natCode eqTag, hq⟩ condSet orderCode a) xs where
-  tagMem_eq := by simp [testParams, testVector, Fin.append_left]
-  tagEq_eq := by simp [testParams, testVector, Fin.append_left]
-  condSet_eq := by simp [testParams, testVector, Fin.append_left]
-  orderCode_eq := by simp [testParams, testVector, Fin.append_left]
-  recParams_eq := fun i ↦ by simp [testParams, testVector, Fin.append_right]
-
-/-- The assignment parameter realizes to the assignment. -/
-theorem realize_testAssignment (tagMem tagEq condSet orderCode a : ↥M) (xs : Fin 1 → M) :
-    Term.realize (Sum.elim (testVector Rec tagMem tagEq condSet orderCode a) xs)
-      (testAssignment Rec) = a := by
-  simp [testAssignment, testVector, Fin.append_left]
 
 /-- **The compiled list of Separation instances** the formula-test family for `φ` needs: one for
 each distinct compiled implication or universal test sentence among the subformulas, none at
