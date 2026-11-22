@@ -58,8 +58,10 @@ and the witness `y`. `t` is not a parameter.
    certifies neither forcing nor provenance; extra valid branches are harmless, since Collection
    asks for witness coverage, not an exact image.
 5. **The witness lemma** (`exists_mem_zval_of_isCollWitness`): axiom-free given a supplied
-   truth-lemma equivalence `htl`, used twice (truth to forcing, forcing to truth); only the
-   ⊇ instance of `mem_zval_decode_iff` is needed, with no upward closure or directedness.
+   truth-lemma equivalence `htl`, used twice (truth to forcing, forcing to truth). Extracting
+   the input's branch uses the forward direction of `mem_zval_decode_iff`; output membership
+   needs only its reverse direction, from a filtered package under `r ∈ S`. No upward closure
+   or directedness.
 
 ## Main definitions
 

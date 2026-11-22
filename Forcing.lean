@@ -35,6 +35,7 @@ import Forcing.Material.ExtensionUnion
 import Forcing.Material.SeparationName
 import Forcing.Material.ExtensionSeparation
 import Forcing.Material.CollectionName
+import Forcing.Material.ExtensionCollection
 import Forcing.Material.FormulaCoding
 import Forcing.Material.Ground
 import Forcing.Material.NameCoding
